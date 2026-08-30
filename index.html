@@ -4351,13 +4351,57 @@ body{padding-bottom:env(safe-area-inset-bottom)}
 }
 
 
+/* IzaZoo v36 — pilot candidate; layout intentionally preserved */
+:root{--module-problem:#c24f4f;--module-problem-soft:#fae9e8;--module-task:#2f9a62;--module-task-soft:#e6f5ed;--module-update:#3d74c8;--module-update-soft:#e8f0fc;--module-doc:#7b58b1;--module-doc-soft:#efe9f8}
+.landscape-cat,.portrait-bottom-cat{position:relative;overflow:hidden;transition:transform .15s ease,box-shadow .15s ease,background .15s ease}.landscape-cat:active,.portrait-bottom-cat:active{transform:scale(.98)}
+.landscape-cat.problem,.portrait-bottom-cat.problem{border-color:#dcabab!important;background:linear-gradient(135deg,var(--module-problem-soft),#fff)!important}.landscape-cat.task,.portrait-bottom-cat.task{border-color:#a9d7bf!important;background:linear-gradient(135deg,var(--module-task-soft),#fff)!important}.landscape-cat.update,.portrait-bottom-cat.update{border-color:#b7cbea!important;background:linear-gradient(135deg,var(--module-update-soft),#fff)!important}.landscape-cat.doc,.portrait-bottom-cat.doc{border-color:#cbbbe2!important;background:linear-gradient(135deg,var(--module-doc-soft),#fff)!important}
+.landscape-cat-icon,.portrait-bottom-icon{display:grid!important;place-items:center;border-radius:10px;font-weight:950!important}.landscape-cat.problem .landscape-cat-icon,.portrait-bottom-cat.problem .portrait-bottom-icon{background:var(--module-problem);color:#fff!important}.landscape-cat.task .landscape-cat-icon,.portrait-bottom-cat.task .portrait-bottom-icon{background:var(--module-task);color:#fff!important}.landscape-cat.update .landscape-cat-icon,.portrait-bottom-cat.update .portrait-bottom-icon{background:var(--module-update);color:#fff!important}.landscape-cat.doc .landscape-cat-icon,.portrait-bottom-cat.doc .portrait-bottom-icon{background:var(--module-doc);color:#fff!important}
+.module-problems .module-heading h1,.module-problems .module-heading .mobile-brand{color:var(--module-problem)!important}.module-tasks .module-heading h1,.module-tasks .module-heading .mobile-brand{color:var(--module-task)!important}.module-updates .module-heading h1,.module-updates .module-heading .mobile-brand{color:var(--module-update)!important}.module-docs .module-heading h1,.module-docs .module-heading .mobile-brand{color:var(--module-doc)!important}.module-heading h1,.module-heading .mobile-brand{font-weight:850;letter-spacing:-.025em}
+.module-back{border:0!important;background:transparent!important;box-shadow:none!important;width:32px!important;height:40px!important;padding:0!important;font-size:34px!important;line-height:1!important;font-family:Georgia,serif!important;color:#566372!important;display:grid!important;place-items:center!important}.module-problems .module-back{color:var(--module-problem)!important}.module-tasks .module-back{color:var(--module-task)!important}.module-updates .module-back{color:var(--module-update)!important}.module-docs .module-back{color:var(--module-doc)!important}
+.search-results-panel{animation:cardOpen .16s ease-out both}.search-symbol{font-size:20px;color:#778391}.stable-search:focus-within{border-color:#aeb7c2;box-shadow:0 0 0 3px rgba(61,116,200,.08)}
+.updates-page{max-width:880px;margin-inline:auto}.updates-chat-stream{display:flex;flex-direction:column;gap:18px;padding:4px 0 90px}.update-thread{display:flex;flex-direction:column;gap:6px;scroll-margin-top:90px}.chat-line{width:min(88%,720px);padding:11px 13px;border-radius:16px;border:1px solid var(--line);background:#fff;box-shadow:0 3px 12px rgba(15,23,42,.035);text-align:right;transition:box-shadow .18s ease,transform .18s ease,background .18s ease}.chat-main{align-self:flex-start;border-inline-start:4px solid var(--module-update);background:linear-gradient(135deg,var(--module-update-soft),#fff 52%);touch-action:pan-y}.chat-reply{width:min(78%,650px);align-self:flex-start;margin-inline-start:32px;background:#fff;border-inline-start:2px solid #aec4e6}.chat-line-meta{display:flex;justify-content:space-between;gap:12px;align-items:center;font-size:10px;color:var(--muted);margin-bottom:6px}.chat-line-meta strong{font-size:11px;color:var(--text)}.chat-line-body{white-space:pre-wrap;line-height:1.55;font-size:14px}.chat-line-audience{font-size:9px;color:var(--muted);margin-top:7px}.chat-thread-actions{margin-inline-start:10px}.chat-reply-action{border:0;background:transparent;color:var(--module-update);font-weight:750;font-size:11px;padding:4px 7px}.chat-reply-composer{width:min(78%,650px);margin-inline-start:32px;background:#f7f9fc;border:1px solid #dfe7f1;border-radius:13px;padding:9px}.chat-reply-composer[hidden]{display:none!important}.chat-reply-input{min-height:60px!important;background:#fff}.chat-reply-buttons{display:flex;gap:7px;margin-top:7px}.chat-reply-buttons button{padding:8px 10px;font-size:11px}.chat-highlight .chat-main{box-shadow:0 0 0 3px rgba(61,116,200,.16),0 8px 20px rgba(15,23,42,.08);transform:translateY(-1px)}.chat-empty{text-align:center;padding:30px}
+.feedback-compose{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px}.feedback-compose .primary{margin-top:9px}.feedback-card{display:block!important}.under-construction-card{min-height:320px;display:grid;place-items:center;text-align:center;align-content:center;gap:8px;background:linear-gradient(145deg,var(--module-doc-soft),#fff);border:1px solid #ddd2ee;border-radius:18px;padding:28px}.construction-icon{font-size:58px;filter:saturate(.8)}.under-construction-card h2{margin:0;color:var(--module-doc)}.under-construction-card p{max-width:460px;color:var(--muted);line-height:1.65}.password-hint{font-size:10px;color:var(--muted);margin-top:5px}
+@keyframes cardOpen{from{opacity:0;transform:translateY(8px) scale(.975)}to{opacity:1;transform:translateY(0) scale(1)}}@keyframes modalBackdropIn{from{opacity:0}to{opacity:1}}@keyframes modalCardIn{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}.list-card,.mobile-list-item,.section-card,.portrait-single-card,.landscape-card{animation:cardOpen .17s ease-out both}.modal{animation:modalBackdropIn .13s ease-out both}.modal-card{animation:modalCardIn .17s cubic-bezier(.2,.8,.2,1) both}.calendar-toolbar{margin-bottom:12px}.calendar-toolbar .month-label{font-size:18px}.legend{display:none!important}
+body.is-landscape{overflow:hidden}body.is-landscape .mirrored-landscape{height:100dvh!important;min-height:0!important;overflow:hidden!important}body.is-landscape .landscape-sidebar{position:sticky!important;top:0!important;height:100dvh!important;overflow:hidden!important}body.is-landscape .landscape-nav{min-height:0;display:grid!important;grid-template-rows:repeat(4,minmax(0,1fr))!important;gap:8px!important}body.is-landscape .landscape-cat{min-height:0!important;padding-block:8px!important}body.is-landscape .landscape-workspace{height:100dvh!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;touch-action:pan-y}body.is-landscape .landscape-content{align-items:start!important}body.is-landscape .landscape-calendar-card{position:sticky!important;top:10px!important;align-self:start!important;max-height:calc(100dvh - 20px);overflow:hidden}body.is-landscape .landscape-feed{min-height:calc(100dvh - 20px)}body.is-landscape .landscape-calendar-card .calendar{max-height:calc(100dvh - 115px)}body.is-landscape .full-module-main{height:100dvh!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+body.is-portrait{overflow-y:auto!important;overflow-x:hidden!important}body.is-portrait .portrait-single-workspace{overflow:visible!important}body.is-portrait .portrait-category-bar{position:sticky!important;top:0!important;z-index:35!important;background:var(--bg)!important;padding-top:7px!important;padding-bottom:8px!important;box-shadow:0 8px 14px rgba(15,23,42,.045)}body.is-portrait .portrait-scroll-content{overflow:visible!important}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
 
-/* v38 accepted refinements only */
-.feedback-preview{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:100%}
+
+/* Sidebar uses the same module color language */
+.nav-problems .ico{color:var(--module-problem)!important}.nav-tasks .ico{color:var(--module-task)!important}.nav-updates .ico{color:var(--module-update)!important}.nav-docs .ico{color:var(--module-doc)!important}
+.nav-problems.active{border-inline-start:3px solid var(--module-problem)!important}.nav-tasks.active{border-inline-start:3px solid var(--module-task)!important}.nav-updates.active{border-inline-start:3px solid var(--module-update)!important}.nav-docs.active{border-inline-start:3px solid var(--module-doc)!important}
+
+
+/* IzaZoo v37 stabilization */
+.search-results-panel,.list-card,.mobile-list-item,.section-card,.portrait-single-card,.landscape-card,.modal,.modal-card{animation:none!important}
+.chat-line{transition:none!important}.chat-highlight .chat-main{transform:none!important}
+
+.landscape-cat.problem,.portrait-bottom-cat.problem{background:#f2d7d4!important;border-color:#d39791!important}
+.landscape-cat.task,.portrait-bottom-cat.task{background:#d7eadc!important;border-color:#97c2a4!important}
+.landscape-cat.update,.portrait-bottom-cat.update{background:#d8e5f4!important;border-color:#96b5d9!important}
+.landscape-cat.doc,.portrait-bottom-cat.doc{background:#e5dced!important;border-color:#b8a3ce!important}
+.landscape-cat-name,.portrait-bottom-name{color:#17212d!important;font-weight:800!important}
+.landscape-cat-icon,.portrait-bottom-icon{opacity:1!important}
+
+.module-heading,.module-heading h1,.module-heading .mobile-brand,.module-back{font-family:inherit!important}
+.module-back{font-weight:700!important}
+
 .update-thread[data-pinned="1"] .chat-main{background:#dce9fa!important;box-shadow:inset 0 0 0 1px rgba(61,116,200,.14)}
-.landscape-calendar-card{padding-top:4px!important}.portrait-single-calendar{padding-top:5px!important}
-.install-offer{position:fixed;z-index:10000;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom));direction:rtl;background:#fff;border:1px solid #d9e0e7;border-radius:16px;box-shadow:0 12px 34px rgba(15,23,42,.18);padding:13px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.install-offer-copy{display:flex;flex-direction:column;gap:3px;min-width:0}.install-offer-copy strong{font-size:16px}.install-offer-copy span{font-size:11px;color:var(--muted);line-height:1.4}
+.feedback-preview{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:100%}
+
+@media (orientation:portrait){
+  html,body{height:auto!important;min-height:100%!important;overflow-x:hidden!important;overflow-y:auto!important}
+  #app,.portrait-single-column{height:auto!important;min-height:100dvh!important;overflow:visible!important}
+  body.is-portrait .portrait-single-workspace{height:auto!important;min-height:100dvh!important;overflow:visible!important;-webkit-overflow-scrolling:touch!important;touch-action:pan-y!important}
+  body.is-portrait .portrait-scroll-content{height:auto!important;overflow:visible!important;touch-action:pan-y!important}
+  body.is-portrait .portrait-category-bar{position:sticky!important;top:0!important;z-index:50!important}
+}
+.calendar-toolbar{margin-top:0!important;padding-top:0!important}
+body.is-landscape .landscape-calendar-card{padding-top:6px!important}
+body.is-portrait .portrait-single-calendar{padding-top:7px!important}
+
+.install-offer{position:fixed;z-index:10000;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom));direction:rtl;background:#fff;border:1px solid #d9e0e7;border-radius:18px;box-shadow:0 14px 38px rgba(15,23,42,.18);padding:14px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+.install-offer-copy{display:flex;flex-direction:column;gap:3px;min-width:0}.install-offer-copy strong{font-size:17px}.install-offer-copy span{font-size:11px;color:var(--muted);line-height:1.4}
 .install-offer-actions{display:flex;gap:7px;flex:0 0 auto}.install-offer-actions button{padding:9px 11px;font-size:11px;white-space:nowrap}
 @media(max-width:520px){.install-offer{align-items:stretch;flex-direction:column}.install-offer-actions{display:grid;grid-template-columns:1fr 1fr}}
 @media(display-mode:standalone){.install-offer{display:none!important}}
@@ -4601,6 +4645,9 @@ function normalizeProblem(p){
   return {...p,reporter:profileName(p.created_by),
     date:p.created_at?p.created_at.slice(0,10):"",
     time:p.created_at?new Date(p.created_at).toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"}):""};
+}
+function delayedSync(loader,renderer,delay=650){
+  setTimeout(async()=>{try{await loader();if(renderer&&currentUser)renderer();}catch(e){console.error("delayedSync",e);}},delay);
 }
 
 
@@ -4935,7 +4982,7 @@ function navigateModule(name,push=true){return goToScreen(name,{push,direction:"
 function navigateHome(push=true,backAnimation=true){return goToScreen("home",{push,direction:backAnimation?"back":"forward"});}
 function appBack(){history.back();}
 function initAppHistory(){
-  history.replaceState({izazoo:true,exitGuard:true},"","#izazoo-exit");
+  history.replaceState({izazoo:true,rootGuard:true},"","#izazoo-root");
   history.pushState({izazoo:true,view:"home"},"","#home");
   currentScreen="home";appHistoryReady=true;
 }
@@ -4946,11 +4993,11 @@ function showExitConfirmation(){
 }
 function cancelAppExit(){
   exitConfirmOpen=false;document.getElementById("modal")?.remove();
-  currentScreen="home";
-  history.pushState({izazoo:true,view:"home"},"","#home");
+  history.pushState({izazoo:true,view:"home"},"","#home");currentScreen="home";
 }
 function confirmAppExit(){
-  exitConfirmOpen=false;document.getElementById("modal")?.remove();
+  exitConfirmOpen=false;
+  document.getElementById("modal")?.remove();
   history.back();
 }
 function closeModalSmart(){
@@ -4959,20 +5006,11 @@ function closeModalSmart(){
 }
 window.addEventListener("popstate",async e=>{
   const modal=document.getElementById("modal");
-  if(modal&&!exitConfirmOpen){
-    modal.remove();calendarReturnDate=null;
-    history.pushState({izazoo:true,view:currentScreen},"",`#${currentScreen}`);
-    return;
-  }
-  if(e.state?.exitGuard){
-    currentScreen="home";dashboard();showExitConfirmation();return;
-  }
+  if(modal&&!exitConfirmOpen){modal.remove();calendarReturnDate=null;history.pushState({izazoo:true,view:currentScreen},"",`#${currentScreen}`);return;}
+  if(e.state?.rootGuard){currentScreen="home";dashboard();showExitConfirmation();return;}
   const target=e.state?.view;
-  if(target){
-    if(target!==currentScreen)await goToScreen(target,{push:false,direction:"back"});
-    return;
-  }
-  if(currentUser){initAppHistory();dashboard();}
+  if(target){if(target===currentScreen)return;await goToScreen(target,{push:false,direction:"back"});return;}
+  if(currentUser){currentScreen="home";dashboard();history.pushState({izazoo:true,view:"home"},"","#home");}
 });
 
 function searchBoxHTML(context){
@@ -5165,6 +5203,7 @@ async function sendFeedback(btn){
   if(data)upsertById(betaFeedback,data);
   if(field)field.value="";
   toast("המשוב נשלח");await feedbackScreen(false);
+  delayedSync(loadBetaFeedback,()=>{if(currentScreen==="feedback")feedbackScreen(false)});
 }
 function editFeedback(id){
   const f=betaFeedback.find(x=>Number(x.id)===Number(id));if(!f||f.author_id!==currentUser.id)return;
@@ -5178,6 +5217,7 @@ async function saveFeedback(id,btn){
   if(error){console.error("beta_feedback update",error);setBusy(btn,false);return toast("לא ניתן לעדכן את המשוב: "+error.message,"error");}
   if(data)upsertById(betaFeedback,data);
   hideModal();toast("המשוב עודכן");await feedbackScreen(false);
+  delayedSync(loadBetaFeedback,()=>{if(currentScreen==="feedback")feedbackScreen(false)});
 }
 
 function page(title,sub,active,content,fab=""){
@@ -5271,6 +5311,7 @@ async function saveProblemEdit(id,btn){
   if(error){setBusy(btn,false);console.error(error);return alert("לא ניתן לעדכן את התקלה: "+error.message);}
   if(data)upsertById(problems,normalizeProblem(data));
   showModal(problemFormTemplate(problems.find(p=>Number(p.id)===Number(id)),false));
+  delayedSync(async()=>{await loadProblems();await loadProblemActivity()},()=>{if(currentScreen==="problems")problemsScreen()});
 }
 function confirmCloseProblem(id){
   const item=problems.find(x=>Number(x.id)===Number(id));
@@ -5317,6 +5358,7 @@ async function createUpdateV2(btn){
   updateBusinesses=updateBusinesses.filter(x=>Number(x.update_id)!==Number(data.id));
   if(!aud.all)updateBusinesses.push(...aud.ids.map(business_id=>({update_id:data.id,business_id})));
   hideModal();updatesScreen();toast("העדכון פורסם");setTimeout(()=>focusUpdateThread(data.id),80);
+  delayedSync(loadUpdatesV2,()=>{if(currentScreen==="updates")updatesScreen()});
 }
 function toggleReplyComposer(button){const thread=button?.closest(".update-thread"),composer=thread?.querySelector(".chat-reply-composer");if(!composer)return;const opening=composer.hidden;composer.hidden=!opening;if(opening)setTimeout(()=>composer.querySelector(".chat-reply-input")?.focus(),60);}
 async function addFollowup(id,btn){
@@ -5326,6 +5368,7 @@ async function addFollowup(id,btn){
   if(error){console.error("update_followups insert",error);setBusy(btn,false);return toast("לא ניתן להוסיף תגובה: "+error.message,"error");}
   if(data)upsertById(updateFollowups,data);
   updatesScreen();toast("התגובה נוספה");setTimeout(()=>focusUpdateThread(id),80);
+  delayedSync(loadUpdatesV2,()=>{if(currentScreen==="updates")updatesScreen()});
 }
 function focusUpdateThread(id){const el=document.querySelector(`.update-thread[data-update-id="${Number(id)}"]`);if(!el)return;el.scrollIntoView({behavior:"smooth",block:"center"});el.classList.remove("chat-highlight");requestAnimationFrame(()=>el.classList.add("chat-highlight"));setTimeout(()=>el.classList.remove("chat-highlight"),1400);}
 async function openUpdateDetails(id){if(currentScreen!=="updates")await goToScreen("updates",{push:true,direction:"forward"});setTimeout(()=>focusUpdateThread(id),60);}
@@ -5345,6 +5388,7 @@ async function saveUpdate(id,btn){
   updateBusinesses=updateBusinesses.filter(x=>Number(x.update_id)!==Number(id));
   if(!aud.all)updateBusinesses.push(...aud.ids.map(business_id=>({update_id:id,business_id})));
   hideModal();updatesScreen();toast("העדכון נשמר");setTimeout(()=>focusUpdateThread(id),80);
+  delayedSync(loadUpdatesV2,()=>{if(currentScreen==="updates")updatesScreen()});
 }
 
 function isTaskOverdue(t){
@@ -5467,6 +5511,7 @@ async function createTask(btn){
 
   if(data)upsertById(tasks,data);
   hideModal();tasksScreen();
+  delayedSync(loadTasks,()=>{if(currentScreen==="tasks")tasksScreen()});
 }
 
 function taskFormTemplate(t,editing=false){
@@ -5548,6 +5593,7 @@ async function saveTaskEdit(id,btn){
 
   if(data)upsertById(tasks,data);
   showModal(taskFormTemplate(tasks.find(x=>Number(x.id)===Number(id)),false));
+  delayedSync(loadTasks,()=>{if(currentScreen==="tasks")tasksScreen()});
 }
 
 function completeTaskModal(id){
@@ -5907,6 +5953,7 @@ async function createProblem(btn){
   if(error){setBusy(btn,false);console.error(error);return alert("לא ניתן לשמור את התקלה בענן: "+error.message);}
   if(data)upsertById(problems,normalizeProblem(data));
   hideModal();problemsScreen();
+  delayedSync(async()=>{await loadProblems();await loadProblemActivity()},()=>{if(currentScreen==="problems")problemsScreen()});
 }
 function newDoc(){showModal(`<h2>מסמך חדש</h2><label>כותרת</label><input id="dt"><label>קטגוריה</label><input id="dc"><label>תוכן</label><textarea id="db"></textarea><div class="actions"><button class="secondary" onclick="hideModal()">ביטול</button><button class="primary" onclick="createDoc()">שמירה</button></div>`)}function createDoc(){if(!dt.value.trim())return alert("יש להזין כותרת");docs.push({id:String(Date.now()),title:dt.value.trim(),category:dc.value.trim()||"כללי",body:db.value.trim(),createdAt:nowISO()});save();hideModal();dashboard()}
 function calendarDay(ds){
@@ -5958,7 +6005,9 @@ bootstrap();
 <script>
 
 let deferredInstallPrompt=null;
-window.addEventListener("beforeinstallprompt",ev=>{ev.preventDefault();deferredInstallPrompt=ev;});
+window.addEventListener("beforeinstallprompt",e=>{
+  e.preventDefault();deferredInstallPrompt=e;maybeShowInstallOffer();
+});
 window.addEventListener("appinstalled",()=>{deferredInstallPrompt=null;document.getElementById("installOffer")?.remove();});
 function runningStandalone(){return window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone===true;}
 function maybeShowInstallOffer(){
@@ -5972,7 +6021,6 @@ async function installIzaZoo(){
   deferredInstallPrompt=null;
 }
 function continueOnWebsite(){sessionStorage.setItem("izazoo_install_offer_dismissed","1");document.getElementById("installOffer")?.remove();}
-window.addEventListener("load",()=>setTimeout(maybeShowInstallOffer,250));
 
 if("serviceWorker" in navigator){
   window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(console.error));
