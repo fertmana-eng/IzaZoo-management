@@ -4987,7 +4987,7 @@ function closeModalSmart(){
 }
 window.addEventListener("popstate",async e=>{
   const modal=document.getElementById("modal");
-  toast(`DEBUG: state=${JSON.stringify(e.state)} screen=${currentScreen} modal=${!!modal} exitOpen=${exitConfirmOpen}`,"success");
+  alert(`DEBUG v2\nstate=${JSON.stringify(e.state)}\nscreen=${currentScreen}\nmodal=${!!modal}\nexitOpen=${exitConfirmOpen}`);
   if(modal&&!exitConfirmOpen){
     modal.remove();calendarReturnDate=null;
     history.pushState({izazoo:true,view:currentScreen},"",`#${currentScreen}`);
@@ -5983,6 +5983,7 @@ async function bootstrap(){
     await login();
   }
 }
+alert("DEBUG BUILD v2 LOADED");
 bootstrap();
 </script>
 <script>
