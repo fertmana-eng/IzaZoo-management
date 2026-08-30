@@ -4405,6 +4405,30 @@ body.is-landscape .full-module-main{height:100dvh!important;overflow-y:auto!impo
 .problem-form-meta>div span+strong:before{content:": ";}
 .update-card{border-inline-start:0!important;background:var(--module-update-soft)!important;border-radius:16px!important}
 .update-title-line{display:none}.update-body-preview{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;font-size:14px!important;line-height:1.55}
+
+/* updates: chat-style thread rendering */
+.updates-chat-stream{display:flex;flex-direction:column;gap:14px}
+.update-thread{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.update-thread[data-pinned="1"]{border-inline-start:4px solid var(--module-update)}
+.chat-line{padding:14px 16px}
+.chat-line+.chat-line{border-top:1px solid var(--line)}
+.chat-line-meta{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px}
+.chat-line-meta strong{font-size:14px;font-weight:700;color:var(--ink)}
+.chat-line-meta span{font-size:11px;color:var(--muted);white-space:nowrap}
+.chat-line-body{font-size:14px;line-height:1.6;color:var(--ink);white-space:pre-wrap}
+.chat-main{background:var(--module-update-soft)}
+.chat-reply{background:#fbfbfc;padding-inline-start:32px;position:relative}
+.chat-reply:before{content:"↳";position:absolute;inset-inline-start:14px;top:14px;color:var(--muted);font-size:13px}
+.chat-line-audience{margin-top:8px;display:inline-block;font-size:10px;font-weight:700;color:var(--module-update);background:#fff;border:1px solid var(--module-update);border-radius:999px;padding:2px 9px}
+.chat-thread-actions{padding:8px 16px;border-top:1px solid var(--line);background:#fafafa}
+.chat-reply-action{border:0;background:transparent;color:var(--module-update);font-weight:700;font-size:12px;padding:4px 2px}
+.chat-reply-composer{padding:12px 16px;border-top:1px solid var(--line);background:#fafafa;display:flex;flex-direction:column;gap:8px}
+.chat-reply-input{border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-size:13px;resize:vertical;min-height:44px;font-family:inherit;width:100%}
+.chat-reply-buttons{display:flex;gap:8px;justify-content:flex-end}
+.chat-reply-buttons button{padding:8px 14px;font-size:12px}
+.chat-empty{padding:40px 16px;text-align:center;color:var(--muted);font-size:14px}
+@keyframes chatHighlightPulse{0%{background:var(--module-update-soft)}100%{background:transparent}}
+.update-thread.chat-highlight{animation:chatHighlightPulse 1.4s ease}
 </style>
 </head>
 <body><div id="root"></div>
