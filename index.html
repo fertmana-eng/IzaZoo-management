@@ -4989,7 +4989,39 @@ function closeModalSmart(){
   if(calendarReturnDate){const ds=calendarReturnDate;calendarReturnDate=null;hideModal();goToScreen("home",{push:false,direction:"back"}).then(()=>calendarDay(ds));return;}
   hideModal();
 }
+function __dbgLog(msg){
+  const line=`[${new Date().toLocaleTimeString()}] ${msg}`;
+  let log=[];
+  try{log=JSON.parse(localStorage.getItem("__izazoo_dbglog")||"[]");}catch(e){}
+  log.push(line);
+  if(log.length>80)log=log.slice(-80);
+  try{localStorage.setItem("__izazoo_dbglog",JSON.stringify(log));}catch(e){}
+  __dbgRender(log);
+}
+function __dbgRender(log){
+  let p=document.getElementById("__dbgpanel");
+  if(!p){
+    p=document.createElement("div");
+    p.id="__dbgpanel";
+    p.style.cssText="position:fixed;left:0;right:0;bottom:0;max-height:45vh;overflow-y:auto;background:rgba(0,0,0,.92);color:#0f0;font:11px monospace;z-index:999999;padding:6px;direction:ltr;text-align:left;white-space:pre-wrap";
+    document.body.appendChild(p);
+  }
+  p.innerHTML="";
+  log.forEach(line=>{
+    const d=document.createElement("div");
+    d.style.borderBottom="1px solid #333";
+    d.textContent=line;
+    p.appendChild(d);
+  });
+  p.scrollTop=p.scrollHeight;
+}
+(function(){
+  let log=[];
+  try{log=JSON.parse(localStorage.getItem("__izazoo_dbglog")||"[]");}catch(e){}
+  if(log.length)window.addEventListener("load",()=>__dbgRender(log));
+})();
 window.addEventListener("popstate",async e=>{
+  __dbgLog(`state=${JSON.stringify(e.state)} screen=${currentScreen} modal=${!!document.getElementById("modal")} exitOpen=${exitConfirmOpen} pendingBacks=${pendingExitBacks}`);
   if(pendingExitBacks>0){
     pendingExitBacks--;
     history.back();
