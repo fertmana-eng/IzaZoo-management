@@ -4987,6 +4987,7 @@ function closeModalSmart(){
 }
 window.addEventListener("popstate",async e=>{
   const modal=document.getElementById("modal");
+  toast(`DEBUG: state=${JSON.stringify(e.state)} screen=${currentScreen} modal=${!!modal} exitOpen=${exitConfirmOpen}`,"success");
   if(modal&&!exitConfirmOpen){
     modal.remove();calendarReturnDate=null;
     history.pushState({izazoo:true,view:currentScreen},"",`#${currentScreen}`);
