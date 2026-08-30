@@ -4943,7 +4943,6 @@ function animateRootIn(direction){
 const moduleNames=new Set(["problems","tasks","updates","docs"]);
 let calendarReturnDate=null;
 let exitConfirmOpen=false;
-let allowRealExit=false;
 
 async function renderNamedScreen(name){
   const fn=screenRenderers[name]||screenRenderers.home;
@@ -4979,7 +4978,6 @@ function cancelAppExit(){
 }
 function confirmAppExit(){
   exitConfirmOpen=false;
-  allowRealExit=true;
   document.getElementById("modal")?.remove();
   history.back();
 }
@@ -4988,7 +4986,6 @@ function closeModalSmart(){
   hideModal();
 }
 window.addEventListener("popstate",async e=>{
-  if(allowRealExit){allowRealExit=false;return;}
   const modal=document.getElementById("modal");
   if(modal&&!exitConfirmOpen){
     modal.remove();calendarReturnDate=null;
