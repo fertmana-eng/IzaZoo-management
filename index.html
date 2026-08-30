@@ -68,6 +68,7 @@ body{min-height:100vh}
 
 /* portrait */
 .mobile-layout{display:none;padding:14px 12px 22px}
+body.is-portrait .module-problems .mobile-layout,body.is-portrait .module-tasks .mobile-layout,body.is-portrait .module-updates .mobile-layout,body.is-portrait .module-docs .mobile-layout{height:100dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 .mobile-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}.mobile-header .greeting{flex:1}
 .mobile-brand{font-family:Georgia,serif;color:#b68b38;font-size:25px}
 .category-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
@@ -6027,14 +6028,6 @@ async function bootstrap(){
   }
 }
 bootstrap();
-setInterval(()=>{
-  let p=document.getElementById("__dbg2");
-  if(!p){p=document.createElement("div");p.id="__dbg2";p.style.cssText="position:fixed;left:0;right:0;bottom:0;max-height:40vh;overflow:auto;background:rgba(0,0,0,.92);color:#0f0;font:10px monospace;z-index:999999;padding:6px;direction:ltr;text-align:left;white-space:pre-wrap";document.body.appendChild(p);}
-  const body=document.body,ml=document.querySelector(".mobile-layout"),pg=document.querySelector(".mobile-layout .page"),sc=document.scrollingElement;
-  const cs=el=>el?getComputedStyle(el):null;
-  const info=el=>{if(!el)return "none";const c=cs(el);return `h=${el.clientHeight} sh=${el.scrollHeight} overflow=${c.overflow}/${c.overflowY} touch-action=${c.touchAction} pos=${c.position}`;};
-  p.textContent=`screen=${typeof currentScreen!=="undefined"?currentScreen:"?"}\nbody: ${info(body)}\nscrollingElement: h=${sc.clientHeight} sh=${sc.scrollHeight} scrollTop=${sc.scrollTop}\n.mobile-layout: ${info(ml)}\n.page: ${info(pg)}`;
-},1000);
 </script>
 <script>
 
