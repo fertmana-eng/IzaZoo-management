@@ -16,12 +16,12 @@
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
 button,input,textarea,select{font:inherit}
 button{cursor:pointer}
-body{min-height:100vh;min-height:100dvh}
-.app-shell{min-height:100vh;min-height:100dvh}
-.desktop-layout{display:grid;grid-template-columns:270px 320px minmax(0,1fr);min-height:100vh;min-height:100dvh}
+body{min-height:100vh}
+.app-shell{min-height:100vh}
+.desktop-layout{display:grid;grid-template-columns:270px 320px minmax(0,1fr);min-height:100vh}
 .sidebar{
   background:linear-gradient(180deg,var(--nav),var(--nav2));color:#fff;padding:28px 18px 18px;
-  position:sticky;top:0;height:100vh;height:100dvh;display:flex;flex-direction:column
+  position:sticky;top:0;height:100vh;display:flex;flex-direction:column
 }
 .brand{padding:0 12px 28px}
 .brand-name{font-family:Georgia,serif;font-size:38px;color:var(--gold);line-height:1}
@@ -50,12 +50,12 @@ body{min-height:100vh;min-height:100dvh}
 .open-item,.activity-item{border-top:1px solid #edf0f3;padding:11px 0}
 .open-item:first-child,.activity-item:first-child{border-top:0}
 .item-title{font-weight:800;font-size:14px}.item-meta{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.5}
-.main{padding:24px 26px 28px;height:100vh;height:100dvh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.main{padding:24px 26px 28px;overflow:hidden}
 .topbar{display:flex;align-items:center;gap:14px;margin-bottom:16px}
 .greeting{margin-inline-end:auto}.greeting h1{margin:0 0 4px;font-size:26px}.date{color:#4b5563;font-size:14px}
 .search{width:280px;position:relative}.search input{width:100%;border:1px solid #dfe3e8;border-radius:12px;background:#fff;padding:10px 38px 10px 12px}.search span{position:absolute;right:13px;top:8px;color:#7d8794;font-size:20px}
 .iconbtn{width:40px;height:40px;border:0;background:#fff;border-radius:11px;box-shadow:var(--shadow)}
-.calendar-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;min-height:calc(100vh - 90px);min-height:calc(100dvh - 90px)}
+.calendar-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;min-height:calc(100vh - 90px)}
 .panel-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}.panel-head h2{margin:0;font-size:23px}.spacer{margin-inline-start:auto}.month-label{font-weight:800}
 .controls{display:flex;gap:7px}.small-btn{border:1px solid #dfe3e9;background:#fff;border-radius:9px;padding:7px 10px}
 .week{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:12px;font-weight:800;margin-bottom:5px}
@@ -117,7 +117,7 @@ body.is-landscape .mobile-layout{display:none !important}
 .portrait-main-grid .mobile-section,.portrait-main-grid .mobile-calendar{margin-bottom:0;height:100%}
 .portrait-open{min-height:100%}
 .portrait-calendar{min-width:0}
-.middle{height:100vh;height:100dvh;overflow-y:auto;scrollbar-gutter:stable}
+.middle{height:100vh;overflow-y:auto;scrollbar-gutter:stable}
 .sidebar{overflow-y:auto}
 .middle .section-card,.sidebar .nav-btn,.calendar-card,.mobile-section,.mobile-calendar,.cat-card{
   border-color:var(--line);
@@ -386,7 +386,6 @@ body.is-landscape .mirrored-landscape{
   display:grid !important;
   grid-template-columns:126px minmax(0,1fr);
   min-height:100vh;
-  min-height:100dvh;
   background:var(--bg);
 }
 body.is-landscape .landscape-sidebar{
@@ -395,7 +394,6 @@ body.is-landscape .landscape-sidebar{
   position:sticky;
   top:0;
   height:100vh;
-  height:100dvh;
   overflow-y:auto;
   background:linear-gradient(180deg,#102033,#162a42);
   color:#fff;
@@ -4364,11 +4362,6 @@ body{padding-bottom:env(safe-area-inset-bottom)}
 @media(max-width:520px){.install-offer{align-items:stretch;flex-direction:column}.install-offer-actions{display:grid;grid-template-columns:1fr 1fr}}
 @media(display-mode:standalone){.install-offer{display:none!important}}
 
-
-/* pilot RC: updates chat only */
-.chat-line{transition:none!important}
-.chat-highlight .chat-main{transform:none!important}
-.update-thread[data-pinned="1"] .chat-main{background:#dce9fa!important;box-shadow:inset 0 0 0 1px rgba(61,116,200,.14)}
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -4428,9 +4421,7 @@ let lastViewportMode=null;
 
 const SUPABASE_URL = "https://ocfbgppfpvjfhclpdtao.supabase.co";
 const SUPABASE_KEY = "sb_publishable_tfvkgoOZ5hDt947woGQdSw_PLAaaIa-";
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY,{
-  global:{fetch:(url,options={})=>fetch(url,{...options,cache:"no-store"})}
-});
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const root=()=>document.getElementById("root"),
 esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c])),
 isoToday=()=>new Date().toISOString().slice(0,10),
@@ -4752,21 +4743,15 @@ function defaultExpiryDate(){
   return d.toISOString().slice(0,10);
 }
 
-let appDataLoadPromise=null;
 async function loadAppData(){
-  if(appDataLoadPromise)return appDataLoadPromise;
-  appDataLoadPromise=(async()=>{
-    await loadProfiles();
-    await loadBusinesses();
-    await loadProblems();
-    await loadProblemActivity();
-    await loadTasks();
-    await loadUpdatesV2();
-    await loadKnowledge();
-    await loadBetaFeedback();
-  })();
-  try{return await appDataLoadPromise;}
-  finally{appDataLoadPromise=null;}
+  await loadProfiles();
+  await loadBusinesses();
+  await loadProblems();
+  await loadProblemActivity();
+  await loadTasks();
+  await loadUpdatesV2();
+  await loadKnowledge();
+  await loadBetaFeedback();
 }
 
 function profileName(id){
@@ -4931,7 +4916,6 @@ function animateRootIn(direction){
 const moduleNames=new Set(["problems","tasks","updates","docs"]);
 let calendarReturnDate=null;
 let exitConfirmOpen=false;
-let allowRealExit=false;
 
 async function renderNamedScreen(name){
   const fn=screenRenderers[name]||screenRenderers.home;
@@ -4966,9 +4950,7 @@ function cancelAppExit(){
   history.pushState({izazoo:true,view:"home"},"","#home");
 }
 function confirmAppExit(){
-  exitConfirmOpen=false;
-  allowRealExit=true;
-  document.getElementById("modal")?.remove();
+  exitConfirmOpen=false;document.getElementById("modal")?.remove();
   history.back();
 }
 function closeModalSmart(){
@@ -4976,7 +4958,6 @@ function closeModalSmart(){
   hideModal();
 }
 window.addEventListener("popstate",async e=>{
-  if(allowRealExit){allowRealExit=false;return;}
   const modal=document.getElementById("modal");
   if(modal&&!exitConfirmOpen){
     modal.remove();calendarReturnDate=null;
@@ -5171,8 +5152,7 @@ function userScreen(push=true){
 }
 async function feedbackScreen(push=true){
   if(push&&currentScreen!=="feedback")return goToScreen("feedback",{push:true,direction:"forward"});
-  currentScreen="feedback";
-  if(push)await loadBetaFeedback();
+  currentScreen="feedback";await loadBetaFeedback();
   const mine=betaFeedback.filter(f=>f.author_id===currentUser.id).sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at));
   page("משוב על המערכת","הערות לבטא","feedback",`<div class="page feedback-page"><div class="feedback-compose"><textarea class="new-feedback-body" placeholder="כתוב כאן הערה, רעיון או תקלה במערכת..."></textarea><button type="button" class="primary" onclick="sendFeedback(this)">שליחה</button></div><h3>המשובים שלי</h3><div class="feedback-own-list">${mine.length?mine.map(f=>`<button type="button" class="list-card feedback-card" onclick="editFeedback(${Number(f.id)})"><div class="feedback-preview">${esc(f.body)}</div><div class="item-meta">עודכן ${esc(formatProblemDateTime(f.updated_at))}</div></button>`).join(""):`<div class="u-sub">עדיין לא שלחת משוב</div>`}</div></div>`);
 }
@@ -5982,7 +5962,7 @@ window.addEventListener("beforeinstallprompt",ev=>{ev.preventDefault();deferredI
 window.addEventListener("appinstalled",()=>{deferredInstallPrompt=null;document.getElementById("installOffer")?.remove();});
 function runningStandalone(){return window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone===true;}
 function maybeShowInstallOffer(){
-  if(runningStandalone()||document.getElementById("installOffer"))return;
+  if(runningStandalone()||sessionStorage.getItem("izazoo_install_offer_dismissed")==="1"||document.getElementById("installOffer"))return;
   document.body.insertAdjacentHTML("beforeend",`<div class="install-offer" id="installOffer"><div class="install-offer-copy"><strong>IzaZoo</strong><span>מומלץ להתקין את האפליקציה לשימוש נוח ומהיר.</span></div><div class="install-offer-actions"><button type="button" class="primary" onclick="installIzaZoo()">התקנת האפליקציה</button><button type="button" class="secondary" onclick="continueOnWebsite()">המשך באתר</button></div></div>`);
 }
 async function installIzaZoo(){
@@ -5991,7 +5971,7 @@ async function installIzaZoo(){
   if(choice.outcome==="accepted")document.getElementById("installOffer")?.remove();
   deferredInstallPrompt=null;
 }
-function continueOnWebsite(){document.getElementById("installOffer")?.remove();}
+function continueOnWebsite(){sessionStorage.setItem("izazoo_install_offer_dismissed","1");document.getElementById("installOffer")?.remove();}
 window.addEventListener("load",()=>setTimeout(maybeShowInstallOffer,250));
 
 if("serviceWorker" in navigator){
