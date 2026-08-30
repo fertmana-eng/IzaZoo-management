@@ -4943,6 +4943,7 @@ function animateRootIn(direction){
 const moduleNames=new Set(["problems","tasks","updates","docs"]);
 let calendarReturnDate=null;
 let exitConfirmOpen=false;
+let pendingExitBacks=0;
 
 async function renderNamedScreen(name){
   const fn=screenRenderers[name]||screenRenderers.home;
@@ -4970,15 +4971,18 @@ function showExitConfirmation(){
   if(exitConfirmOpen)return;
   exitConfirmOpen=true;
   showModal(`<div class="confirm-card"><h2>לצאת מ־IzaZoo?</h2><p class="u-sub">האם לצאת מהאפליקציה?</p><div class="actions"><button class="secondary" onclick="cancelAppExit()">ביטול</button><button class="danger-action" onclick="confirmAppExit()">יציאה</button></div></div>`,{exitModal:true});
+  // safety-net entry: without this, a second physical back press exits the
+  // app directly at the OS level before our code gets a chance to run.
+  history.pushState({izazoo:true,view:"home"},"","#home");
 }
 function cancelAppExit(){
   exitConfirmOpen=false;document.getElementById("modal")?.remove();
   currentScreen="home";
-  history.pushState({izazoo:true,view:"home"},"","#home");
 }
 function confirmAppExit(){
   exitConfirmOpen=false;
   document.getElementById("modal")?.remove();
+  pendingExitBacks=2; // pop the safety-net entry, then the original home entry, then exit
   history.back();
 }
 function closeModalSmart(){
@@ -4986,8 +4990,19 @@ function closeModalSmart(){
   hideModal();
 }
 window.addEventListener("popstate",async e=>{
+  if(pendingExitBacks>0){
+    pendingExitBacks--;
+    history.back();
+    return;
+  }
   const modal=document.getElementById("modal");
-  alert(`DEBUG v2\nstate=${JSON.stringify(e.state)}\nscreen=${currentScreen}\nmodal=${!!modal}\nexitOpen=${exitConfirmOpen}`);
+  if(modal&&exitConfirmOpen){
+    // physical back pressed while the exit-confirm dialog is open -> cancel, stay in the app
+    exitConfirmOpen=false;
+    modal.remove();
+    currentScreen="home";
+    return;
+  }
   if(modal&&!exitConfirmOpen){
     modal.remove();calendarReturnDate=null;
     history.pushState({izazoo:true,view:currentScreen},"",`#${currentScreen}`);
@@ -5983,7 +5998,6 @@ async function bootstrap(){
     await login();
   }
 }
-alert("DEBUG BUILD v2 LOADED");
 bootstrap();
 </script>
 <script>
