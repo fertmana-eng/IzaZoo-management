@@ -4410,6 +4410,11 @@ body.is-landscape .full-module-main{height:100dvh!important;overflow-y:auto!impo
 <body><div id="root"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// arm the back-button exit guard immediately, before any async work (session
+// check, data loading) has a chance to run - otherwise a back press during
+// that loading window bypasses all protection.
+history.replaceState({izazoo:true,exitGuard:true},"","#izazoo-exit");
+history.pushState({izazoo:true,view:"home"},"","#home");
 const USERS=[{name:"אלכס",username:"alex",password:"1234"},{name:"אבנר",username:"avner",password:"1234"},{name:"קטיה",username:"katya",password:"1234"},{name:"לי-של",username:"lishel",password:"1234"},{name:"גל",username:"gal",password:"1234"},{name:"ספיר",username:"sapir",password:"1234"}];
 let currentUser=null;
 let problems=[];
@@ -4971,9 +4976,6 @@ function showExitConfirmation(){
   if(exitConfirmOpen)return;
   exitConfirmOpen=true;
   showModal(`<div class="confirm-card"><h2>לצאת מ־IzaZoo?</h2><p class="u-sub">האם לצאת מהאפליקציה?</p><div class="actions"><button class="secondary" onclick="cancelAppExit()">ביטול</button><button class="danger-action" onclick="confirmAppExit()">יציאה</button></div></div>`,{exitModal:true});
-  // safety-net entry: without this, a second physical back press exits the
-  // app directly at the OS level before our code gets a chance to run.
-  history.pushState({izazoo:true,view:"home"},"","#home");
 }
 function cancelAppExit(){
   exitConfirmOpen=false;document.getElementById("modal")?.remove();
@@ -5041,6 +5043,8 @@ window.addEventListener("popstate",async e=>{
     return;
   }
   if(e.state?.exitGuard){
+    if(!currentUser)return; // not logged in yet (e.g. login screen) - nothing to protect, let it behave normally
+    history.pushState({izazoo:true,view:"home"},"","#home"); // push the safety net FIRST, before any rendering, to close the race window
     currentScreen="home";dashboard();showExitConfirmation();return;
   }
   const target=e.state?.view;
