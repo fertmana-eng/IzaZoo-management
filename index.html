@@ -4407,22 +4407,29 @@ body.is-landscape .full-module-main{height:100dvh!important;overflow-y:auto!impo
 .update-card{border-inline-start:0!important;background:var(--module-update-soft)!important;border-radius:16px!important}
 .update-title-line{display:none}.update-body-preview{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;font-size:14px!important;line-height:1.55}
 
-/* updates: chat-style thread rendering */
+/* updates: chat-style thread rendering (Facebook-style avatar bubbles) */
 .updates-chat-stream{display:flex;flex-direction:column;gap:18px}
 .update-thread{background:transparent}
-.chat-line{max-width:88%;margin-bottom:4px}
-.chat-line+.chat-line{margin-top:10px}
-.chat-main{max-width:100%}
-.chat-reply{margin-inline-start:auto;max-width:82%}
-.chat-line-meta{display:flex;align-items:baseline;gap:8px;margin-bottom:3px;padding-inline:4px}
-.chat-line-meta strong{font-size:12.5px;font-weight:700;color:var(--module-update)}
-.chat-line-meta span{font-size:10.5px;color:var(--muted)}
-.chat-line-body{background:#fff;border-radius:16px;border-end-start-radius:4px;padding:10px 14px;font-size:14.5px;line-height:1.55;color:var(--ink);white-space:pre-wrap;box-shadow:0 1px 2px rgba(15,23,42,.06)}
-.chat-reply .chat-line-body{background:var(--module-update-soft);border-end-start-radius:16px;border-end-end-radius:4px}
-.update-thread[data-pinned="1"] .chat-main .chat-line-body{background:#fff7e6}
-.update-thread[data-pinned="1"] .chat-main .chat-line-meta strong:after{content:" 📌"}
+.mock-msg{display:flex;flex-direction:column}
+.mock-meta{display:flex;justify-content:space-between;gap:8px;margin-bottom:3px;padding-inline:4px}
+.mock-reply-wrap .mock-meta{margin-inline-start:30px}
+.mock-meta strong{font-size:12px;font-weight:700;color:var(--module-update)}
+.mock-meta span{font-size:10px;color:var(--muted)}
+.mock-box{display:flex;align-items:center;gap:9px;padding:3px 3px 3px 14px;box-shadow:0 1px 2px rgba(15,23,42,.06)}
+.mock-box.main{border-radius:16px 18px 18px 16px;background:var(--module-update-soft)}
+.mock-box.reply{border-radius:16px;background:#fff;margin-inline-start:30px}
+.update-thread[data-pinned="1"] .mock-box.main{background:#fff7e6}
+.update-thread[data-pinned="1"] .mock-meta strong:after{content:" 📌"}
+.mock-avatar{width:30px;height:30px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;flex:0 0 auto;font-size:13px}
+.mock-avatar.small{width:26px;height:26px;font-size:11px}
+.mock-text{flex:1;font-size:14px;white-space:pre-wrap}
+.mock-edit-btn{flex:0 0 auto;border:0;background:transparent;font-size:12px;color:var(--muted)}
+.mock-replies{margin-inline-start:21px;margin-top:4px;display:flex;flex-direction:column;gap:4px;position:relative}
+.mock-replies:before{content:"";position:absolute;top:2px;bottom:22px;inset-inline-start:-5px;width:2px;background:#d5d9de}
+.mock-reply-wrap{position:relative}
+.mock-reply-wrap:before{content:"";position:absolute;top:2px;inset-inline-start:-5px;width:20px;height:32px;border-inline-start:2px solid #d5d9de;border-bottom:2px solid #d5d9de;border-end-start-radius:14px}
 .chat-line-audience{margin-top:5px;margin-inline:4px;display:inline-block;font-size:10px;font-weight:700;color:var(--muted)}
-.chat-thread-actions{margin-top:2px;padding-inline:4px}
+.chat-thread-actions{margin-top:2px;padding-inline:4px;display:flex;gap:10px;align-items:center}
 .chat-reply-action{border:0;background:transparent;color:var(--muted);font-weight:700;font-size:11.5px;padding:2px}
 .chat-reply-composer{margin-top:8px;display:flex;flex-direction:column;gap:8px}
 .chat-reply-composer[hidden]{display:none}
@@ -4431,7 +4438,7 @@ body.is-landscape .full-module-main{height:100dvh!important;overflow-y:auto!impo
 .chat-reply-buttons button{padding:7px 13px;font-size:12px;border-radius:999px}
 .chat-empty{padding:40px 16px;text-align:center;color:var(--muted);font-size:14px}
 @keyframes chatHighlightPulse{0%{background:var(--module-update-soft)}100%{background:transparent}}
-.update-thread.chat-highlight .chat-line-body{animation:chatHighlightPulse 1.4s ease}
+.update-thread.chat-highlight .mock-box{animation:chatHighlightPulse 1.4s ease}
 .chat-composer{position:sticky;bottom:0;z-index:5;display:flex;align-items:flex-end;gap:8px;background:#fff;border-top:1px solid var(--line);padding:8px 10px;margin-top:10px}
 .composer-pin-btn{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:999px;width:36px;height:36px;font-size:15px;line-height:1;cursor:pointer}
 .composer-pin-btn.active{background:#fff7e6;border-color:#e8c766}
@@ -5400,9 +5407,27 @@ async function quickSetPin(id,pinned,days){
   if(data)upsertById(updates,data);
   updatesScreen();toast(pinned?"העדכון הוצמד":"ההצמדה הוסרה");
 }
+function initialLetter(name){return esc((name||"?").trim().charAt(0));}
 function updateThreadHTML(u){
   const audience=audienceLabel(u.all_businesses,updateTargetIds(u.id)),replies=updateFollowups.filter(f=>Number(f.update_id)===Number(u.id));
-  return `<section class="update-thread" data-update-id="${Number(u.id)}" data-pinned="${isPinActive(u)?"1":"0"}"><div class="chat-line chat-main"><div class="chat-line-meta"><strong>${isPinActive(u)?"📌 ":""}${esc(profileName(u.created_by))}</strong><span>${esc(formatProblemDateTime(u.created_at))}</span></div><div class="chat-line-body">${esc(u.body)}</div><div class="chat-line-audience">${esc(audience)}</div></div>${replies.map(f=>`<div class="chat-line chat-reply"><div class="chat-line-meta"><strong>${esc(profileName(f.author_id))}</strong><span>${esc(formatProblemDateTime(f.created_at))}</span></div><div class="chat-line-body">${esc(f.body)}</div></div>`).join("")}<div class="chat-thread-actions"><button type="button" class="chat-reply-action" onclick="toggleReplyComposer(this)">↩ תגובה</button><div class="pin-menu-wrap"><button type="button" class="chat-reply-action" onclick="togglePinMenu(this,${Number(u.id)})">📌${isPinActive(u)?" מוצמד":""}</button><div class="pin-dropdown" hidden>${isPinActive(u)?`<button type="button" onclick="quickSetPin(${Number(u.id)},false)">הסר הצמדה</button>`:`<button type="button" onclick="quickSetPin(${Number(u.id)},true,3)">3 ימים</button><button type="button" onclick="quickSetPin(${Number(u.id)},true,7)">7 ימים</button><button type="button" onclick="quickSetPin(${Number(u.id)},true,14)">14 יום</button><button type="button" onclick="quickSetPin(${Number(u.id)},true,30)">30 יום</button>`}</div></div>${canEditUpdate(u)?`<button type="button" class="chat-reply-action" onclick="startEditUpdate(${Number(u.id)})">✏️ עריכה</button>`:""}</div><div class="chat-reply-composer" hidden><textarea class="chat-reply-input" rows="2" placeholder="כתוב תגובה..."></textarea><div class="chat-reply-buttons"><button type="button" class="secondary" onclick="toggleReplyComposer(this)">ביטול</button><button type="button" class="primary" onclick="addFollowup(${Number(u.id)},this)">שליחה</button></div></div></section>`;
+  const mainName=profileName(u.created_by);
+  const pinRow=`<div class="pin-menu-wrap"><button type="button" class="chat-reply-action" onclick="togglePinMenu(this,${Number(u.id)})">📌${isPinActive(u)?" מוצמד":""}</button><div class="pin-dropdown" hidden>${isPinActive(u)?`<button type="button" onclick="quickSetPin(${Number(u.id)},false)">הסר הצמדה</button>`:`<button type="button" onclick="quickSetPin(${Number(u.id)},true,3)">3 ימים</button><button type="button" onclick="quickSetPin(${Number(u.id)},true,7)">7 ימים</button><button type="button" onclick="quickSetPin(${Number(u.id)},true,14)">14 יום</button><button type="button" onclick="quickSetPin(${Number(u.id)},true,30)">30 יום</button>`}</div></div>`;
+  return `<section class="update-thread" data-update-id="${Number(u.id)}" data-pinned="${isPinActive(u)?"1":"0"}">
+    <div class="mock-msg">
+      <div class="mock-meta"><strong>${isPinActive(u)?"📌 ":""}${esc(mainName)}</strong><span>${esc(formatProblemDateTime(u.created_at))}</span></div>
+      <div class="mock-box main">
+        <div class="mock-avatar">${initialLetter(mainName)}</div>
+        <div class="mock-text">${esc(u.body)}</div>
+        ${canEditUpdate(u)?`<button type="button" class="mock-edit-btn" onclick="startEditUpdate(${Number(u.id)})">✏️</button>`:""}
+      </div>
+      <div class="chat-line-audience">${esc(audience)}</div>
+    </div>
+    <div class="mock-replies">
+      ${replies.map(f=>{const rn=profileName(f.author_id);return `<div class="mock-reply-wrap"><div class="mock-msg"><div class="mock-meta"><strong>${esc(rn)}</strong><span>${esc(formatProblemDateTime(f.created_at))}</span></div><div class="mock-box reply"><div class="mock-avatar small">${initialLetter(rn)}</div><div class="mock-text">${esc(f.body)}</div></div></div></div>`;}).join("")}
+    </div>
+    <div class="chat-thread-actions"><button type="button" class="chat-reply-action" onclick="toggleReplyComposer(this)">↩ תגובה</button>${pinRow}</div>
+    <div class="chat-reply-composer" hidden><textarea class="chat-reply-input" rows="2" placeholder="כתוב תגובה..."></textarea><div class="chat-reply-buttons"><button type="button" class="secondary" onclick="toggleReplyComposer(this)">ביטול</button><button type="button" class="primary" onclick="addFollowup(${Number(u.id)},this)">שליחה</button></div></div>
+  </section>`;
 }
 function updateCardHTML(u){return updateThreadHTML(u);}
 function updatesScreen(){currentScreen="updates";const active=visibleUpdates(false),rows=active.length?active.map(updateThreadHTML).join(""):`<div class="u-sub chat-empty">אין עדכונים עדיין</div>`;page("עדכונים",`${active.length} שיחות`,"updates",`<div class="page updates-page"><div class="updates-chat-stream">${rows}</div></div>`,updateComposerHTML());}
