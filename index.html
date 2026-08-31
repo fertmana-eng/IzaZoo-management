@@ -4141,6 +4141,8 @@ body{overscroll-behavior:none}
 .feedback-card{cursor:pointer}
 .audience-picker{border:1px solid var(--line);padding:10px;background:var(--paper-2)}
 .audience-picker label,.inline-check{display:flex!important;align-items:center;gap:7px;margin:6px 0!important;font-size:12px}
+.pin-days-row{display:flex!important;align-items:center;gap:8px;margin:2px 0 6px 22px!important;font-size:12px;color:var(--muted)}
+.pin-days-row select{border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:12px;font-family:inherit}
 .audience-picker input,.inline-check input{width:auto!important}
 .update-card{cursor:pointer;border-inline-start:4px solid var(--module-update)!important}
 .update-title-line{font-size:15px;margin-bottom:6px}
@@ -4355,7 +4357,6 @@ body{padding-bottom:env(safe-area-inset-bottom)}
 
 /* v38 accepted refinements only */
 .feedback-preview{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:100%}
-.update-thread[data-pinned="1"] .chat-main{background:#dce9fa!important;box-shadow:inset 0 0 0 1px rgba(61,116,200,.14)}
 .landscape-calendar-card{padding-top:4px!important}.portrait-single-calendar{padding-top:5px!important}
 
 /* restored from v37: this block is what actually made landscape scrolling work.
@@ -4381,7 +4382,6 @@ body.is-landscape .full-module-main{height:100dvh!important;overflow-y:auto!impo
 /* pilot RC: updates chat only */
 .chat-line{transition:none!important}
 .chat-highlight .chat-main{transform:none!important}
-.update-thread[data-pinned="1"] .chat-main{background:#dce9fa!important;box-shadow:inset 0 0 0 1px rgba(61,116,200,.14)}
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -4408,28 +4408,50 @@ body.is-landscape .full-module-main{height:100dvh!important;overflow-y:auto!impo
 .update-title-line{display:none}.update-body-preview{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;font-size:14px!important;line-height:1.55}
 
 /* updates: chat-style thread rendering */
-.updates-chat-stream{display:flex;flex-direction:column;gap:14px}
-.update-thread{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
-.update-thread[data-pinned="1"]{border-inline-start:4px solid var(--module-update)}
-.chat-line{padding:14px 16px}
-.chat-line+.chat-line{border-top:1px solid var(--line)}
-.chat-line-meta{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px}
-.chat-line-meta strong{font-size:14px;font-weight:700;color:var(--ink)}
-.chat-line-meta span{font-size:11px;color:var(--muted);white-space:nowrap}
-.chat-line-body{font-size:14px;line-height:1.6;color:var(--ink);white-space:pre-wrap}
-.chat-main{background:var(--module-update-soft)}
-.chat-reply{background:#fbfbfc;padding-inline-start:32px;position:relative}
-.chat-reply:before{content:"↳";position:absolute;inset-inline-start:14px;top:14px;color:var(--muted);font-size:13px}
-.chat-line-audience{margin-top:8px;display:inline-block;font-size:10px;font-weight:700;color:var(--module-update);background:#fff;border:1px solid var(--module-update);border-radius:999px;padding:2px 9px}
-.chat-thread-actions{padding:8px 16px;border-top:1px solid var(--line);background:#fafafa}
-.chat-reply-action{border:0;background:transparent;color:var(--module-update);font-weight:700;font-size:12px;padding:4px 2px}
-.chat-reply-composer{padding:12px 16px;border-top:1px solid var(--line);background:#fafafa;display:flex;flex-direction:column;gap:8px}
-.chat-reply-input{border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-size:13px;resize:vertical;min-height:44px;font-family:inherit;width:100%}
+.updates-chat-stream{display:flex;flex-direction:column;gap:18px}
+.update-thread{background:transparent}
+.chat-line{max-width:88%;margin-bottom:4px}
+.chat-line+.chat-line{margin-top:10px}
+.chat-main{max-width:100%}
+.chat-reply{margin-inline-start:auto;max-width:82%}
+.chat-line-meta{display:flex;align-items:baseline;gap:8px;margin-bottom:3px;padding-inline:4px}
+.chat-line-meta strong{font-size:12.5px;font-weight:700;color:var(--module-update)}
+.chat-line-meta span{font-size:10.5px;color:var(--muted)}
+.chat-line-body{background:#fff;border-radius:16px;border-end-start-radius:4px;padding:10px 14px;font-size:14.5px;line-height:1.55;color:var(--ink);white-space:pre-wrap;box-shadow:0 1px 2px rgba(15,23,42,.06)}
+.chat-reply .chat-line-body{background:var(--module-update-soft);border-end-start-radius:16px;border-end-end-radius:4px}
+.update-thread[data-pinned="1"] .chat-main .chat-line-body{background:#fff7e6}
+.update-thread[data-pinned="1"] .chat-main .chat-line-meta strong:after{content:" 📌"}
+.chat-line-audience{margin-top:5px;margin-inline:4px;display:inline-block;font-size:10px;font-weight:700;color:var(--muted)}
+.chat-thread-actions{margin-top:2px;padding-inline:4px}
+.chat-reply-action{border:0;background:transparent;color:var(--muted);font-weight:700;font-size:11.5px;padding:2px}
+.chat-reply-composer{margin-top:8px;display:flex;flex-direction:column;gap:8px}
+.chat-reply-composer[hidden]{display:none}
+.chat-reply-input{border:1px solid var(--line);border-radius:14px;padding:9px 13px;font-size:13.5px;resize:none;min-height:40px;font-family:inherit;width:100%;background:#fff}
 .chat-reply-buttons{display:flex;gap:8px;justify-content:flex-end}
-.chat-reply-buttons button{padding:8px 14px;font-size:12px}
+.chat-reply-buttons button{padding:7px 13px;font-size:12px;border-radius:999px}
 .chat-empty{padding:40px 16px;text-align:center;color:var(--muted);font-size:14px}
 @keyframes chatHighlightPulse{0%{background:var(--module-update-soft)}100%{background:transparent}}
-.update-thread.chat-highlight{animation:chatHighlightPulse 1.4s ease}
+.update-thread.chat-highlight .chat-line-body{animation:chatHighlightPulse 1.4s ease}
+.chat-composer{position:sticky;bottom:0;z-index:5;display:flex;align-items:flex-end;gap:8px;background:#fff;border-top:1px solid var(--line);padding:8px 10px;margin-top:10px}
+.composer-pin-btn{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:999px;width:36px;height:36px;font-size:15px;line-height:1;cursor:pointer}
+.composer-pin-btn.active{background:#fff7e6;border-color:#e8c766}
+.composer-input{flex:1 1 auto;min-width:0;border:1px solid var(--line);border-radius:18px;padding:8px 14px;font-size:14px;font-family:inherit;resize:none;max-height:110px;line-height:1.4}
+.composer-send-wrap{position:relative;flex:0 0 auto}
+.composer-send-btn{border:0;background:var(--module-update);color:#fff;font-weight:700;font-size:13px;border-radius:999px;padding:9px 14px;white-space:nowrap}
+.composer-menu{position:absolute;bottom:calc(100% + 8px);inset-inline-end:0;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 6px 18px rgba(15,23,42,.14);padding:6px;display:flex;flex-direction:column;min-width:160px}
+.composer-menu[hidden]{display:none}
+.composer-menu button{border:0;background:transparent;text-align:start;padding:9px 10px;border-radius:8px;font-size:13px;color:var(--ink)}
+.composer-menu button:hover{background:var(--bg-alt)}
+.composer-menu-empty{padding:9px 10px;font-size:12px;color:var(--muted)}
+.pin-menu-wrap{position:relative;display:inline-block}
+.pin-dropdown{position:absolute;top:calc(100% + 6px);inset-inline-start:0;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 6px 18px rgba(15,23,42,.14);padding:6px;display:flex;flex-direction:column;min-width:120px;z-index:6}
+.pin-dropdown[hidden]{display:none}
+.pin-dropdown button{border:0;background:transparent;text-align:start;padding:8px 10px;border-radius:8px;font-size:12.5px;color:var(--ink)}
+.pin-dropdown button:hover{background:var(--bg-alt)}
+.composer-row{display:flex;align-items:flex-end;gap:8px}
+.composer-edit-banner{display:flex;align-items:center;justify-content:space-between;background:var(--module-update-soft);color:var(--module-update);font-size:12px;font-weight:700;border-radius:10px;padding:6px 10px;margin-bottom:6px}
+.composer-edit-banner[hidden]{display:none}
+.composer-edit-banner button{border:0;background:transparent;color:var(--module-update);font-weight:700;font-size:12px}
 </style>
 </head>
 <body><div id="root"></div>
@@ -4769,10 +4791,11 @@ function audienceLabel(all,ids){
   const names=(ids||[]).map(businessName).filter(Boolean);
   return names.length?names.join(" + "):"ללא קהל";
 }
-function isUpdateExpired(u){ return false; }
+function isUpdateExpired(u){ return !!u.expires_at && new Date(u.expires_at) <= new Date(); }
+function isPinActive(u){ return !!u.is_pinned && !isUpdateExpired(u); }
 function visibleUpdates(includeArchive=false){
   if(includeArchive)return [];
-  return updates.filter(u=>{if(currentBusinessId==="all")return true;if(u.all_businesses)return true;return updateTargetIds(u.id).includes(Number(currentBusinessId));}).sort((a,b)=>{if(!!a.is_pinned!==!!b.is_pinned)return a.is_pinned?-1:1;return new Date(b.created_at)-new Date(a.created_at);});
+  return updates.filter(u=>{if(currentBusinessId==="all")return true;if(u.all_businesses)return true;return updateTargetIds(u.id).includes(Number(currentBusinessId));}).sort((a,b)=>{if(isPinActive(a)!==isPinActive(b))return isPinActive(a)?-1:1;return new Date(b.created_at)-new Date(a.created_at);});
 }
 function visibleKnowledge(includeArchive=false){
   return docs.filter(k=>{
@@ -5176,7 +5199,7 @@ function openItems(){
  }));
  visibleUpdates(false).forEach(x=>a.push({
    type:"update",id:x.id,icon:"↗",title:x.body,
-   date:x.created_at?x.created_at.slice(0,10):"",time:x.created_at?new Date(x.created_at).toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"}):"",sub:x.is_pinned?"עדכון · מוצמד":"עדכון"
+   date:x.created_at?x.created_at.slice(0,10):"",time:x.created_at?new Date(x.created_at).toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"}):"",sub:isPinActive(x)?"עדכון · מוצמד":"עדכון"
  }));
  return a.sort((x,y)=>(y.date+y.time).localeCompare(x.date+x.time));
 }
@@ -5366,24 +5389,33 @@ async function reopenProblem(id,btn){
   if(error){setBusy(btn,false);console.error(error);return alert("לא ניתן לפתוח מחדש את התקלה: "+error.message);}
   await loadProblems();await loadProblemActivity();hideModal();problemsScreen();
 }
-let updateLongPressTimer=null;
-function canEditUpdate(u){return !!u&&(u.created_by===currentUser.id||canAdmin());}
-function updatePressStart(id){clearTimeout(updateLongPressTimer);const u=updates.find(x=>Number(x.id)===Number(id));if(!canEditUpdate(u))return;updateLongPressTimer=setTimeout(()=>{navigator.vibrate?.(25);editUpdate(id);},550);}
-function updatePressEnd(){clearTimeout(updateLongPressTimer);updateLongPressTimer=null;}
+function canEditUpdate(u){return !!u&&u.created_by===currentUser.id;}
+function togglePinMenu(btn,id){const menu=btn.nextElementSibling;const opening=menu.hidden;document.querySelectorAll(".pin-dropdown").forEach(m=>m.hidden=true);menu.hidden=!opening;}
+async function quickSetPin(id,pinned,days){
+  if(!checkOnline())return;
+  const expiresAt=pinned?new Date(Date.now()+days*86400000).toISOString():null;
+  const {data,error}=await supabaseClient.from("updates_v2").update({is_pinned:pinned,expires_at:expiresAt}).eq("id",id)
+    .select("id,title,body,created_by,created_at,updated_at,expires_at,is_archived,is_pinned,all_businesses").single();
+  if(error){console.error("quick pin update",error);return toast("שגיאה בעדכון הצמדה: "+error.message,"error");}
+  if(data)upsertById(updates,data);
+  updatesScreen();toast(pinned?"העדכון הוצמד":"ההצמדה הוסרה");
+}
 function updateThreadHTML(u){
   const audience=audienceLabel(u.all_businesses,updateTargetIds(u.id)),replies=updateFollowups.filter(f=>Number(f.update_id)===Number(u.id));
-  return `<section class="update-thread" data-update-id="${Number(u.id)}" data-pinned="${u.is_pinned?"1":"0"}"><div class="chat-line chat-main" onpointerdown="updatePressStart(${Number(u.id)})" onpointerup="updatePressEnd()" onpointercancel="updatePressEnd()" onpointerleave="updatePressEnd()" oncontextmenu="event.preventDefault()"><div class="chat-line-meta"><strong>${u.is_pinned?"📌 ":""}${esc(profileName(u.created_by))}</strong><span>${esc(formatProblemDateTime(u.created_at))}</span></div><div class="chat-line-body">${esc(u.body)}</div><div class="chat-line-audience">${esc(audience)}</div></div>${replies.map(f=>`<div class="chat-line chat-reply"><div class="chat-line-meta"><strong>${esc(profileName(f.author_id))}</strong><span>${esc(formatProblemDateTime(f.created_at))}</span></div><div class="chat-line-body">${esc(f.body)}</div></div>`).join("")}<div class="chat-thread-actions"><button type="button" class="chat-reply-action" onclick="toggleReplyComposer(this)">↩ תגובה</button></div><div class="chat-reply-composer" hidden><textarea class="chat-reply-input" rows="2" placeholder="כתוב תגובה..."></textarea><div class="chat-reply-buttons"><button type="button" class="secondary" onclick="toggleReplyComposer(this)">ביטול</button><button type="button" class="primary" onclick="addFollowup(${Number(u.id)},this)">שליחה</button></div></div></section>`;
+  return `<section class="update-thread" data-update-id="${Number(u.id)}" data-pinned="${isPinActive(u)?"1":"0"}"><div class="chat-line chat-main"><div class="chat-line-meta"><strong>${isPinActive(u)?"📌 ":""}${esc(profileName(u.created_by))}</strong><span>${esc(formatProblemDateTime(u.created_at))}</span></div><div class="chat-line-body">${esc(u.body)}</div><div class="chat-line-audience">${esc(audience)}</div></div>${replies.map(f=>`<div class="chat-line chat-reply"><div class="chat-line-meta"><strong>${esc(profileName(f.author_id))}</strong><span>${esc(formatProblemDateTime(f.created_at))}</span></div><div class="chat-line-body">${esc(f.body)}</div></div>`).join("")}<div class="chat-thread-actions"><button type="button" class="chat-reply-action" onclick="toggleReplyComposer(this)">↩ תגובה</button><div class="pin-menu-wrap"><button type="button" class="chat-reply-action" onclick="togglePinMenu(this,${Number(u.id)})">📌${isPinActive(u)?" מוצמד":""}</button><div class="pin-dropdown" hidden>${isPinActive(u)?`<button type="button" onclick="quickSetPin(${Number(u.id)},false)">הסר הצמדה</button>`:`<button type="button" onclick="quickSetPin(${Number(u.id)},true,3)">3 ימים</button><button type="button" onclick="quickSetPin(${Number(u.id)},true,7)">7 ימים</button><button type="button" onclick="quickSetPin(${Number(u.id)},true,14)">14 יום</button><button type="button" onclick="quickSetPin(${Number(u.id)},true,30)">30 יום</button>`}</div></div>${canEditUpdate(u)?`<button type="button" class="chat-reply-action" onclick="startEditUpdate(${Number(u.id)})">✏️ עריכה</button>`:""}</div><div class="chat-reply-composer" hidden><textarea class="chat-reply-input" rows="2" placeholder="כתוב תגובה..."></textarea><div class="chat-reply-buttons"><button type="button" class="secondary" onclick="toggleReplyComposer(this)">ביטול</button><button type="button" class="primary" onclick="addFollowup(${Number(u.id)},this)">שליחה</button></div></div></section>`;
 }
 function updateCardHTML(u){return updateThreadHTML(u);}
-function updatesScreen(){currentScreen="updates";const active=visibleUpdates(false),rows=active.length?active.map(updateThreadHTML).join(""):`<div class="u-sub chat-empty">אין עדכונים עדיין</div>`;page("עדכונים",`${active.length} שיחות`,"updates",`<div class="page updates-page"><div class="updates-chat-stream">${rows}</div></div>`,`<button class="fab" onclick="newUpdate()">＋ עדכון חדש</button>`);}
+function updatesScreen(){currentScreen="updates";const active=visibleUpdates(false),rows=active.length?active.map(updateThreadHTML).join(""):`<div class="u-sub chat-empty">אין עדכונים עדיין</div>`;page("עדכונים",`${active.length} שיחות`,"updates",`<div class="page updates-page"><div class="updates-chat-stream">${rows}</div></div>`,updateComposerHTML());}
 function audiencePickerHTML(prefix,selectedAll=false,selected=[]){const allowed=availableBusinesses(),allAllowed=currentUser.role==="owner"||currentUser.all_businesses_access;return `<div class="audience-picker">${allAllowed?`<label><input type="checkbox" data-all-audience="${prefix}" ${selectedAll?"checked":""} onchange="toggleAllAudience('${prefix}',this)"> כל קבוצת IzaZoo</label>`:""}<div>${allowed.map(b=>`<label><input type="checkbox" class="${prefix}Business" value="${b.id}" ${selected.includes(Number(b.id))?"checked":""}> ${esc(b.name)}</label>`).join("")}</div></div>`;}
 function toggleAllAudience(prefix,source){const scope=source?.closest(".modal-card")||document,all=source||scope.querySelector(`[data-all-audience="${prefix}"]`);scope.querySelectorAll("."+prefix+"Business").forEach(x=>{x.disabled=!!all?.checked;if(all?.checked)x.checked=false;});}
 function selectedAudience(prefix,scope=document){const all=!!scope.querySelector(`[data-all-audience="${prefix}"]`)?.checked,ids=[...scope.querySelectorAll("."+prefix+"Business:checked")].map(x=>Number(x.value));return {all,ids};}
-function newUpdate(){showModal(`<h2>עדכון חדש</h2><label>תוכן</label><textarea class="new-update-body" style="min-height:150px" placeholder="מה חשוב לעדכן?"></textarea><label>למי מיועד?</label>${audiencePickerHTML("nu")}<label class="inline-check"><input class="new-update-pinned" type="checkbox"> 📌 הצמד לראש הרשימה</label><div class="actions"><button class="secondary" onclick="hideModal()">ביטול</button><button class="primary" onclick="createUpdateV2(this)">פרסום</button></div>`);}
+function newUpdate(){showModal(`<h2>עדכון חדש</h2><label>תוכן</label><textarea class="new-update-body" style="min-height:150px" placeholder="מה חשוב לעדכן?"></textarea><label>למי מיועד?</label>${audiencePickerHTML("nu")}<label class="inline-check"><input class="new-update-pinned" type="checkbox" onchange="document.querySelector('.new-update-pin-days').hidden=!this.checked"> 📌 הצמד לראש הרשימה</label><label class="pin-days-row new-update-pin-days" hidden>לכמה זמן להצמיד?<select class="new-update-pin-days-select"><option value="3">3 ימים</option><option value="7" selected>7 ימים</option><option value="14">14 יום</option><option value="30">30 יום</option></select></label><div class="actions"><button class="secondary" onclick="hideModal()">ביטול</button><button class="primary" onclick="createUpdateV2(this)">פרסום</button></div>`);}
 async function createUpdateV2(btn){
   const modal=btn?.closest(".modal-card"),body=(modal?.querySelector(".new-update-body")?.value||"").trim(),aud=selectedAudience("nu",modal||document),title=body.length>60?body.slice(0,60)+"…":body,pinned=!!modal?.querySelector(".new-update-pinned")?.checked;
+  const pinDays=Number(modal?.querySelector(".new-update-pin-days-select")?.value)||7;
+  const expiresAt=pinned?new Date(Date.now()+pinDays*86400000).toISOString():null;
   if(!body)return toast("יש להזין תוכן","error");if(!aud.all&&!aud.ids.length)return toast("יש לבחור לפחות עסק אחד","error");if(!checkOnline())return;setBusy(btn,true,"מפרסם...");
-  const {data,error}=await supabaseClient.from("updates_v2").insert({title,body,created_by:currentUser.id,expires_at:null,is_pinned:pinned,all_businesses:aud.all,is_archived:false})
+  const {data,error}=await supabaseClient.from("updates_v2").insert({title,body,created_by:currentUser.id,expires_at:expiresAt,is_pinned:pinned,all_businesses:aud.all,is_archived:false})
     .select("id,title,body,created_by,created_at,updated_at,expires_at,is_archived,is_pinned,all_businesses").single();
   if(error){console.error("updates_v2 insert",error);setBusy(btn,false);return toast("לא ניתן לפרסם את העדכון: "+error.message,"error");}
   if(!aud.all&&aud.ids.length){const {error:e}=await supabaseClient.from("update_businesses").insert(aud.ids.map(business_id=>({update_id:data.id,business_id})));if(e){console.error("update_businesses insert",e);setBusy(btn,false);return toast("העדכון נוצר אך קהל היעד לא נשמר: "+e.message,"error");}}
@@ -5393,6 +5425,69 @@ async function createUpdateV2(btn){
   hideModal();updatesScreen();toast("העדכון פורסם");setTimeout(()=>focusUpdateThread(data.id),80);
 }
 function toggleReplyComposer(button){const thread=button?.closest(".update-thread"),composer=thread?.querySelector(".chat-reply-composer");if(!composer)return;const opening=composer.hidden;composer.hidden=!opening;if(opening)setTimeout(()=>composer.querySelector(".chat-reply-input")?.focus(),60);}
+let editingUpdateId=null;
+function updateComposerHTML(){
+  const allowed=availableBusinesses(),allAllowed=currentUser.role==="owner"||currentUser.all_businesses_access;
+  const targets=`${allAllowed?`<button type="button" onclick="publishFromComposer('all')">לכולם</button>`:""}${allowed.map(b=>`<button type="button" onclick="publishFromComposer(${Number(b.id)})">${esc(b.name)}</button>`).join("")}`;
+  return `<div class="chat-composer">
+    <div class="composer-edit-banner" hidden>עריכת עדכון <button type="button" onclick="cancelEditUpdate()">✕ ביטול</button></div>
+    <div class="composer-row">
+    <button type="button" class="composer-pin-btn" onclick="toggleComposerPin(this)" title="הצמד עדכון">📌</button>
+    <textarea class="composer-input" rows="1" placeholder="כתוב עדכון..." oninput="this.rows=Math.min(5,this.value.split('\\n').length)"></textarea>
+    <div class="composer-send-wrap">
+      <button type="button" class="composer-send-btn" onclick="toggleComposerMenu(this)">פרסם ▾</button>
+      <div class="composer-menu" hidden>${targets||"<span class=\"composer-menu-empty\">אין קהל זמין</span>"}</div>
+    </div>
+    </div>
+  </div>`;
+}
+function toggleComposerPin(btn){btn.classList.toggle("active");}
+function toggleComposerMenu(btn){const menu=btn.nextElementSibling;const opening=menu.hidden;document.querySelectorAll(".composer-menu").forEach(m=>m.hidden=true);menu.hidden=!opening;}
+function startEditUpdate(id){
+  const u=updates.find(x=>Number(x.id)===Number(id));if(!canEditUpdate(u))return;
+  editingUpdateId=id;
+  const composer=document.querySelector(".chat-composer");if(!composer)return;
+  const input=composer.querySelector(".composer-input");input.value=u.body;input.rows=Math.min(5,u.body.split("\n").length);input.focus();
+  composer.querySelector(".composer-pin-btn").classList.toggle("active",isPinActive(u));
+  const banner=composer.querySelector(".composer-edit-banner");banner.hidden=false;
+  composer.scrollIntoView({block:"end"});
+}
+function cancelEditUpdate(){
+  editingUpdateId=null;
+  const composer=document.querySelector(".chat-composer");if(!composer)return;
+  composer.querySelector(".composer-input").value="";composer.querySelector(".composer-input").rows=1;
+  composer.querySelector(".composer-pin-btn").classList.remove("active");
+  composer.querySelector(".composer-edit-banner").hidden=true;
+}
+async function publishFromComposer(target){
+  const composer=document.querySelector(".chat-composer"),body=(composer?.querySelector(".composer-input")?.value||"").trim(),pinned=!!composer?.querySelector(".composer-pin-btn")?.classList.contains("active"),title=body.length>60?body.slice(0,60)+"…":body;
+  const aud=target==="all"?{all:true,ids:[]}:{all:false,ids:[Number(target)]};
+  if(!body)return toast("יש להזין תוכן","error");if(!checkOnline())return;
+  const sendBtn=composer.querySelector(".composer-send-btn");document.querySelectorAll(".composer-menu").forEach(m=>m.hidden=true);setBusy(sendBtn,true,"...");
+  const expiresAt=pinned?new Date(Date.now()+7*86400000).toISOString():null;
+  if(editingUpdateId){
+    const id=editingUpdateId;
+    const {data,error}=await supabaseClient.from("updates_v2").update({title,body,expires_at:expiresAt,is_pinned:pinned,all_businesses:aud.all,updated_at:new Date().toISOString()}).eq("id",id)
+      .select("id,title,body,created_by,created_at,updated_at,expires_at,is_archived,is_pinned,all_businesses").single();
+    if(error){console.error("updates_v2 update",error);setBusy(sendBtn,false);return toast("לא ניתן לעדכן: "+error.message,"error");}
+    const {error:rerr}=await supabaseClient.rpc("replace_update_targets",{target_update_id:id,business_ids:aud.ids,new_all_businesses:aud.all});
+    if(rerr){console.error("replace_update_targets",rerr);setBusy(sendBtn,false);return toast("הטקסט נשמר אך קהל היעד לא עודכן: "+rerr.message,"error");}
+    if(data)upsertById(updates,data);
+    updateBusinesses=updateBusinesses.filter(x=>Number(x.update_id)!==Number(id));
+    if(!aud.all)updateBusinesses.push(...aud.ids.map(business_id=>({update_id:id,business_id})));
+    editingUpdateId=null;
+    updatesScreen();toast("העדכון עודכן");setTimeout(()=>focusUpdateThread(id),80);
+    return;
+  }
+  const {data,error}=await supabaseClient.from("updates_v2").insert({title,body,created_by:currentUser.id,expires_at:expiresAt,is_pinned:pinned,all_businesses:aud.all,is_archived:false})
+    .select("id,title,body,created_by,created_at,updated_at,expires_at,is_archived,is_pinned,all_businesses").single();
+  if(error){console.error("updates_v2 insert",error);setBusy(sendBtn,false);return toast("לא ניתן לפרסם את העדכון: "+error.message,"error");}
+  if(!aud.all&&aud.ids.length){const {error:e}=await supabaseClient.from("update_businesses").insert(aud.ids.map(business_id=>({update_id:data.id,business_id})));if(e){console.error("update_businesses insert",e);setBusy(sendBtn,false);return toast("העדכון נוצר אך קהל היעד לא נשמר: "+e.message,"error");}}
+  if(data)upsertById(updates,data);
+  updateBusinesses=updateBusinesses.filter(x=>Number(x.update_id)!==Number(data.id));
+  if(!aud.all)updateBusinesses.push(...aud.ids.map(business_id=>({update_id:data.id,business_id})));
+  updatesScreen();toast("העדכון פורסם");setTimeout(()=>focusUpdateThread(data.id),80);
+}
 async function addFollowup(id,btn){
   const thread=btn?.closest(".update-thread"),field=thread?.querySelector(".chat-reply-input"),body=(field?.value||"").trim();if(!body)return toast("יש לכתוב תגובה","error");if(!checkOnline())return;setBusy(btn,true,"שולח...");
   const {data,error}=await supabaseClient.from("update_followups").insert({update_id:id,author_id:currentUser.id,body})
@@ -5405,13 +5500,16 @@ function focusUpdateThread(id){const el=document.querySelector(`.update-thread[d
 async function openUpdateDetails(id){if(currentScreen!=="updates")await goToScreen("updates",{push:true,direction:"forward"});setTimeout(()=>focusUpdateThread(id),60);}
 function editUpdate(id){
   const u=updates.find(x=>Number(x.id)===Number(id));if(!canEditUpdate(u))return;
-  showModal(`<h2>עריכת עדכון</h2><textarea class="edit-update-body" style="min-height:140px">${esc(u.body)}</textarea><label>קהל יעד</label>${audiencePickerHTML("eu",u.all_businesses,updateTargetIds(u.id))}<label class="inline-check"><input class="edit-update-pinned" type="checkbox" ${u.is_pinned?"checked":""}> 📌 מוצמד</label><div class="actions"><button class="secondary" onclick="hideModal()">ביטול</button><button class="primary" onclick="saveUpdate(${Number(id)},this)">שמירה</button></div>`);
+  const daysLeft=u.expires_at?Math.max(1,Math.round((new Date(u.expires_at)-Date.now())/86400000)):7;
+  showModal(`<h2>עריכת עדכון</h2><textarea class="edit-update-body" style="min-height:140px">${esc(u.body)}</textarea><label>קהל יעד</label>${audiencePickerHTML("eu",u.all_businesses,updateTargetIds(u.id))}<label class="inline-check"><input class="edit-update-pinned" type="checkbox" ${isPinActive(u)?"checked":""} onchange="document.querySelector('.edit-update-pin-days').hidden=!this.checked"> 📌 מוצמד</label><label class="pin-days-row edit-update-pin-days" ${isPinActive(u)?"":"hidden"}>לכמה זמן להצמיד?<select class="edit-update-pin-days-select"><option value="3" ${daysLeft===3?"selected":""}>3 ימים</option><option value="7" ${daysLeft!==3&&daysLeft!==14&&daysLeft!==30?"selected":""}>7 ימים</option><option value="14" ${daysLeft===14?"selected":""}>14 יום</option><option value="30" ${daysLeft===30?"selected":""}>30 יום</option></select></label><div class="actions"><button class="secondary" onclick="hideModal()">ביטול</button><button class="primary" onclick="saveUpdate(${Number(id)},this)">שמירה</button></div>`);
   const modal=document.querySelector("#modal .modal-card"),all=modal?.querySelector('[data-all-audience="eu"]');if(all)toggleAllAudience("eu",all);
 }
 async function saveUpdate(id,btn){
   const modal=btn?.closest(".modal-card"),body=(modal?.querySelector(".edit-update-body")?.value||"").trim(),aud=selectedAudience("eu",modal||document),title=body.length>60?body.slice(0,60)+"…":body,pinned=!!modal?.querySelector(".edit-update-pinned")?.checked;
+  const pinDays=Number(modal?.querySelector(".edit-update-pin-days-select")?.value)||7;
+  const expiresAt=pinned?new Date(Date.now()+pinDays*86400000).toISOString():null;
   if(!body)return toast("העדכון לא יכול להיות ריק","error");if(!aud.all&&!aud.ids.length)return toast("יש לבחור קהל יעד","error");if(!checkOnline())return;setBusy(btn,true,"שומר...");
-  const {data,error}=await supabaseClient.from("updates_v2").update({title,body,expires_at:null,is_archived:false,is_pinned:pinned,updated_at:new Date().toISOString()}).eq("id",id)
+  const {data,error}=await supabaseClient.from("updates_v2").update({title,body,expires_at:expiresAt,is_archived:false,is_pinned:pinned,updated_at:new Date().toISOString()}).eq("id",id)
     .select("id,title,body,created_by,created_at,updated_at,expires_at,is_archived,is_pinned,all_businesses").single();
   if(error){console.error("updates_v2 update",error);setBusy(btn,false);return toast("לא ניתן לעדכן: "+error.message,"error");}
   const {error:rerr}=await supabaseClient.rpc("replace_update_targets",{target_update_id:id,business_ids:aud.ids,new_all_businesses:aud.all});if(rerr){console.error("replace_update_targets",rerr);setBusy(btn,false);return toast("הטקסט נשמר אך קהל היעד לא עודכן: "+rerr.message,"error");}
