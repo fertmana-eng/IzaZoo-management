@@ -5385,7 +5385,7 @@ async function closeProblem(id,btn){
   const {error}=await supabaseClient.rpc("close_problem",{problem_id:Number(id)});
   if(error){setBusy(btn,false);console.error(error);return alert("לא ניתן לסגור את התקלה: "+error.message);}
   await loadProblems();await loadProblemActivity();
-  alert("DEBUG אחרי סגירה:\nמספר תקלות שהתקבלו: "+problems.length+"\nמזהים: "+problems.map(p=>p.id+":"+p.status).join(", "));
+  alert("DEBUG אחרי סגירה:\nמספר תקלות שהתקבלו: "+problems.length+"\nמזהים: "+problems.map(p=>p.id+":"+p.status+":עסק"+p.business_id).join(", ")+"\ncurrentBusinessId: "+currentBusinessId+"\nvisibleProblems: "+visibleProblems().length);
   hideModal();toast("התקלה נסגרה");problemsScreen();
 }
 function confirmReopenProblem(id){
