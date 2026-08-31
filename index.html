@@ -4529,7 +4529,7 @@ function counts(){
 
 async function loadLoginUsers(){
   const {data,error}=await supabaseClient.rpc("get_login_users");
-  if(error){console.error("get_login_users",error);loginUsers=[];return false;}
+  if(error){console.error("get_login_users",error);return false;}
   loginUsers=data||[];
   return true;
 }
@@ -4644,7 +4644,7 @@ function roleLabel(r){return r==="owner"?"Owner":r==="admin"?"Admin":"Manager"}
 
 async function loadProfiles(){
   const {data,error}=await supabaseClient.rpc("get_visible_profiles");
-  if(error){console.error("get_visible_profiles",error);profilesById={};return false;}
+  if(error){console.error("get_visible_profiles",error);return false;}
   profilesById={};
   (data||[]).forEach(p=>{profilesById[p.id]=p});
   return true;
@@ -4652,7 +4652,7 @@ async function loadProfiles(){
 
 async function loadBusinesses(){
   const {data,error}=await supabaseClient.from("businesses").select("id,name,is_active,created_at,updated_at").order("id");
-  if(error){console.error("loadBusinesses",error);businesses=[];return false;}
+  if(error){console.error("loadBusinesses",error);return false;}
   businesses=data||[];
   const {data:members,error:me}=await supabaseClient.from("user_businesses").select("user_id,business_id");
   if(me){console.error("load memberships",me);userBusinesses=[];}else userBusinesses=members||[];
@@ -4698,7 +4698,6 @@ async function loadTasks(){
     .order("created_at",{ascending:false});
   if(error){
     console.error("loadTasks",error);
-    tasks=[];
     return false;
   }
   tasks=data||[];
@@ -4751,9 +4750,9 @@ async function loadUpdatesV2(){
       .select("id,update_id,author_id,body,created_at,updated_at")
       .order("created_at",{ascending:true})
   ]);
-  if(u.error){console.error("updates_v2",u.error);updates=[];}else updates=u.data||[];
-  if(b.error){console.error("update_businesses",b.error);updateBusinesses=[];}else updateBusinesses=b.data||[];
-  if(f.error){console.error("update_followups",f.error);updateFollowups=[];}else updateFollowups=f.data||[];
+  if(u.error){console.error("updates_v2",u.error);}else updates=u.data||[];
+  if(b.error){console.error("update_businesses",b.error);}else updateBusinesses=b.data||[];
+  if(f.error){console.error("update_followups",f.error);}else updateFollowups=f.data||[];
 }
 
 async function loadKnowledge(){
@@ -4769,10 +4768,10 @@ async function loadKnowledge(){
       .select("id,name,sort_order,is_active,created_at,updated_at")
       .order("sort_order",{ascending:true})
   ]);
-  docs=i.error?[]:(i.data||[]);
-  knowledgeBusinesses=b.error?[]:(b.data||[]);
-  knowledgeVersions=v.error?[]:(v.data||[]);
-  knowledgeCategories=c.error?[]:(c.data||[]);
+  docs=i.error?docs:(i.data||[]);
+  knowledgeBusinesses=b.error?knowledgeBusinesses:(b.data||[]);
+  knowledgeVersions=v.error?knowledgeVersions:(v.data||[]);
+  knowledgeCategories=c.error?knowledgeCategories:(c.data||[]);
   if(i.error)console.error("knowledge_items",i.error);
   if(b.error)console.error("knowledge_businesses",b.error);
   if(v.error)console.error("knowledge_versions",v.error);
@@ -4784,7 +4783,7 @@ async function loadBetaFeedback(){
     .from("beta_feedback")
     .select("id,author_id,business_id,body,created_at,updated_at")
     .order("updated_at",{ascending:false});
-  if(error){console.error("beta_feedback",error);betaFeedback=[];return false;}
+  if(error){console.error("beta_feedback",error);return false;}
   betaFeedback=data||[];
   return true;
 }
@@ -4868,7 +4867,7 @@ async function loadProblemActivity(){
     .from("problem_activity")
     .select("id,problem_id,actor_id,action,details,created_at")
     .order("created_at",{ascending:false});
-  if(error){ console.error("loadProblemActivity",error); problemActivity=[]; return false; }
+  if(error){ console.error("loadProblemActivity",error); return false; }
   problemActivity=data||[]; return true;
 }
 function activityText(a){
@@ -4898,7 +4897,6 @@ async function loadProblems(){
     .order("created_at",{ascending:false});
   if(error){
     console.error("loadProblems",error);
-    problems=[];
     return false;
   }
   problems=(data||[]).map(p=>({
@@ -5386,7 +5384,7 @@ async function closeProblem(id,btn){
   setBusy(btn,true,"סוגר...");
   const {error}=await supabaseClient.rpc("close_problem",{problem_id:Number(id)});
   if(error){setBusy(btn,false);console.error(error);return alert("לא ניתן לסגור את התקלה: "+error.message);}
-  await loadProblems();await loadProblemActivity();hideModal();toast("התקלה נוצרה");problemsScreen();
+  await loadProblems();await loadProblemActivity();hideModal();toast("התקלה נסגרה");problemsScreen();
 }
 function confirmReopenProblem(id){
   const item=problems.find(x=>Number(x.id)===Number(id));
@@ -5786,7 +5784,6 @@ async function completeTask(id,btn){
   hideModal();
   tasksScreen();
 }
-
 function confirmReopenTask(id){
   const t=tasks.find(x=>Number(x.id)===Number(id));
   if(!t)return;
