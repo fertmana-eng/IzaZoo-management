@@ -4440,13 +4440,15 @@ body.is-landscape .full-module-main{height:100dvh!important;overflow-y:auto!impo
 .chat-empty{padding:40px 16px;text-align:center;color:var(--muted);font-size:14px}
 @keyframes chatHighlightPulse{0%{background:var(--module-update-soft)}100%{background:transparent}}
 .update-thread.chat-highlight .mock-box{animation:chatHighlightPulse 1.4s ease}
-.chat-composer{position:sticky;bottom:0;z-index:5;display:flex;align-items:flex-end;gap:8px;background:#fff;border-top:1px solid var(--line);padding:8px 10px;margin-top:10px}
-.composer-pin-btn{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:999px;width:36px;height:36px;font-size:15px;line-height:1;cursor:pointer}
-.composer-pin-btn.active{background:#fff7e6;border-color:#e8c766}
-.composer-input{flex:1 1 auto;min-width:0;border:1px solid var(--line);border-radius:18px;padding:8px 14px;font-size:14px;font-family:inherit;resize:none;max-height:110px;line-height:1.4}
+.chat-composer-wrap{position:sticky;top:0;z-index:5;background:var(--bg);padding:6px 4px 10px;margin-bottom:8px}
+.chat-composer{display:flex;align-items:center;gap:6px}
+.composer-pin-btn{flex:0 0 auto;border:0;background:transparent;font-size:16px;line-height:1;cursor:pointer;opacity:.55}
+.composer-pin-btn.active{opacity:1}
+.composer-input{flex:1 1 auto;min-width:0;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:6px 2px;font-size:14.5px;font-family:inherit;resize:none;min-height:0;max-height:90px;line-height:1.4;background:transparent}
+.composer-input:focus{outline:0;border-bottom-color:var(--module-update)}
+.composer-send-btn{border:0;background:transparent;color:var(--module-update);font-weight:700;font-size:20px;padding:4px 6px;line-height:1}
 .composer-send-wrap{position:relative;flex:0 0 auto}
-.composer-send-btn{border:0;background:var(--module-update);color:#fff;font-weight:700;font-size:13px;border-radius:999px;padding:9px 14px;white-space:nowrap}
-.composer-menu{position:absolute;bottom:calc(100% + 8px);inset-inline-end:0;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 6px 18px rgba(15,23,42,.14);padding:6px;display:flex;flex-direction:column;min-width:160px}
+.composer-menu{position:absolute;top:calc(100% + 8px);inset-inline-end:0;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 6px 18px rgba(15,23,42,.14);padding:6px;display:flex;flex-direction:column;min-width:160px}
 .composer-menu[hidden]{display:none}
 .composer-menu button{border:0;background:transparent;text-align:start;padding:9px 10px;border-radius:8px;font-size:13px;color:var(--ink)}
 .composer-menu button:hover{background:var(--bg-alt)}
@@ -4456,7 +4458,6 @@ body.is-landscape .full-module-main{height:100dvh!important;overflow-y:auto!impo
 .pin-dropdown[hidden]{display:none}
 .pin-dropdown button{border:0;background:transparent;text-align:start;padding:8px 10px;border-radius:8px;font-size:12.5px;color:var(--ink)}
 .pin-dropdown button:hover{background:var(--bg-alt)}
-.composer-row{display:flex;align-items:flex-end;gap:8px}
 .composer-edit-banner{display:flex;align-items:center;justify-content:space-between;background:var(--module-update-soft);color:var(--module-update);font-size:12px;font-weight:700;border-radius:10px;padding:6px 10px;margin-bottom:6px}
 .composer-edit-banner[hidden]{display:none}
 .composer-edit-banner button{border:0;background:transparent;color:var(--module-update);font-weight:700;font-size:12px}
@@ -5431,7 +5432,7 @@ function updateThreadHTML(u){
   </section>`;
 }
 function updateCardHTML(u){return updateThreadHTML(u);}
-function updatesScreen(){currentScreen="updates";const active=visibleUpdates(false),rows=active.length?active.map(updateThreadHTML).join(""):`<div class="u-sub chat-empty">אין עדכונים עדיין</div>`;page("עדכונים",`${active.length} שיחות`,"updates",`<div class="page updates-page"><div class="updates-chat-stream">${rows}</div></div>`,updateComposerHTML());}
+function updatesScreen(){currentScreen="updates";const active=visibleUpdates(false),rows=active.length?active.map(updateThreadHTML).join(""):`<div class="u-sub chat-empty">אין עדכונים עדיין</div>`;page("עדכונים",`${active.length} שיחות`,"updates",`<div class="page updates-page">${updateComposerHTML()}<div class="updates-chat-stream">${rows}</div></div>`,"");}
 function audiencePickerHTML(prefix,selectedAll=false,selected=[]){const allowed=availableBusinesses(),allAllowed=currentUser.role==="owner"||currentUser.all_businesses_access;return `<div class="audience-picker">${allAllowed?`<label><input type="checkbox" data-all-audience="${prefix}" ${selectedAll?"checked":""} onchange="toggleAllAudience('${prefix}',this)"> כל קבוצת IzaZoo</label>`:""}<div>${allowed.map(b=>`<label><input type="checkbox" class="${prefix}Business" value="${b.id}" ${selected.includes(Number(b.id))?"checked":""}> ${esc(b.name)}</label>`).join("")}</div></div>`;}
 function toggleAllAudience(prefix,source){const scope=source?.closest(".modal-card")||document,all=source||scope.querySelector(`[data-all-audience="${prefix}"]`);scope.querySelectorAll("."+prefix+"Business").forEach(x=>{x.disabled=!!all?.checked;if(all?.checked)x.checked=false;});}
 function selectedAudience(prefix,scope=document){const all=!!scope.querySelector(`[data-all-audience="${prefix}"]`)?.checked,ids=[...scope.querySelectorAll("."+prefix+"Business:checked")].map(x=>Number(x.value));return {all,ids};}
@@ -5455,24 +5456,25 @@ let editingUpdateId=null;
 function updateComposerHTML(){
   const allowed=availableBusinesses(),allAllowed=currentUser.role==="owner"||currentUser.all_businesses_access;
   const targets=`${allAllowed?`<button type="button" onclick="publishFromComposer('all')">לכולם</button>`:""}${allowed.map(b=>`<button type="button" onclick="publishFromComposer(${Number(b.id)})">${esc(b.name)}</button>`).join("")}`;
-  return `<div class="chat-composer">
+  return `<div class="chat-composer-wrap">
     <div class="composer-edit-banner" hidden>עריכת עדכון <button type="button" onclick="cancelEditUpdate()">✕ ביטול</button></div>
-    <div class="composer-row">
-    <button type="button" class="composer-pin-btn" onclick="toggleComposerPin(this)" title="הצמד עדכון">📌</button>
-    <textarea class="composer-input" rows="1" placeholder="כתוב עדכון..." oninput="this.rows=Math.min(5,this.value.split('\\n').length)"></textarea>
-    <div class="composer-send-wrap">
-      <button type="button" class="composer-send-btn" onclick="toggleComposerMenu(this)">פרסם ▾</button>
-      <div class="composer-menu" hidden>${targets||"<span class=\"composer-menu-empty\">אין קהל זמין</span>"}</div>
-    </div>
+    <div class="chat-composer">
+      <button type="button" class="composer-pin-btn" onclick="toggleComposerPin(this)" title="הצמד עדכון">📌</button>
+      <textarea class="composer-input" rows="1" placeholder="כתוב עדכון..." oninput="this.rows=Math.min(5,this.value.split('\\n').length)"></textarea>
+      <div class="composer-send-wrap">
+        <button type="button" class="composer-send-btn" onclick="toggleComposerMenu(this)">➤</button>
+        <div class="composer-menu" hidden>${targets||"<span class=\"composer-menu-empty\">אין קהל זמין</span>"}</div>
+      </div>
     </div>
   </div>`;
 }
 function toggleComposerPin(btn){btn.classList.toggle("active");}
 function toggleComposerMenu(btn){const menu=btn.nextElementSibling;const opening=menu.hidden;document.querySelectorAll(".composer-menu").forEach(m=>m.hidden=true);menu.hidden=!opening;}
+function visibleComposer(){return Array.from(document.querySelectorAll(".chat-composer-wrap")).find(el=>el.offsetParent!==null)||null;}
 function startEditUpdate(id){
   const u=updates.find(x=>Number(x.id)===Number(id));if(!canEditUpdate(u))return;
   editingUpdateId=id;
-  const composer=document.querySelector(".chat-composer");if(!composer)return;
+  const composer=visibleComposer();if(!composer)return;
   const input=composer.querySelector(".composer-input");input.value=u.body;input.rows=Math.min(5,u.body.split("\n").length);input.focus();
   composer.querySelector(".composer-pin-btn").classList.toggle("active",isPinActive(u));
   const banner=composer.querySelector(".composer-edit-banner");banner.hidden=false;
@@ -5480,13 +5482,13 @@ function startEditUpdate(id){
 }
 function cancelEditUpdate(){
   editingUpdateId=null;
-  const composer=document.querySelector(".chat-composer");if(!composer)return;
+  const composer=visibleComposer();if(!composer)return;
   composer.querySelector(".composer-input").value="";composer.querySelector(".composer-input").rows=1;
   composer.querySelector(".composer-pin-btn").classList.remove("active");
   composer.querySelector(".composer-edit-banner").hidden=true;
 }
 async function publishFromComposer(target){
-  const composer=document.querySelector(".chat-composer"),body=(composer?.querySelector(".composer-input")?.value||"").trim(),pinned=!!composer?.querySelector(".composer-pin-btn")?.classList.contains("active"),title=body.length>60?body.slice(0,60)+"…":body;
+  const composer=visibleComposer(),body=(composer?.querySelector(".composer-input")?.value||"").trim(),pinned=!!composer?.querySelector(".composer-pin-btn")?.classList.contains("active"),title=body.length>60?body.slice(0,60)+"…":body;
   const aud=target==="all"?{all:true,ids:[]}:{all:false,ids:[Number(target)]};
   if(!body)return toast("יש להזין תוכן","error");if(!checkOnline())return;
   const sendBtn=composer.querySelector(".composer-send-btn");document.querySelectorAll(".composer-menu").forEach(m=>m.hidden=true);setBusy(sendBtn,true,"...");
