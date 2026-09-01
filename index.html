@@ -6171,6 +6171,7 @@ async function bootstrap(){
     await loadAppData();
     initAppHistory();
     const savedScreen=sessionStorage.getItem("__izazoo_returnScreen");
+    __dlog(`bootstrap: savedScreen from sessionStorage = ${savedScreen}, screenRenderers has it = ${savedScreen?!!screenRenderers[savedScreen]:"n/a"}`);
     if(savedScreen){
       sessionStorage.removeItem("__izazoo_returnScreen");
       if(screenRenderers[savedScreen])goToScreen(savedScreen,{push:false});
@@ -6184,7 +6185,9 @@ async function bootstrap(){
   }
 }
 function forceRefresh(){
+  __dlog(`forceRefresh() called, currentScreen=${currentScreen}, saving to sessionStorage`);
   sessionStorage.setItem("__izazoo_returnScreen",currentScreen);
+  __dlog(`forceRefresh() saved value=${sessionStorage.getItem("__izazoo_returnScreen")}, calling location.reload()`);
   location.reload();
 }
 bootstrap();
