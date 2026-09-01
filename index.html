@@ -5199,6 +5199,7 @@ function dashboard(){
     </div>
   </div>`;
   renderOfflineBar();
+  __forceRepaint();
 }function portraitCat(ico,name,count,action,kind){return `<button class="portrait-cat ${kind}" onclick="${action}"><span class="portrait-cat-icon">${ico}</span><span class="portrait-cat-name">${name}</span><span class="portrait-cat-count">${count}</span></button>`}
 function portraitBottomCat(ico,name,count,action,kind){return `<button class="portrait-bottom-cat ${kind}" onclick="${action}"><span class="portrait-bottom-icon">${ico}</span><span class="portrait-bottom-name">${name}</span><span class="portrait-bottom-count">${count}</span></button>`}
 function landscapeCat(ico,name,count,action,kind){return `<button class="landscape-cat ${kind}" onclick="${action}"><span class="landscape-cat-icon">${ico}</span><span class="landscape-cat-name">${name}</span><span class="landscape-cat-count">${count}</span></button>`}
@@ -5297,6 +5298,13 @@ async function saveFeedback(id,btn){
 function page(title,sub,active,content,fab=""){
   currentSearchContext=active;const moduleClass=`module-${active}`;const showSearch=["problems","tasks","updates"].includes(active);
   root().innerHTML=`<div class="${moduleClass}"><div class="desktop-layout">${sidebar(active)}<main class="main full-module-main"><div class="topbar module-topbar"><button class="module-back" aria-label="חזרה" onclick="appBack()">‹</button><div class="greeting module-heading"><h1>${title}</h1><div class="date">${sub}</div></div><div class="module-top-tools">${businessSelectorHTML()}</div></div>${showSearch?searchBoxHTML(active):""}<div data-search-context="${active}">${content}</div>${fab}</main></div><div class="mobile-layout"><div class="mobile-header module-mobile-header"><button class="module-back" aria-label="חזרה" onclick="appBack()">‹</button><div class="mobile-title-wrap module-heading"><div class="mobile-brand">${title}</div><div class="date">${sub}</div></div><div class="module-top-tools">${businessSelectorHTML()}</div></div>${showSearch?searchBoxHTML(active):""}<div data-search-context="${active}">${content}</div>${fab}</div></div>`;renderOfflineBar();
+  __forceRepaint();
+}
+function __forceRepaint(){
+  const el=root();if(!el)return;
+  void el.offsetHeight;
+  el.style.transform="translateZ(0)";
+  requestAnimationFrame(()=>{requestAnimationFrame(()=>{el.style.transform="";});});
 }
 function problemCardHTML(x){
   const title=esc(x.title||"");
