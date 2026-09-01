@@ -5396,19 +5396,19 @@ async function saveProblemEdit(id,btn){
   showModal(problemFormTemplate(problems.find(p=>Number(p.id)===Number(id)),false));
 }
 async function confirmCloseProblem(id){
-  hideModal();
   const {error}=await supabaseClient.rpc("close_problem",{problem_id:Number(id)});
   if(error){console.error(error);return alert("לא ניתן לסגור את התקלה: "+error.message);}
   await loadProblems();await loadProblemActivity();
   problemsScreen();
-  showUndoToast("התקלה נסגרה",()=>undoCloseProblem(id));
+  const item=problems.find(x=>Number(x.id)===Number(id));
+  showModal(`<h2>לסגור את התקלה?</h2><p>${item?`"${esc(item.title)}" תועבר להיסטוריה.`:"התקלה תועבר להיסטוריה."}</p><div class="actions"><button class="secondary" onclick="undoCloseProblem(${Number(id)})">ביטול</button><button class="primary" onclick="hideModal()">סגור תקלה</button></div>`);
 }
 async function undoCloseProblem(id){
   const {error}=await supabaseClient.rpc("reopen_problem",{problem_id:Number(id)});
   if(error){console.error(error);return alert("לא ניתן לפתוח מחדש את התקלה: "+error.message);}
   await loadProblems();await loadProblemActivity();
+  hideModal();
   problemsScreen();
-  toast("התקלה נפתחה מחדש");
 }
 function showUndoToast(message,undoFn){
   document.querySelector(".app-toast")?.remove();
