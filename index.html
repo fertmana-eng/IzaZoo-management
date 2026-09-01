@@ -5018,11 +5018,8 @@ async function renderNamedScreen(name){
 async function goToScreen(name,{push=true,direction="forward"}={}){
   if(!screenRenderers[name])name="home";
   if(currentScreen===name){await renderNamedScreen(name);return;}
-  const animate=moduleNames.has(currentScreen)||moduleNames.has(name);
-  if(animate)await animateRootOut(direction);
   previousScreen=currentScreen;currentScreen=name;
   await renderNamedScreen(name);
-  if(animate)animateRootIn(direction);
   if(push)history.pushState({izazoo:true,view:name},"",`#${name}`);
 }
 function navigateModule(name,push=true){return goToScreen(name,{push,direction:"forward"});}
@@ -6103,7 +6100,7 @@ function syncVisualViewport(){const vv=window.visualViewport,h=vv?.height||windo
 function focusFieldIntoView(target){if(!target||!target.matches("input,textarea,select"))return;setTimeout(()=>target.scrollIntoView({behavior:"smooth",block:"center",inline:"nearest"}),180);}
 window.visualViewport?.addEventListener("resize",syncVisualViewport);window.visualViewport?.addEventListener("scroll",syncVisualViewport);document.addEventListener("focusin",e=>focusFieldIntoView(e.target));syncVisualViewport();
 function showModal(inner,options={}){document.getElementById("modal")?.remove();document.body.insertAdjacentHTML("beforeend",`<div class="modal" id="modal" data-exit-modal="${options.exitModal?"1":"0"}"><div class="modal-card">${inner}</div></div>`);syncVisualViewport();}
-function hideModal(){const modal=document.getElementById("modal");if(!modal){calendarReturnDate=null;return;}const card=modal.querySelector(".modal-card");if(card?.animate){card.animate([{opacity:1,transform:"translateY(0) scale(1)"},{opacity:0,transform:"translateY(7px) scale(.97)"}],{duration:110,easing:"ease-in"});modal.animate([{opacity:1},{opacity:0}],{duration:110,easing:"ease-in"});}modal.remove();calendarReturnDate=null;}
+function hideModal(){const modal=document.getElementById("modal");if(!modal){calendarReturnDate=null;return;}modal.remove();calendarReturnDate=null;}
 function setBusy(btn,busy,label=""){
   if(!btn)return;
   if(busy){
@@ -6179,10 +6176,10 @@ async function bootstrap(){
     initAppHistory();
     const savedScreen=sessionStorage.getItem("__izazoo_returnScreen");
     __dlog(`bootstrap: savedScreen from sessionStorage = ${savedScreen}, screenRenderers has it = ${savedScreen?!!screenRenderers[savedScreen]:"n/a"}`);
-    if(savedScreen){
+    if(savedScreen&&screenRenderers[savedScreen]){
       sessionStorage.removeItem("__izazoo_returnScreen");
-      if(screenRenderers[savedScreen])goToScreen(savedScreen,{push:false});
-      else dashboard();
+      dashboard();
+      setTimeout(()=>{__dlog(`bootstrap: delayed navigation to ${savedScreen}`);goToScreen(savedScreen,{push:false});},120);
     }else{
       dashboard();
     }
