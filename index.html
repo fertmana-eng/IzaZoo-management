@@ -4126,7 +4126,8 @@ body{overscroll-behavior:none}
 .mobile-title-wrap{flex:1}
 .full-module-main{grid-column:2/-1!important;padding-inline:18px!important}
 .offline-bar{position:fixed;z-index:10000;top:0;left:0;right:0;background:#7f413d;color:#fff;text-align:center;padding:5px;font-size:11px}
-.app-toast{position:fixed;z-index:10001;left:50%;bottom:25px;transform:translate(-50%,20px);opacity:0;background:#21343f;color:#fff;padding:10px 15px;box-shadow:0 10px 30px rgba(0,0,0,.2);font-size:12px;transition:.18s ease}
+.app-toast{position:fixed;z-index:10001;left:50%;bottom:25px;transform:translate(-50%,20px);opacity:0;background:#21343f;color:#fff;padding:10px 15px;box-shadow:0 10px 30px rgba(0,0,0,.2);font-size:12px;transition:.18s ease;display:flex;align-items:center;gap:12px}
+.app-toast-undo{background:transparent;border:0;color:#8ecbff;font-weight:700;font-size:12px;text-decoration:underline;padding:0}
 .app-toast.error{background:#7f413d}.app-toast.show{opacity:1;transform:translate(-50%,0)}
 .profile-card{display:flex;gap:14px;align-items:center;border-bottom:1px solid var(--line);padding:5px 0 18px;margin-bottom:14px}
 .profile-large-avatar{width:52px;height:52px;display:flex;align-items:center;justify-content:center;background:var(--brand);color:#fff;font-size:20px;font-weight:800}
@@ -5394,9 +5395,31 @@ async function saveProblemEdit(id,btn){
   if(data)upsertById(problems,normalizeProblem(data));
   showModal(problemFormTemplate(problems.find(p=>Number(p.id)===Number(id)),false));
 }
-function confirmCloseProblem(id){
-  const item=problems.find(x=>Number(x.id)===Number(id));
-  showModal(`<h2>לסגור את התקלה?</h2><p>${item?`"${esc(item.title)}" תועבר להיסטוריה.`:"התקלה תועבר להיסטוריה."}</p><div class="actions"><button class="secondary" onclick="openProblemDetails(${Number(id)})">ביטול</button><button class="primary" onclick="closeProblem(${Number(id)},this)">סגור תקלה</button></div>`);
+async function confirmCloseProblem(id){
+  hideModal();
+  const {error}=await supabaseClient.rpc("close_problem",{problem_id:Number(id)});
+  if(error){console.error(error);return alert("לא ניתן לסגור את התקלה: "+error.message);}
+  await loadProblems();await loadProblemActivity();
+  problemsScreen();
+  showUndoToast("התקלה נסגרה",()=>undoCloseProblem(id));
+}
+async function undoCloseProblem(id){
+  const {error}=await supabaseClient.rpc("reopen_problem",{problem_id:Number(id)});
+  if(error){console.error(error);return alert("לא ניתן לפתוח מחדש את התקלה: "+error.message);}
+  await loadProblems();await loadProblemActivity();
+  problemsScreen();
+  toast("התקלה נפתחה מחדש");
+}
+function showUndoToast(message,undoFn){
+  document.querySelector(".app-toast")?.remove();
+  const el=document.createElement("div");
+  el.className="app-toast success";
+  el.innerHTML=`<span></span><button type="button" class="app-toast-undo">בטל</button>`;
+  el.querySelector("span").textContent=message;
+  el.querySelector("button").onclick=()=>{el.remove();undoFn();};
+  document.body.appendChild(el);
+  requestAnimationFrame(()=>el.classList.add("show"));
+  setTimeout(()=>{el.classList.remove("show");setTimeout(()=>el.remove(),180)},4000);
 }
 function __dlog(msg){
   let log=[];
@@ -5409,12 +5432,6 @@ function __showDlog(){
   let log=[];
   try{log=JSON.parse(localStorage.getItem("__izazoo_dlog")||"[]");}catch(e){}
   showModal(`<h2>יומן דיבאג (${log.length})</h2><pre style="white-space:pre-wrap;font-size:10.5px;direction:ltr;text-align:left;max-height:65vh;overflow:auto;background:#111;color:#0f0;padding:8px;border-radius:8px">${esc(log.join("\n"))}</pre><div class="actions"><button class="secondary" onclick="localStorage.removeItem('__izazoo_dlog');hideModal()">נקה יומן</button><button class="primary" onclick="hideModal()">סגור</button></div>`);
-}
-async function closeProblem(id,btn){
-  setBusy(btn,true,"סוגר...");
-  const {error}=await supabaseClient.rpc("close_problem",{problem_id:Number(id)});
-  if(error){setBusy(btn,false);console.error(error);return alert("לא ניתן לסגור את התקלה: "+error.message);}
-  await loadProblems();await loadProblemActivity();hideModal();toast("התקלה נסגרה");problemsScreen();
 }
 function confirmReopenProblem(id){
   const item=problems.find(x=>Number(x.id)===Number(id));
