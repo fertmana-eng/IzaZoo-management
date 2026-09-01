@@ -4501,8 +4501,14 @@ let lastViewportMode=null;
 
 const SUPABASE_URL = "https://ocfbgppfpvjfhclpdtao.supabase.co";
 const SUPABASE_KEY = "sb_publishable_tfvkgoOZ5hDt947woGQdSw_PLAaaIa-";
+let lastNetworkActivity=0;
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY,{
-  global:{fetch:(url,options={})=>fetch(url,{...options,cache:"no-store"})}
+  global:{fetch:(url,options={})=>{
+    lastNetworkActivity=Date.now();
+    const shortUrl=String(url).replace(SUPABASE_URL,"");
+    if(typeof __dlog==="function")__dlog(`FETCH start ${shortUrl}`);
+    return fetch(url,{...options,cache:"no-store"}).then(r=>{lastNetworkActivity=Date.now();if(typeof __dlog==="function")__dlog(`FETCH done ${shortUrl} status=${r.status}`);return r;}).catch(e=>{lastNetworkActivity=Date.now();if(typeof __dlog==="function")__dlog(`FETCH FAILED ${shortUrl} ${e}`);throw e;});
+  }}
 });
 const root=()=>document.getElementById("root"),
 esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c])),
@@ -5110,12 +5116,16 @@ async function openSearchResult(type,id){
 }
 
 async function refreshOnResume(){
+  __dlog(`refreshOnResume called, currentUser=${!!currentUser}, online=${navigator.onLine}, msSinceNetwork=${Date.now()-lastNetworkActivity}`);
   if(!currentUser||!navigator.onLine)return;
+  if(Date.now()-lastNetworkActivity<1500){__dlog(`refreshOnResume SKIPPED (recent activity)`);return;}
+  __dlog(`refreshOnResume PROCEEDING - will reload+render`);
   await loadAppData();
   if(currentScreen==="home")dashboard();
   else if(screenRenderers[currentScreen])screenRenderers[currentScreen]();
+  __dlog(`refreshOnResume finished rendering ${currentScreen}`);
 }
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")refreshOnResume()});
+document.addEventListener("visibilitychange",()=>{__dlog(`visibilitychange fired, state=${document.visibilityState}`);if(document.visibilityState==="visible")refreshOnResume()});
 
 function dashboard(){
   currentScreen="home";
@@ -5380,11 +5390,30 @@ function confirmCloseProblem(id){
   const item=problems.find(x=>Number(x.id)===Number(id));
   showModal(`<h2>לסגור את התקלה?</h2><p>${item?`"${esc(item.title)}" תועבר להיסטוריה.`:"התקלה תועבר להיסטוריה."}</p><div class="actions"><button class="secondary" onclick="openProblemDetails(${Number(id)})">ביטול</button><button class="primary" onclick="closeProblem(${Number(id)},this)">סגור תקלה</button></div>`);
 }
+function __dlog(msg){
+  let log=[];
+  try{log=JSON.parse(localStorage.getItem("__izazoo_dlog")||"[]");}catch(e){}
+  log.push(`[${new Date().toISOString().slice(11,23)}] ${msg}`);
+  if(log.length>250)log=log.slice(-250);
+  try{localStorage.setItem("__izazoo_dlog",JSON.stringify(log));}catch(e){}
+}
+function __showDlog(){
+  let log=[];
+  try{log=JSON.parse(localStorage.getItem("__izazoo_dlog")||"[]");}catch(e){}
+  showModal(`<h2>יומן דיבאג (${log.length})</h2><pre style="white-space:pre-wrap;font-size:10.5px;direction:ltr;text-align:left;max-height:65vh;overflow:auto;background:#111;color:#0f0;padding:8px;border-radius:8px">${esc(log.join("\n"))}</pre><div class="actions"><button class="secondary" onclick="localStorage.removeItem('__izazoo_dlog');hideModal()">נקה יומן</button><button class="primary" onclick="hideModal()">סגור</button></div>`);
+}
 async function closeProblem(id,btn){
+  __dlog(`closeProblem START id=${id}`);
   setBusy(btn,true,"סוגר...");
   const {error}=await supabaseClient.rpc("close_problem",{problem_id:Number(id)});
+  __dlog(`closeProblem RPC done error=${!!error}`);
   if(error){setBusy(btn,false);console.error(error);return alert("לא ניתן לסגור את התקלה: "+error.message);}
-  await loadProblems();await loadProblemActivity();hideModal();toast("התקלה נסגרה");problemsScreen();
+  await loadProblems();
+  __dlog(`closeProblem loadProblems done, problems.length=${problems.length}, ids=${problems.map(p=>p.id+":"+p.status).join(",")}`);
+  await loadProblemActivity();
+  __dlog(`closeProblem loadProblemActivity done`);
+  hideModal();toast("התקלה נסגרה");problemsScreen();
+  __dlog(`closeProblem problemsScreen() rendered`);
 }
 function confirmReopenProblem(id){
   const item=problems.find(x=>Number(x.id)===Number(id));
@@ -6151,6 +6180,13 @@ async function bootstrap(){
   }
 }
 bootstrap();
+(function(){
+  const b=document.createElement("button");
+  b.textContent="יומן";
+  b.style.cssText="position:fixed;bottom:8px;left:8px;z-index:999999;background:#c0392b;color:#fff;border:0;border-radius:20px;padding:8px 14px;font-size:12px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.3)";
+  b.onclick=__showDlog;
+  document.body.appendChild(b);
+})();
 </script>
 <script>
 
