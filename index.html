@@ -5411,17 +5411,10 @@ function __showDlog(){
   showModal(`<h2>יומן דיבאג (${log.length})</h2><pre style="white-space:pre-wrap;font-size:10.5px;direction:ltr;text-align:left;max-height:65vh;overflow:auto;background:#111;color:#0f0;padding:8px;border-radius:8px">${esc(log.join("\n"))}</pre><div class="actions"><button class="secondary" onclick="localStorage.removeItem('__izazoo_dlog');hideModal()">נקה יומן</button><button class="primary" onclick="hideModal()">סגור</button></div>`);
 }
 async function closeProblem(id,btn){
-  __dlog(`closeProblem START id=${id}`);
   setBusy(btn,true,"סוגר...");
   const {error}=await supabaseClient.rpc("close_problem",{problem_id:Number(id)});
-  __dlog(`closeProblem RPC done error=${!!error}`);
   if(error){setBusy(btn,false);console.error(error);return alert("לא ניתן לסגור את התקלה: "+error.message);}
-  await loadProblems();
-  __dlog(`closeProblem loadProblems done, problems.length=${problems.length}, ids=${problems.map(p=>p.id+":"+p.status).join(",")}`);
-  await loadProblemActivity();
-  __dlog(`closeProblem loadProblemActivity done`);
-  hideModal();toast("התקלה נסגרה");problemsScreen();
-  __dlog(`closeProblem problemsScreen() rendered`);
+  forceRefresh();
 }
 function confirmReopenProblem(id){
   const item=problems.find(x=>Number(x.id)===Number(id));
@@ -5431,7 +5424,7 @@ async function reopenProblem(id,btn){
   setBusy(btn,true,"פותח...");
   const {error}=await supabaseClient.rpc("reopen_problem",{problem_id:Number(id)});
   if(error){setBusy(btn,false);console.error(error);return alert("לא ניתן לפתוח מחדש את התקלה: "+error.message);}
-  await loadProblems();await loadProblemActivity();hideModal();problemsScreen();
+  forceRefresh();
 }
 function canEditUpdate(u){return !!u&&u.created_by===currentUser.id;}
 function togglePinMenu(btn,id){const menu=btn.nextElementSibling;const opening=menu.hidden;document.querySelectorAll(".pin-dropdown").forEach(m=>m.hidden=true);menu.hidden=!opening;}
@@ -5817,9 +5810,7 @@ async function completeTask(id,btn){
     return alert("לא ניתן להשלים את המשימה: "+error.message);
   }
 
-  await loadTasks();
-  hideModal();
-  tasksScreen();
+  forceRefresh();
 }
 function confirmReopenTask(id){
   const t=tasks.find(x=>Number(x.id)===Number(id));
@@ -5843,9 +5834,7 @@ async function reopenTask(id,btn){
     return alert("לא ניתן לפתוח את המשימה מחדש: "+error.message);
   }
 
-  await loadTasks();
-  hideModal();
-  tasksScreen();
+  forceRefresh();
 }
 
 function knowledgeCardHTML(k){
@@ -6181,11 +6170,22 @@ async function bootstrap(){
     if(!ok)return;
     await loadAppData();
     initAppHistory();
-    dashboard();
+    const savedScreen=sessionStorage.getItem("__izazoo_returnScreen");
+    if(savedScreen){
+      sessionStorage.removeItem("__izazoo_returnScreen");
+      if(screenRenderers[savedScreen])goToScreen(savedScreen,{push:false});
+      else dashboard();
+    }else{
+      dashboard();
+    }
     if(currentUser.must_change_password)setTimeout(()=>changePasswordModal(true),80);
   }else{
     await login();
   }
+}
+function forceRefresh(){
+  sessionStorage.setItem("__izazoo_returnScreen",currentScreen);
+  location.reload();
 }
 bootstrap();
 (function(){
