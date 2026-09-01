@@ -5303,8 +5303,11 @@ function page(title,sub,active,content,fab=""){
 function __forceRepaint(){
   const el=root();if(!el)return;
   void el.offsetHeight;
-  el.style.transform="translateZ(0)";
-  requestAnimationFrame(()=>{requestAnimationFrame(()=>{el.style.transform="";});});
+  const nudge=document.createElement("div");
+  nudge.style.cssText="position:fixed;width:1px;height:1px;top:0;left:0;opacity:0;pointer-events:none;z-index:-1";
+  document.body.appendChild(nudge);
+  void nudge.offsetHeight;
+  nudge.remove();
 }
 function problemCardHTML(x){
   const title=esc(x.title||"");
@@ -5414,7 +5417,7 @@ async function closeProblem(id,btn){
   setBusy(btn,true,"סוגר...");
   const {error}=await supabaseClient.rpc("close_problem",{problem_id:Number(id)});
   if(error){setBusy(btn,false);console.error(error);return alert("לא ניתן לסגור את התקלה: "+error.message);}
-  forceRefresh();
+  await loadProblems();await loadProblemActivity();hideModal();toast("התקלה נסגרה");problemsScreen();
 }
 function confirmReopenProblem(id){
   const item=problems.find(x=>Number(x.id)===Number(id));
@@ -5424,7 +5427,7 @@ async function reopenProblem(id,btn){
   setBusy(btn,true,"פותח...");
   const {error}=await supabaseClient.rpc("reopen_problem",{problem_id:Number(id)});
   if(error){setBusy(btn,false);console.error(error);return alert("לא ניתן לפתוח מחדש את התקלה: "+error.message);}
-  forceRefresh();
+  await loadProblems();await loadProblemActivity();hideModal();problemsScreen();
 }
 function canEditUpdate(u){return !!u&&u.created_by===currentUser.id;}
 function togglePinMenu(btn,id){const menu=btn.nextElementSibling;const opening=menu.hidden;document.querySelectorAll(".pin-dropdown").forEach(m=>m.hidden=true);menu.hidden=!opening;}
@@ -5810,7 +5813,9 @@ async function completeTask(id,btn){
     return alert("לא ניתן להשלים את המשימה: "+error.message);
   }
 
-  forceRefresh();
+  await loadTasks();
+  hideModal();
+  tasksScreen();
 }
 function confirmReopenTask(id){
   const t=tasks.find(x=>Number(x.id)===Number(id));
@@ -5834,7 +5839,9 @@ async function reopenTask(id,btn){
     return alert("לא ניתן לפתוח את המשימה מחדש: "+error.message);
   }
 
-  forceRefresh();
+  await loadTasks();
+  hideModal();
+  tasksScreen();
 }
 
 function knowledgeCardHTML(k){
