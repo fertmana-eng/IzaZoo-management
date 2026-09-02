@@ -4462,6 +4462,34 @@ body.is-landscape .full-module-main{height:100dvh!important;overflow-y:auto!impo
 .composer-edit-banner{display:flex;align-items:center;justify-content:space-between;background:var(--module-update-soft);color:var(--module-update);font-size:12px;font-weight:700;border-radius:10px;padding:6px 10px;margin-bottom:6px}
 .composer-edit-banner[hidden]{display:none}
 .composer-edit-banner button{border:0;background:transparent;color:var(--module-update);font-weight:700;font-size:12px}
+
+/* category screens: badge+title+plus header row (problems example) */
+.module-heading h1,.mobile-title-wrap .mobile-brand{display:flex!important;align-items:center;gap:8px;width:100%}
+.cat-title-row{display:flex;align-items:center;gap:8px;width:100%}
+.cat-badge{flex:0 0 auto;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:var(--danger,#c0392b);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.cat-title-text{flex:1;min-width:0}
+.cat-plus-btn{flex:0 0 auto;width:30px;height:30px;border-radius:9px;background:var(--danger,#c0392b);color:#fff;font-size:18px;font-weight:700;border:0;display:flex;align-items:center;justify-content:center;padding:0;line-height:1}
+.module-heading .date:empty,.mobile-title-wrap .date:empty{display:none}
+body.is-portrait .module-problems .mobile-header,
+body.is-portrait .module-tasks .mobile-header,
+body.is-portrait .module-updates .mobile-header,
+body.is-portrait .module-docs .mobile-header{position:sticky;top:0;z-index:6;background:var(--bg)}
+body.is-portrait .module-problems .stable-search,
+body.is-portrait .module-tasks .stable-search,
+body.is-portrait .module-updates .stable-search,
+body.is-portrait .module-docs .stable-search{position:sticky;top:64px;z-index:6;background:var(--bg)}
+
+/* portrait home: put business/user/logout tools into the empty space beside the greeting */
+body.is-portrait .portrait-single-header{padding-bottom:12px!important}
+body.is-portrait .portrait-header-row{display:flex!important;justify-content:space-between;align-items:flex-start;gap:8px}
+body.is-portrait .portrait-header-greeting{min-width:0}
+body.is-portrait .portrait-header-greeting h1{margin:0 0 4px!important}
+body.is-portrait .portrait-header-greeting .portrait-single-date{margin:0!important}
+body.is-portrait .portrait-header-tools-compact{display:flex!important;flex-direction:row;align-items:center;gap:5px;flex:0 0 auto;width:150px;margin:0!important;height:30px}
+body.is-portrait .portrait-header-tools-compact .business-select,
+body.is-portrait .portrait-header-tools-compact .business-static{flex:1 1 auto;min-width:0;height:30px!important;font-size:10.5px!important;padding:0 4px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.is-portrait .portrait-header-tools-compact .header-icon-btn{flex:0 0 auto;width:30px;height:30px;padding:0!important;font-size:14px!important;display:flex!important;align-items:center;justify-content:center;line-height:1!important;overflow:visible}
+body.is-portrait .portrait-single-header .stable-search{margin-top:14px!important}
 </style>
 </head>
 <body><div id="root"></div>
@@ -5171,12 +5199,16 @@ function dashboard(){
     <div class="mobile-layout portrait-dashboard portrait-single-column">
       <main class="portrait-single-workspace">
         <header class="portrait-single-header">
-          <h1>שלום, ${first}</h1>
-          <div class="portrait-single-date">${fmtFull()}</div>
-          <div class="clean-header-tools">
-            ${businessSelectorHTML()}
-            <button class="header-action" onclick="userScreen()">👤 משתמש</button>
-            <button class="header-action" onclick="confirmLogout()">התנתקות</button>
+          <div class="portrait-header-row">
+            <div class="portrait-header-greeting">
+              <h1>שלום, ${first}</h1>
+              <div class="portrait-single-date">${fmtFull()}</div>
+            </div>
+            <div class="clean-header-tools portrait-header-tools-compact">
+              ${businessSelectorHTML()}
+              <button class="header-action header-icon-btn" onclick="userScreen()" aria-label="משתמש">👤</button>
+              <button class="header-action header-icon-btn" onclick="confirmLogout()" aria-label="התנתקות">⏻</button>
+            </div>
           </div>
           ${searchBoxHTML("home")}
         </header>
@@ -5334,8 +5366,12 @@ function problemsScreen(){
   const closedProblems=scoped.filter(x=>x.status==="closed").sort((a,b)=>new Date(b.closed_at||0)-new Date(a.closed_at||0));
   const openRows=openProblems.length?openProblems.map(problemCardHTML).join(""):`<div class="u-sub">אין תקלות פתוחות</div>`;
   const closedRows=closedProblems.length?closedProblems.map(problemCardHTML).join(""):`<div class="u-sub">אין תקלות סגורות עדיין</div>`;
-  const fab=currentBusinessId==="all"?"":`<button class="fab" onclick="newProblem()">＋ תקלה חדשה</button>`;
-  page("תקלות",`${openProblems.length} תקלות פתוחות`,"problems",`<div class="page problems-page"><h3 style="margin:0 0 10px">פתוחות</h3>${openRows}<h3 style="margin:20px 0 10px">היסטוריה</h3>${closedRows}</div>`,fab);
+  const canCreate=currentBusinessId!=="all";
+  const titleHTML=categoryHeaderTitle("תקלות",openProblems.length,canCreate?"newProblem()":null);
+  page(titleHTML,"","problems",`<div class="page problems-page"><h3 style="margin:0 0 10px">פתוחות</h3>${openRows}<h3 style="margin:20px 0 10px">היסטוריה</h3>${closedRows}</div>`,"");
+}
+function categoryHeaderTitle(name,count,plusOnclick){
+  return `<span class="cat-title-row"><span class="cat-badge">${count}</span><span class="cat-title-text">${esc(name)}</span>${plusOnclick?`<button type="button" class="cat-plus-btn" onclick="${plusOnclick}">+</button>`:""}</span>`;
 }
 function toggleProblemDescription(id){const el=document.getElementById(`desc-${id}`),btn=document.getElementById(`desc-btn-${id}`);if(!el||!btn)return;if(el.classList.contains("is-collapsed")){el.classList.remove("is-collapsed");btn.textContent="הצג פחות";}else{el.classList.add("is-collapsed");btn.textContent="הצג עוד";}}
 function problemFormTemplate(x,editing=false){
