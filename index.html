@@ -4509,6 +4509,30 @@ body.is-portrait .module-docs .mobile-header{background:transparent!important;bo
 .module-tasks .cat-badge,.module-tasks .cat-plus-btn{background:var(--module-task)!important}
 .module-updates .cat-badge,.module-updates .cat-plus-btn{background:var(--module-update)!important}
 .module-docs .cat-badge,.module-docs .cat-plus-btn{background:var(--module-doc)!important}
+body.is-landscape .module-problems .desktop-layout,
+body.is-landscape .module-tasks .desktop-layout,
+body.is-landscape .module-updates .desktop-layout{grid-template-columns:minmax(0,1fr)!important}
+body.is-landscape .module-problems .sidebar,
+body.is-landscape .module-tasks .sidebar,
+body.is-landscape .module-updates .sidebar{display:none!important}
+body.is-landscape .module-problems .full-module-main,
+body.is-landscape .module-tasks .full-module-main,
+body.is-landscape .module-updates .full-module-main{grid-column:1/-1!important;max-width:none!important}
+body.is-landscape .module-problems .topbar .module-top-tools,
+body.is-landscape .module-tasks .topbar .module-top-tools,
+body.is-landscape .module-updates .topbar .module-top-tools{display:none!important}
+body.is-landscape .module-problems .desktop-sticky-head,
+body.is-landscape .module-tasks .desktop-sticky-head,
+body.is-landscape .module-updates .desktop-sticky-head{position:sticky;top:0;z-index:6;background:var(--bg);padding-bottom:2px}
+body.is-landscape .module-problems .topbar,
+body.is-landscape .module-tasks .topbar,
+body.is-landscape .module-updates .topbar{background:transparent!important;border-bottom:0!important;margin-bottom:2px!important}
+body.is-landscape .module-problems .stable-search,
+body.is-landscape .module-tasks .stable-search,
+body.is-landscape .module-updates .stable-search{border-radius:12px!important;overflow:hidden;border-inline-start:0!important}
+body.is-landscape .module-problems .stable-search input{box-shadow:inset -4px 0 0 0 var(--module-problem)!important;border-radius:12px!important}
+body.is-landscape .module-tasks .stable-search input{box-shadow:inset -4px 0 0 0 var(--module-task)!important;border-radius:12px!important}
+body.is-landscape .module-updates .stable-search input{box-shadow:inset -4px 0 0 0 var(--module-update)!important;border-radius:12px!important}
 .cat-plus-icon{font-size:16px;line-height:1}
 .cat-plus-label{font-size:12px;font-weight:700;white-space:nowrap}
 body.is-portrait .module-problems .mobile-header .module-back,
@@ -5369,7 +5393,7 @@ async function saveFeedback(id,btn){
 function page(title,sub,active,content,fab="",stickyExtra=""){
   currentSearchContext=active;const moduleClass=`module-${active}`;const showSearch=["problems","tasks","updates"].includes(active);
   const bizTag=showSearch?`<div class="active-business-tag">עסק פעיל: <b>${esc(activeBusinessLabel())}</b></div>`:"";
-  root().innerHTML=`<div class="${moduleClass}"><div class="desktop-layout">${sidebar(active)}<main class="main full-module-main"><div class="topbar module-topbar"><button class="module-back" aria-label="חזרה" onclick="appBack()">‹</button><div class="greeting module-heading"><h1>${title}</h1><div class="date">${sub}</div></div><div class="module-top-tools">${businessSelectorHTML()}</div></div>${showSearch?searchBoxHTML(active):""}${stickyExtra}<div data-search-context="${active}">${content}</div>${fab}</main></div><div class="mobile-layout"><div class="mobile-sticky-head"><div class="mobile-header module-mobile-header"><button class="module-back" aria-label="חזרה" onclick="appBack()">‹</button><div class="mobile-title-wrap module-heading"><div class="mobile-brand">${title}</div><div class="date">${sub}</div></div><div class="module-top-tools">${businessSelectorHTML()}</div></div>${bizTag}${showSearch?searchBoxHTML(active):""}${stickyExtra}</div><div data-search-context="${active}">${content}</div>${fab}</div></div>`;renderOfflineBar();
+  root().innerHTML=`<div class="${moduleClass}"><div class="desktop-layout">${sidebar(active)}<main class="main full-module-main"><div class="desktop-sticky-head"><div class="topbar module-topbar"><button class="module-back" aria-label="חזרה" onclick="appBack()">‹</button><div class="greeting module-heading"><h1>${title}</h1><div class="date">${sub}</div></div><div class="module-top-tools">${businessSelectorHTML()}</div></div>${bizTag}${showSearch?searchBoxHTML(active):""}${stickyExtra}</div><div data-search-context="${active}">${content}</div>${fab}</main></div><div class="mobile-layout"><div class="mobile-sticky-head"><div class="mobile-header module-mobile-header"><button class="module-back" aria-label="חזרה" onclick="appBack()">‹</button><div class="mobile-title-wrap module-heading"><div class="mobile-brand">${title}</div><div class="date">${sub}</div></div><div class="module-top-tools">${businessSelectorHTML()}</div></div>${bizTag}${showSearch?searchBoxHTML(active):""}${stickyExtra}</div><div data-search-context="${active}">${content}</div>${fab}</div></div>`;renderOfflineBar();
   __forceRepaint();
 }
 function __forceRepaint(){
