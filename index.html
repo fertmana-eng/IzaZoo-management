@@ -4466,7 +4466,7 @@ body.is-landscape .full-module-main{height:100dvh!important;overflow-y:auto!impo
 /* category screens: badge+title+plus header row (problems example) */
 .module-heading h1,.mobile-title-wrap .mobile-brand{display:flex!important;align-items:center;gap:8px;width:100%}
 .cat-title-row{display:flex;align-items:center;gap:8px;width:100%}
-.cat-badge{flex:0 0 auto;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:var(--danger,#c0392b);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.cat-badge{flex:0 0 auto;min-width:26px;height:20px;padding:0 8px;border-radius:10px;background:var(--danger,#c0392b);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
 .cat-title-text{flex:1;min-width:0}
 .cat-plus-btn{flex:0 0 auto;width:30px;height:30px;border-radius:9px;background:var(--danger,#c0392b);color:#fff;font-size:18px;font-weight:700;border:0;display:flex;align-items:center;justify-content:center;padding:0;line-height:1}
 .module-heading .date:empty,.mobile-title-wrap .date:empty{display:none}
@@ -4479,6 +4479,18 @@ body.is-portrait .module-tasks .mobile-header .module-top-tools,
 body.is-portrait .module-updates .mobile-header .module-top-tools{display:none!important}
 .active-business-tag{margin-top:6px;padding:0 2px;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px}
 .active-business-tag b{color:var(--ink);font-weight:600}
+body.is-portrait .module-problems .mobile-header,
+body.is-portrait .module-tasks .mobile-header,
+body.is-portrait .module-updates .mobile-header,
+body.is-portrait .module-docs .mobile-header{background:transparent!important;border-bottom:0!important}
+.cat-plus-btn{width:auto!important;height:24px!important;border-radius:12px!important;padding:0 12px 0 10px!important;gap:5px}
+.cat-plus-icon{font-size:16px;line-height:1}
+.cat-plus-label{font-size:12px;font-weight:700;white-space:nowrap}
+body.is-portrait .module-problems .mobile-header .module-back,
+body.is-portrait .module-tasks .mobile-header .module-back,
+body.is-portrait .module-updates .mobile-header .module-back,
+body.is-portrait .module-docs .mobile-header .module-back{background:transparent!important;border:0!important;width:auto!important;height:auto!important}
+.problem-title-divider{display:block!important;height:1px!important;background:rgba(0,0,0,.06)!important;margin:4px 0!important;border:0!important;padding:0!important}
 .mobile-brand,.module-heading h1{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif!important}
 body.is-portrait .portrait-single-header h1{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif!important}
 
@@ -5372,11 +5384,11 @@ function problemsScreen(){
   const openRows=openProblems.length?openProblems.map(problemCardHTML).join(""):`<div class="u-sub">אין תקלות פתוחות</div>`;
   const closedRows=closedProblems.length?closedProblems.map(problemCardHTML).join(""):`<div class="u-sub">אין תקלות סגורות עדיין</div>`;
   const canCreate=currentBusinessId!=="all";
-  const titleHTML=categoryHeaderTitle("תקלות",openProblems.length,canCreate?"newProblem()":null);
+  const titleHTML=categoryHeaderTitle("תקלות",openProblems.length,canCreate?"newProblem()":null,"פתיחת תקלה");
   page(titleHTML,"","problems",`<div class="page problems-page"><h3 style="margin:0 0 10px">פתוחות</h3>${openRows}<h3 style="margin:20px 0 10px">היסטוריה</h3>${closedRows}</div>`,"");
 }
-function categoryHeaderTitle(name,count,plusOnclick){
-  return `<span class="cat-title-row"><span class="cat-badge">${count}</span><span class="cat-title-text">${esc(name)}</span>${plusOnclick?`<button type="button" class="cat-plus-btn" onclick="${plusOnclick}">+</button>`:""}</span>`;
+function categoryHeaderTitle(name,count,plusOnclick,plusLabel){
+  return `<span class="cat-title-row"><span class="cat-badge">${count}</span><span class="cat-title-text">${esc(name)}</span>${plusOnclick?`<button type="button" class="cat-plus-btn" onclick="${plusOnclick}"><span class="cat-plus-icon">+</span>${plusLabel?`<span class="cat-plus-label">${esc(plusLabel)}</span>`:""}</button>`:""}</span>`;
 }
 function toggleProblemDescription(id){const el=document.getElementById(`desc-${id}`),btn=document.getElementById(`desc-btn-${id}`);if(!el||!btn)return;if(el.classList.contains("is-collapsed")){el.classList.remove("is-collapsed");btn.textContent="הצג פחות";}else{el.classList.add("is-collapsed");btn.textContent="הצג עוד";}}
 function problemFormTemplate(x,editing=false){
