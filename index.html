@@ -4466,8 +4466,26 @@ body.is-landscape .full-module-main{height:100dvh!important;overflow-y:auto!impo
 /* category screens: badge+title+plus header row (problems example) */
 .module-heading h1,.mobile-title-wrap .mobile-brand{display:flex!important;align-items:center;gap:8px;width:100%}
 .cat-title-row{display:flex;align-items:center;gap:8px;width:100%}
+.cat-title-cluster{display:flex;flex-direction:column;align-items:flex-start;min-width:0}
+.cat-title-main{display:flex;align-items:center;gap:8px}
+.cat-biz-inline{font-size:11px;color:var(--muted);margin-top:1px}
+.active-business-tag{margin:1px 31px 0 2px;font-size:11px;color:var(--muted);text-align:right;padding-bottom:9px;position:relative}
+.active-business-tag::after{content:"";position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:240px;height:1px;background:rgba(0,0,0,.08)}
+.stable-search input{border-radius:12px!important}
+body.is-portrait .module-problems .stable-search,
+body.is-portrait .module-tasks .stable-search,
+body.is-portrait .module-updates .stable-search,
+body.is-portrait .module-docs .stable-search{margin-inline:0!important;border-radius:12px!important;overflow:hidden}
+body.is-portrait .module-problems .mobile-header,
+body.is-portrait .module-tasks .mobile-header,
+body.is-portrait .module-updates .mobile-header,
+body.is-portrait .module-docs .mobile-header{margin-bottom:2px!important}
+body.is-portrait .stable-search input{border-radius:12px!important}
+body.is-portrait .stable-search{border-radius:12px;overflow:hidden}
+.active-business-tag b{color:var(--ink);font-weight:600}
+.cat-biz-inline b{color:var(--ink);font-weight:600}
 .cat-badge{flex:0 0 auto;min-width:26px;height:20px;padding:0 8px;border-radius:10px;background:var(--danger,#c0392b);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
-.cat-title-text{flex:1;min-width:0}
+.cat-title-text{flex:0 1 auto;min-width:0}
 .cat-plus-btn{flex:0 0 auto;width:30px;height:30px;border-radius:9px;background:var(--danger,#c0392b);color:#fff;font-size:18px;font-weight:700;border:0;display:flex;align-items:center;justify-content:center;padding:0;line-height:1}
 .module-heading .date:empty,.mobile-title-wrap .date:empty{display:none}
 body.is-portrait .module-problems .mobile-sticky-head,
@@ -4477,13 +4495,12 @@ body.is-portrait .module-docs .mobile-sticky-head{position:sticky;top:-14px;z-in
 body.is-portrait .module-problems .mobile-header .module-top-tools,
 body.is-portrait .module-tasks .mobile-header .module-top-tools,
 body.is-portrait .module-updates .mobile-header .module-top-tools{display:none!important}
-.active-business-tag{margin-top:6px;padding:0 2px;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px}
 .active-business-tag b{color:var(--ink);font-weight:600}
 body.is-portrait .module-problems .mobile-header,
 body.is-portrait .module-tasks .mobile-header,
 body.is-portrait .module-updates .mobile-header,
 body.is-portrait .module-docs .mobile-header{background:transparent!important;border-bottom:0!important}
-.cat-plus-btn{width:auto!important;height:24px!important;border-radius:12px!important;padding:0 12px 0 10px!important;gap:5px}
+.cat-plus-btn{width:auto!important;height:24px!important;border-radius:12px!important;padding:0 12px 0 10px!important;gap:5px;margin-inline-start:auto!important}
 .cat-plus-icon{font-size:16px;line-height:1}
 .cat-plus-label{font-size:12px;font-weight:700;white-space:nowrap}
 body.is-portrait .module-problems .mobile-header .module-back,
@@ -5343,7 +5360,7 @@ async function saveFeedback(id,btn){
 
 function page(title,sub,active,content,fab=""){
   currentSearchContext=active;const moduleClass=`module-${active}`;const showSearch=["problems","tasks","updates"].includes(active);
-  const bizTag=showSearch?`<div class="active-business-tag">🏢 עסק פעיל: <b>${esc(activeBusinessLabel())}</b></div>`:"";
+  const bizTag=showSearch?`<div class="active-business-tag">עסק פעיל: <b>${esc(activeBusinessLabel())}</b></div>`:"";
   root().innerHTML=`<div class="${moduleClass}"><div class="desktop-layout">${sidebar(active)}<main class="main full-module-main"><div class="topbar module-topbar"><button class="module-back" aria-label="חזרה" onclick="appBack()">‹</button><div class="greeting module-heading"><h1>${title}</h1><div class="date">${sub}</div></div><div class="module-top-tools">${businessSelectorHTML()}</div></div>${showSearch?searchBoxHTML(active):""}<div data-search-context="${active}">${content}</div>${fab}</main></div><div class="mobile-layout"><div class="mobile-sticky-head"><div class="mobile-header module-mobile-header"><button class="module-back" aria-label="חזרה" onclick="appBack()">‹</button><div class="mobile-title-wrap module-heading"><div class="mobile-brand">${title}</div><div class="date">${sub}</div></div><div class="module-top-tools">${businessSelectorHTML()}</div></div>${bizTag}${showSearch?searchBoxHTML(active):""}</div><div data-search-context="${active}">${content}</div>${fab}</div></div>`;renderOfflineBar();
   __forceRepaint();
 }
