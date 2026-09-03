@@ -4559,12 +4559,14 @@ body.is-portrait .portrait-single-header .stable-search{margin-top:14px!importan
 .home-v3 .home-h-icons{display:flex;gap:6px}
 .home-v3 .home-h-icons .header-icon-btn{width:26px;height:26px;min-height:0!important;padding:0!important;display:flex!important;align-items:center;justify-content:center;line-height:1!important;border:0!important;background:transparent!important;color:var(--muted)}
 .home-v3 .home-h-icons .header-icon-btn svg{width:16px;height:16px}
-.home-v3 .home-h-row2{display:flex;justify-content:space-between;align-items:center;margin-top:-12px}
+.home-v3 .home-h-row2{display:flex;justify-content:space-between;align-items:center;margin-top:0;padding-bottom:12px;border-bottom:1px solid rgba(0,0,0,.08)}
 .home-v3 .home-h-date{font-size:12px;color:var(--muted)}
-.home-v3 .home-h-business{font-size:12px}
-.home-v3 .home-h-business{display:flex;align-items:center;position:relative}
-.home-v3 .home-h-business .business-select,.home-v3 .home-h-business .business-static{font-size:12px!important;font-weight:600;background:transparent;border:0;padding:0!important;padding-inline-end:14px!important;height:auto!important;margin:0!important;-webkit-appearance:none;appearance:none}
-.home-v3 .home-h-business::before{content:"";position:absolute;left:8px;top:50%;width:6px;height:6px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:translateY(-90%) rotate(45deg);pointer-events:none}
+.home-v3 .home-h-business{display:flex;align-items:center;gap:8px;position:relative;flex:0 1 auto;min-width:0;max-width:60%}
+.home-v3 .home-biz-label{font-size:12px!important;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.home-v3 .home-biz-chevron{flex:0 0 auto;width:6px;height:6px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:rotate(45deg) translateY(-2px)}
+.home-v3 .home-biz-overlay{position:absolute;inset:0;opacity:0;width:100%;height:100%;margin:0;padding:0;border:0;-webkit-appearance:none;appearance:none}
+.home-v3 .home-h-business .business-static{font-size:12px!important;font-weight:600}
+.home-v3 .portrait-single-header .stable-search{margin-inline:0!important}
 </style>
 </head>
 <body><div id="root"></div>
@@ -4838,6 +4840,16 @@ function businessSelectorHTML(){
   if(!bs.length)return `<span class="business-static">אין עסק פעיל</span>`;
   if(bs.length===1&&!canAdmin())return `<span class="business-static">${esc(bs[0].name)}</span>`;
   return `<select class="business-select" onchange="switchBusiness(this.value)">
+    ${canAdmin()?`<option value="all" ${currentBusinessId==="all"?"selected":""}>כל העסקים</option>`:""}
+    ${bs.map(b=>`<option value="${b.id}" ${Number(currentBusinessId)===Number(b.id)?"selected":""}>${esc(b.name)}</option>`).join("")}
+  </select>`;
+}
+function homeBusinessSelectorHTML(){
+  const bs=availableBusinesses();
+  if(!bs.length)return `<span class="business-static">אין עסק פעיל</span>`;
+  if(bs.length===1&&!canAdmin())return `<span class="business-static">${esc(bs[0].name)}</span>`;
+  const currentLabel=currentBusinessId==="all"?"כל העסקים":(businessName(currentBusinessId)||"בחר עסק");
+  return `<span class="home-biz-label">${esc(currentLabel)}</span><span class="home-biz-chevron" aria-hidden="true"></span><select class="business-select home-biz-overlay" onchange="switchBusiness(this.value)" aria-label="בחירת עסק">
     ${canAdmin()?`<option value="all" ${currentBusinessId==="all"?"selected":""}>כל העסקים</option>`:""}
     ${bs.map(b=>`<option value="${b.id}" ${Number(currentBusinessId)===Number(b.id)?"selected":""}>${esc(b.name)}</option>`).join("")}
   </select>`;
@@ -5284,7 +5296,7 @@ function dashboard(){
           </div>
           <div class="home-h-row2">
             <div class="home-h-date">${fmtFull()}</div>
-            <div class="home-h-business">${businessSelectorHTML()}</div>
+            <div class="home-h-business">${homeBusinessSelectorHTML()}</div>
           </div>
           ${searchBoxHTML("home")}
         </header>
