@@ -4586,6 +4586,15 @@ body.is-portrait .portrait-single-header .stable-search{margin-top:14px!importan
 .home-v3 .portrait-bottom-cat.task .portrait-bottom-icon{color:var(--module-task)!important}
 .home-v3 .portrait-bottom-cat.update .portrait-bottom-icon{color:var(--module-update)!important}
 .home-v3 .portrait-bottom-cat.doc .portrait-bottom-icon{color:var(--module-doc)!important}
+.home-v3 .week{background:var(--surface-1,#f1efe6)!important;color:var(--muted)!important;padding:6px 0!important;font-weight:600!important}
+.home-v3 .day.today{background:transparent!important;color:var(--ink)!important;outline:0!important;box-shadow:inset 0 0 0 2px #1a1a1a!important;position:relative;z-index:1}
+.home-v3 .portrait-single-calendar .panel-head.calendar-toolbar{margin-bottom:6px!important;padding-bottom:6px!important}
+.home-v3 .portrait-single-calendar .small-btn{padding:4px 6px!important;font-size:12px!important;border:0!important;background:transparent!important;color:var(--muted)!important;font-weight:600!important}
+.home-v3 .portrait-single-calendar .month-label{font-size:12px!important;font-weight:600!important;color:var(--muted)!important}
+.home-v3 .day.today .day-num{color:var(--ink)!important;font-weight:700}
+.home-v3 .day{position:relative!important}
+.home-v3 .calendar-markers{display:flex!important;position:absolute!important;bottom:3px;left:3px;right:3px;margin:0!important;padding:0!important;gap:0!important;min-height:3px!important;height:3px!important}
+.home-v3 .calendar-marker{flex:1!important;width:auto!important;height:3px!important;border-radius:0!important}
 </style>
 </head>
 <body><div id="root"></div>
@@ -5366,11 +5375,13 @@ function mobileActivityHTML(n){const a=activityItems().slice(0,n);return a.lengt
 async function openItemFromDashboard(type,id){id=Number(id);if(type==="problem"){if(currentScreen!=="problems")await goToScreen("problems",{push:true,direction:"forward"});return openProblemDetails(id);}if(type==="task"){if(currentScreen!=="tasks")await goToScreen("tasks",{push:true,direction:"forward"});return openTaskDetails(id);}if(type==="update"){if(currentScreen!=="updates")await goToScreen("updates",{push:true,direction:"forward"});return focusUpdateThread(id);}}
 
 function calendarHTML(mobile){
-  const y=calCursor.getFullYear(),m=calCursor.getMonth(),first=new Date(y,m,1),last=new Date(y,m+1,0),title=first.toLocaleDateString("he-IL",{month:"long",year:"numeric"}),items=calendarItems();let cells="",offset=first.getDay();
+  const y=calCursor.getFullYear(),m=calCursor.getMonth(),first=new Date(y,m,1),last=new Date(y,m+1,0),items=calendarItems();let cells="",offset=first.getDay();
+  const todayCount=items.filter(x=>x.date===isoToday()).length;
+  const curMonthAbbr=first.toLocaleDateString("he-IL",{month:"short"});
   for(let i=offset-1;i>=0;i--){const d=new Date(y,m,-i);cells+=`<div class="day other"><div class="day-num">${d.getDate()}</div></div>`;}
   for(let d=1;d<=last.getDate();d++){const ds=`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`,its=items.filter(x=>x.date===ds),types=[...new Set(its.map(x=>x.type))],markers=types.map(t=>`<i class="calendar-marker ${t}"></i>`).join("");cells+=`<div class="day ${ds===isoToday()?"today":""} ${its.length?"has-items":""}" onclick="calendarDay('${ds}')"><div class="day-num">${d}</div><div class="calendar-markers">${markers}</div><div class="events">${its.slice(0,3).map(x=>`<div class="event-pill ${typeClass(x.type)}">${typeIcon(x.type)} ${esc(x.title)}</div>`).join("")}</div></div>`;}
   while((offset+last.getDate())%7!==0){const n=(offset+last.getDate())%7,d=7-n;for(let i=1;i<=d;i++)cells+=`<div class="day other"><div class="day-num">${i}</div></div>`;break;}
-  return `<div class="panel-head calendar-toolbar"><div class="month-label">${title}</div><div class="spacer"></div><div class="controls"><button class="small-btn" onclick="prevMonth()">›</button><button class="small-btn" onclick="todayMonth()">היום</button><button class="small-btn" onclick="nextMonth()">‹</button></div></div><div class="week">${["א׳","ב׳","ג׳","ד׳","ה׳","ו׳","ש׳"].map(x=>`<div>${x}</div>`).join("")}</div><div class="calendar">${cells}</div>`;
+  return `<div class="panel-head calendar-toolbar"><div class="month-label">${todayCount?`${todayCount} פריטים פעילים היום`:"אין פריטים פעילים היום"}</div><div class="spacer"></div><div class="controls"><button class="small-btn" onclick="prevMonth()">‹</button><button class="small-btn" onclick="todayMonth()">${esc(curMonthAbbr)}</button><button class="small-btn" onclick="nextMonth()">›</button></div></div><div class="week">${["א׳","ב׳","ג׳","ד׳","ה׳","ו׳","ש׳"].map(x=>`<div>${x}</div>`).join("")}</div><div class="calendar">${cells}</div>`;
 }
 function prevMonth(){calCursor=new Date(calCursor.getFullYear(),calCursor.getMonth()-1,1);dashboard()}
 function nextMonth(){calCursor=new Date(calCursor.getFullYear(),calCursor.getMonth()+1,1);dashboard()}
