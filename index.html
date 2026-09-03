@@ -4486,12 +4486,6 @@ body.is-portrait .module-updates .mobile-header,
 body.is-portrait .module-docs .mobile-header{margin-bottom:2px!important}
 body.is-portrait .stable-search input{border-radius:12px!important}
 body.is-portrait .stable-search{border-radius:12px;overflow:hidden}
-body.is-portrait .module-problems .problem-card,
-body.is-portrait .module-tasks .task-card,
-body.is-portrait .module-docs .knowledge-card{border-inline-start:0!important;border-radius:12px!important;overflow:hidden}
-body.is-portrait .module-problems .problem-card{box-shadow:inset -4px 0 0 0 var(--module-problem)!important}
-body.is-portrait .module-tasks .task-card{box-shadow:inset -4px 0 0 0 var(--module-task)!important}
-body.is-portrait .module-docs .knowledge-card{box-shadow:inset -4px 0 0 0 var(--module-doc)!important}
 .active-business-tag b{color:var(--ink);font-weight:600}
 .cat-biz-inline b{color:var(--ink);font-weight:600}
 .cat-badge{flex:0 0 auto;min-width:26px;height:20px;padding:0 8px;border-radius:10px;background:var(--danger,#c0392b);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
@@ -4539,12 +4533,6 @@ body.is-landscape .module-updates .stable-search{border-radius:12px!important;ov
 body.is-landscape .module-problems .stable-search input{box-shadow:inset -4px 0 0 0 var(--module-problem)!important;border-radius:12px!important}
 body.is-landscape .module-tasks .stable-search input{box-shadow:inset -4px 0 0 0 var(--module-task)!important;border-radius:12px!important}
 body.is-landscape .module-updates .stable-search input{box-shadow:inset -4px 0 0 0 var(--module-update)!important;border-radius:12px!important}
-body.is-landscape .module-problems .problem-card,
-body.is-landscape .module-tasks .task-card,
-body.is-landscape .module-docs .knowledge-card{border-inline-start:0!important;border-radius:12px!important;overflow:hidden}
-body.is-landscape .module-problems .problem-card{box-shadow:inset -4px 0 0 0 var(--module-problem)!important}
-body.is-landscape .module-tasks .task-card{box-shadow:inset -4px 0 0 0 var(--module-task)!important}
-body.is-landscape .module-docs .knowledge-card{box-shadow:inset -4px 0 0 0 var(--module-doc)!important}
 .cat-plus-icon{font-size:16px;line-height:1}
 .cat-plus-label{font-size:12px;font-weight:700;white-space:nowrap}
 body.is-portrait .module-problems .mobile-header .module-back,
@@ -4566,6 +4554,17 @@ body.is-portrait .portrait-header-tools-compact .business-select,
 body.is-portrait .portrait-header-tools-compact .business-static{flex:1 1 auto;min-width:0;height:30px!important;font-size:10.5px!important;padding:0 4px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 body.is-portrait .portrait-header-tools-compact .header-icon-btn{flex:0 0 auto;width:30px;height:30px;padding:0!important;font-size:14px!important;display:flex!important;align-items:center;justify-content:center;line-height:1!important;overflow:visible}
 body.is-portrait .portrait-single-header .stable-search{margin-top:14px!important}
+.home-v3 .home-h-row1{display:flex;justify-content:space-between;align-items:center}
+.home-v3 .home-h-greeting{font-size:22px!important;font-weight:700!important;line-height:30px!important;margin:0!important}
+.home-v3 .home-h-icons{display:flex;gap:6px}
+.home-v3 .home-h-icons .header-icon-btn{width:26px;height:26px;min-height:0!important;padding:0!important;display:flex!important;align-items:center;justify-content:center;line-height:1!important;border:0!important;background:transparent!important;color:var(--muted)}
+.home-v3 .home-h-icons .header-icon-btn svg{width:16px;height:16px}
+.home-v3 .home-h-row2{display:flex;justify-content:space-between;align-items:center;margin-top:-12px}
+.home-v3 .home-h-date{font-size:12px;color:var(--muted)}
+.home-v3 .home-h-business{font-size:12px}
+.home-v3 .home-h-business{display:flex;align-items:center;position:relative}
+.home-v3 .home-h-business .business-select,.home-v3 .home-h-business .business-static{font-size:12px!important;font-weight:600;background:transparent;border:0;padding:0!important;padding-inline-end:14px!important;height:auto!important;margin:0!important;-webkit-appearance:none;appearance:none}
+.home-v3 .home-h-business::before{content:"";position:absolute;left:8px;top:50%;width:6px;height:6px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:translateY(-90%) rotate(45deg);pointer-events:none}
 </style>
 </head>
 <body><div id="root"></div>
@@ -5273,19 +5272,19 @@ function dashboard(){
       </main>
     </div>
 
-    <div class="mobile-layout portrait-dashboard portrait-single-column">
+    <div class="mobile-layout portrait-dashboard portrait-single-column home-v3">
       <main class="portrait-single-workspace">
         <header class="portrait-single-header">
-          <div class="portrait-header-row">
-            <div class="portrait-header-greeting">
-              <h1>שלום, ${first}</h1>
-              <div class="portrait-single-date">${fmtFull()}</div>
+          <div class="home-h-row1">
+            <h1 class="home-h-greeting">שלום, ${first}</h1>
+            <div class="home-h-icons">
+              <button class="header-action header-icon-btn" onclick="userScreen()" aria-label="משתמש"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="8" r="4"/></svg></button>
+              <button class="header-action header-icon-btn" onclick="confirmLogout()" aria-label="התנתקות"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v8"/><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/></svg></button>
             </div>
-            <div class="clean-header-tools portrait-header-tools-compact">
-              ${businessSelectorHTML()}
-              <button class="header-action header-icon-btn" onclick="userScreen()" aria-label="משתמש">👤</button>
-              <button class="header-action header-icon-btn" onclick="confirmLogout()" aria-label="התנתקות">⏻</button>
-            </div>
+          </div>
+          <div class="home-h-row2">
+            <div class="home-h-date">${fmtFull()}</div>
+            <div class="home-h-business">${businessSelectorHTML()}</div>
           </div>
           ${searchBoxHTML("home")}
         </header>
