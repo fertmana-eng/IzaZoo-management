@@ -4535,7 +4535,8 @@ body.is-portrait .module-problems .mobile-header .module-back,
 body.is-portrait .module-tasks .mobile-header .module-back,
 body.is-portrait .module-updates .mobile-header .module-back,
 body.is-portrait .module-docs .mobile-header .module-back{background:transparent!important;border:0!important;width:auto!important;height:auto!important}
-.problem-title-divider{display:none!important}
+.problem-title-divider{display:block!important;height:1px!important;background:var(--line)!important;margin:8px 0!important;border:0!important;padding:0!important}
+.module-problems .problem-description{border-top:0!important;margin-top:0!important;padding-top:0!important}
 .mobile-brand,.module-heading h1{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif!important}
 body.is-portrait .portrait-single-header h1{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif!important}
 
@@ -4600,11 +4601,11 @@ body.is-portrait .module-problems .active-business-tag{border-bottom:1px solid v
 body.is-portrait .module-problems .problem-card{border-inline-start:0!important;box-shadow:none!important;border-radius:0!important;border:0!important;margin:0!important}
 .module-problems .cat-section-card{border:1px solid var(--line);border-radius:0;overflow:hidden;background:var(--paper)}
 .module-problems .cat-section-card h3{margin:0!important;padding:7px 16px 6px!important;background:var(--paper-2)!important;border-bottom:1px solid var(--line)!important}
-.module-problems .cat-section-rows .problem-card{border-bottom:1px solid var(--line)!important}
-.module-problems .cat-section-rows .problem-card:last-child{border-bottom:0!important}
+body.is-portrait .module-problems .cat-section-rows .problem-card{border-bottom:1px solid var(--line)!important}
+body.is-portrait .module-problems .cat-section-rows .problem-card:last-child{border-bottom:0!important}
 .module-problems .cat-section-rows .u-sub{padding:14px 16px}
 body.is-portrait .module-problems.module-problems .mobile-layout{background:var(--canvas)!important}
-body.is-portrait .module-problems .mobile-sticky-head{background:transparent!important}
+body.is-portrait .module-problems .mobile-sticky-head{background:var(--canvas)!important}
 body.is-portrait .module-problems .problems-page h3{background:var(--paper-2)!important}
 body.is-portrait .module-problems .problem-card{background:transparent!important}
 body.is-portrait .module-problems .stable-search{background:transparent!important}
