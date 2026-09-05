@@ -3897,11 +3897,7 @@ body.is-landscape .landscape-brand,
   .problem-meta-line{font-size:11px}
 }
 
-/* v28 title divider + expandable long descriptions */
-.problem-title-divider{
-  padding-bottom:7px;
-  border-bottom:1px solid var(--line);
-}
+/* v28 title divider + expandable long descriptions (superseded by the single rule below) */
 .problem-description.compact.expandable{
   display:-webkit-box;
   -webkit-box-orient:vertical;
@@ -3953,7 +3949,7 @@ body.is-landscape .landscape-brand,
 
 /* v30 complete problems module */
 .clickable-open-item,.problem-card{cursor:pointer}.clickable-open-item:active{opacity:.68}
-.problem-title-divider{height:1px;background:var(--line);margin:8px 0 7px}
+/* .problem-title-divider styling consolidated into the single rule below */
 .problem-description-wrap{margin-top:0}.problem-description.expandable-description{margin:0;padding:0;border:0;line-height:1.45;white-space:pre-wrap}.problem-description.expandable-description.is-collapsed{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
 .description-toggle{position:relative;z-index:3;display:inline-block;margin-top:3px;padding:1px 0;border:0;background:transparent;color:var(--accent);font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .problem-extra-line{margin-top:8px;font-size:11.5px;color:var(--muted)}.problem-extra-line strong{color:var(--ink)}
@@ -4539,7 +4535,7 @@ body.is-portrait .module-problems .mobile-header .module-back,
 body.is-portrait .module-tasks .mobile-header .module-back,
 body.is-portrait .module-updates .mobile-header .module-back,
 body.is-portrait .module-docs .mobile-header .module-back{background:transparent!important;border:0!important;width:auto!important;height:auto!important}
-.problem-title-divider{display:block!important;height:1px!important;background:rgba(0,0,0,.06)!important;margin:4px 0!important;border:0!important;padding:0!important}
+.problem-title-divider{display:none!important}
 .mobile-brand,.module-heading h1{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif!important}
 body.is-portrait .portrait-single-header h1{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif!important}
 
@@ -4575,7 +4571,7 @@ body .login-v2 label{font-family:Arial,"Helvetica Neue","Segoe UI",sans-serif!im
 body .login-v2 input{font-family:Arial,"Helvetica Neue","Segoe UI",sans-serif!important;border-bottom:1px solid var(--line)!important}
 body .login-v2 .primary{border-radius:8px!important;font-family:Arial,"Helvetica Neue","Segoe UI",sans-serif!important;font-weight:600!important;box-shadow:none!important}
 body.is-portrait .home-v3 .portrait-single-card{border-radius:0!important;box-shadow:none!important;border:1px solid var(--line)!important}
-body.is-portrait .home-v3 .portrait-single-card h3{background:var(--paper-2)!important;font-family:Arial,"Helvetica Neue","Segoe UI",sans-serif!important;font-size:16px!important;font-weight:700!important;color:var(--ink)!important}
+body.is-portrait .home-v3 .portrait-single-card h3{background:var(--paper-2)!important;font-family:Arial,"Helvetica Neue","Segoe UI",sans-serif!important;font-size:16px!important;font-weight:700!important;color:var(--ink)!important;padding:7px 16px 6px!important}
 .home-v3 .mobile-list-item{font-family:Arial,"Helvetica Neue","Segoe UI",sans-serif!important;background:transparent!important;padding:8px 12px!important}
 .home-v3 .mobile-list-item .item-title{font-size:12px!important;font-weight:600!important;color:var(--ink)!important;display:flex!important;align-items:center;gap:6px}
 .home-v3 .mobile-list-item .item-meta{font-size:11px!important;color:var(--muted)!important;font-weight:500!important;margin-top:2px!important}
@@ -4584,7 +4580,13 @@ body.is-portrait .home-v3 .portrait-single-card h3{background:var(--paper-2)!imp
 .home-v3 .mobile-list-item.problem .item-icon{color:var(--module-problem)!important}
 .home-v3 .mobile-list-item.task .item-icon{color:var(--module-task)!important}
 .home-v3 .mobile-list-item.update .item-icon{color:var(--module-update)!important}
-body.is-portrait .module-problems .cat-title-text{color:var(--ink)!important;font-family:Arial,"Helvetica Neue","Segoe UI",sans-serif!important;font-weight:700!important}
+body.is-portrait .module-problems .cat-title-text{color:var(--ink)!important;font-family:Arial,"Helvetica Neue","Segoe UI",sans-serif!important;font-weight:700!important;font-size:22px!important}
+body.is-portrait .module-problems .cat-badge{font-family:Arial,"Helvetica Neue","Segoe UI",sans-serif!important}
+body.is-portrait .module-problems .active-business-tag{font-family:Arial,"Helvetica Neue","Segoe UI",sans-serif!important;font-size:12px!important;font-weight:600!important}
+body.is-portrait .module-problems .problem-description,
+body.is-portrait .module-problems .problem-extra-line,
+body.is-portrait .module-problems .problem-meta-line{font-family:Arial,"Helvetica Neue","Segoe UI",sans-serif!important;font-size:11px!important;font-weight:500!important;color:var(--muted)!important}
+body.is-portrait .module-problems .problem-title{font-family:Arial,"Helvetica Neue","Segoe UI",sans-serif!important;font-size:12px!important;font-weight:600!important}
 body.is-portrait .module-problems .stable-search{border-inline-start:0!important}
 body.is-portrait .module-problems .stable-search,
 body.is-portrait .module-problems .stable-search input{box-shadow:none!important}
@@ -4595,7 +4597,21 @@ body.is-portrait .module-problems .problems-page h3{font-family:Arial,"Helvetica
 .module-updates .cat-title-icon{color:var(--module-update)}
 .module-docs .cat-title-icon{color:var(--module-doc)}
 body.is-portrait .module-problems .active-business-tag{border-bottom:1px solid var(--line)!important;margin-inline:2px!important}
-body.is-portrait .module-problems .problem-card{border-inline-start:0!important;box-shadow:none!important;border-radius:0!important;border:1px solid var(--line)!important}
+body.is-portrait .module-problems .problem-card{border-inline-start:0!important;box-shadow:none!important;border-radius:0!important;border:0!important;margin:0!important}
+.module-problems .cat-section-card{border:1px solid var(--line);border-radius:0;overflow:hidden;background:var(--paper)}
+.module-problems .cat-section-card h3{margin:0!important;padding:7px 16px 6px!important;background:var(--paper-2)!important;border-bottom:1px solid var(--line)!important}
+.module-problems .cat-section-rows .problem-card{border-bottom:1px solid var(--line)!important}
+.module-problems .cat-section-rows .problem-card:last-child{border-bottom:0!important}
+.module-problems .cat-section-rows .u-sub{padding:14px 16px}
+body.is-portrait .module-problems.module-problems .mobile-layout{background:var(--canvas)!important}
+body.is-portrait .module-problems .mobile-sticky-head{background:transparent!important}
+body.is-portrait .module-problems .problems-page h3{background:var(--paper-2)!important}
+body.is-portrait .module-problems .problem-card{background:transparent!important}
+body.is-portrait .module-problems .stable-search{background:transparent!important}
+body.is-portrait .module-problems .stable-search input{background:var(--paper)!important}
+.module-problems .page{background:none!important}
+body.is-portrait .home-v3 .portrait-single-workspace{background:var(--canvas)!important}
+.history-toggle-label{font-size:11px!important;font-weight:500!important;color:var(--muted)!important;font-family:Arial,"Helvetica Neue","Segoe UI",sans-serif!important}
 .module-problems .card-title-icon{display:inline-flex;margin-inline-end:4px;color:var(--module-problem)}
 .module-problems .problem-title{display:flex!important;align-items:center}
 body.is-portrait .module-problems .active-business-tag::after{display:none!important}
@@ -5531,7 +5547,15 @@ function problemsScreen(){
   const closedRows=closedProblems.length?closedProblems.map(problemCardHTML).join(""):`<div class="u-sub">אין תקלות סגורות עדיין</div>`;
   const canCreate=currentBusinessId!=="all";
   const titleHTML=categoryHeaderTitle("תקלות",openProblems.length,canCreate?"newProblem()":null,"פתיחת תקלה",'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 17h.01"/></svg>');
-  page(titleHTML,"","problems",`<div class="page problems-page"><h3 style="margin:0 0 10px">פתוחות</h3>${openRows}<h3 style="margin:20px 0 10px">היסטוריה</h3>${closedRows}</div>`,"");
+  page(titleHTML,"","problems",`<div class="page problems-page"><div class="cat-section-card"><h3 style="margin:0">פתוחות</h3><div class="cat-section-rows">${openRows}</div></div><div class="cat-section-card" style="margin-top:20px"><h3 style="margin:0;cursor:pointer;display:flex;align-items:center;justify-content:space-between" onclick="toggleHistorySection('problems-history')"><span>היסטוריה</span><span id="problems-history-toggle-label" class="history-toggle-label">לחץ לפתיחה</span></h3><div id="problems-history" class="cat-section-rows" style="display:none">${closedRows}</div></div></div>`,"");
+}
+function toggleHistorySection(id){
+  const els=document.querySelectorAll("#"+id);
+  const labels=document.querySelectorAll("#"+id+"-toggle-label");
+  if(!els.length)return;
+  const isHidden=!els[0].style.display||els[0].style.display==="none";
+  els.forEach(el=>el.style.display=isHidden?"":"none");
+  labels.forEach(label=>label.textContent=isHidden?"לחץ להסתרה":"לחץ לפתיחה");
 }
 function categoryHeaderTitle(name,count,plusOnclick,plusLabel,icon){
   return `<span class="cat-title-row">${icon?`<span class="cat-title-icon">${icon}</span>`:""}<span class="cat-badge">${count}</span><span class="cat-title-text">${esc(name)}</span>${plusOnclick?`<button type="button" class="cat-plus-btn" onclick="${plusOnclick}"><span class="cat-plus-icon">+</span>${plusLabel?`<span class="cat-plus-label">${esc(plusLabel)}</span>`:""}</button>`:""}</span>`;
