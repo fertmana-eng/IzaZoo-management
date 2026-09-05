@@ -3226,7 +3226,7 @@ input:focus,textarea:focus,select:focus{
 :root{
   --canvas:#f2f1ec;
   --paper:#fdfcf8;
-  --paper-2:#f7f5ef;
+  --paper-2:#f5f2e7;
   --paper-3:#efede6;
 
   --ink:#1f2a30;
@@ -4573,7 +4573,11 @@ body .login-v2 input{font-family:Arial,"Helvetica Neue","Segoe UI",sans-serif!im
 body .login-v2 .primary{border-radius:8px!important;font-family:Arial,"Helvetica Neue","Segoe UI",sans-serif!important;font-weight:600!important;box-shadow:none!important}
 body.is-portrait .home-v3 .portrait-single-card{border-radius:0!important;box-shadow:none!important;border:1px solid var(--line)!important}
 body.is-portrait .home-v3 .portrait-single-card h3{background:var(--paper-2)!important;font-family:Arial,"Helvetica Neue","Segoe UI",sans-serif!important;font-size:16px!important;font-weight:700!important;color:var(--ink)!important;padding:7px 16px 6px!important}
-.home-v3 .mobile-list-item{font-family:Arial,"Helvetica Neue","Segoe UI",sans-serif!important;background:transparent!important;padding:8px 12px!important}
+.home-v3 .mobile-list-item{font-family:Arial,"Helvetica Neue","Segoe UI",sans-serif!important;background:transparent!important;padding:8px 12px!important;border-bottom:1px solid var(--line)!important}
+.home-v3 .mobile-list-item.problem{border-bottom-color:var(--module-problem)!important}
+.home-v3 .mobile-list-item.task{border-bottom-color:var(--module-task)!important}
+.home-v3 .mobile-list-item.update{border-bottom-color:var(--module-update)!important}
+.home-v3 .mobile-list-item:last-child{border-bottom:0!important}
 .home-v3 .mobile-list-item .item-title{font-size:12px!important;font-weight:600!important;color:var(--ink)!important;display:flex!important;align-items:center;gap:6px}
 .home-v3 .mobile-list-item .item-meta{font-size:11px!important;color:var(--muted)!important;font-weight:500!important;margin-top:2px!important}
 .home-v3 .mobile-list-item:before{display:none!important}
@@ -4601,7 +4605,7 @@ body.is-portrait .module-problems .active-business-tag{border-bottom:1px solid v
 body.is-portrait .module-problems .problem-card{border-inline-start:0!important;box-shadow:none!important;border-radius:0!important;border:0!important;margin:0!important}
 .module-problems .cat-section-card{border:1px solid var(--line);border-radius:0;overflow:hidden;background:var(--paper)}
 .module-problems .cat-section-card h3{margin:0!important;padding:7px 16px 6px!important;background:var(--paper-2)!important;border-bottom:1px solid var(--line)!important}
-body.is-portrait .module-problems .cat-section-rows .problem-card{border-bottom:1px solid var(--line)!important}
+body.is-portrait .module-problems .cat-section-rows .problem-card{border-bottom:1px solid var(--module-problem)!important}
 body.is-portrait .module-problems .cat-section-rows .problem-card:last-child{border-bottom:0!important}
 .module-problems .cat-section-rows .u-sub{padding:14px 16px}
 body.is-portrait .module-problems.module-problems .mobile-layout{background:var(--canvas)!important}
@@ -5554,7 +5558,7 @@ function toggleHistorySection(id){
   const els=document.querySelectorAll("#"+id);
   const labels=document.querySelectorAll("#"+id+"-toggle-label");
   if(!els.length)return;
-  const isHidden=!els[0].style.display||els[0].style.display==="none";
+  const isHidden=els[0].style.display==="none";
   els.forEach(el=>el.style.display=isHidden?"":"none");
   labels.forEach(label=>label.textContent=isHidden?"לחץ להסתרה":"לחץ לפתיחה");
 }
@@ -6435,6 +6439,7 @@ function forceRefresh(){
   location.reload();
 }
 bootstrap();
+/* Debug log button disabled during redesign work - re-enable before real release
 (function(){
   const b=document.createElement("button");
   b.textContent="יומן";
@@ -6442,6 +6447,7 @@ bootstrap();
   b.onclick=__showDlog;
   document.body.appendChild(b);
 })();
+*/
 </script>
 <script>
 
@@ -6460,7 +6466,9 @@ async function installIzaZoo(){
   deferredInstallPrompt=null;
 }
 function continueOnWebsite(){document.getElementById("installOffer")?.remove();}
+/* Install-offer popup disabled during redesign work - re-enable before real release
 window.addEventListener("load",()=>setTimeout(maybeShowInstallOffer,250));
+*/
 
 if("serviceWorker" in navigator){
   window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(console.error));
