@@ -4601,14 +4601,22 @@ if(!window.supabase){
 const SUPABASE_URL = "https://ocfbgppfpvjfhclpdtao.supabase.co";
 const SUPABASE_KEY = "sb_publishable_tfvkgoOZ5hDt947woGQdSw_PLAaaIa-";
 let lastNetworkActivity=0;
+let lastFetchProblem=""; // why the last request to the server failed (shown in error messages)
+const FETCH_TIMEOUT_MS=20000;
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY,{
   global:{fetch:(url,options={})=>{
     lastNetworkActivity=Date.now();
-    const shortUrl=String(url).replace(SUPABASE_URL,"");
-    if(typeof __dlog==="function")__dlog(`FETCH start ${shortUrl}`);
-    return fetch(url,{...options,cache:"no-store"}).then(r=>{lastNetworkActivity=Date.now();if(typeof __dlog==="function")__dlog(`FETCH done ${shortUrl} status=${r.status}`);return r;}).catch(e=>{lastNetworkActivity=Date.now();if(typeof __dlog==="function")__dlog(`FETCH FAILED ${shortUrl} ${e}`);throw e;});
+    // give up on requests the server never answers, instead of waiting forever
+    const ctrl=new AbortController();
+    const timer=setTimeout(()=>ctrl.abort(),FETCH_TIMEOUT_MS);
+    if(options.signal){if(options.signal.aborted)ctrl.abort();else options.signal.addEventListener("abort",()=>ctrl.abort(),{once:true});}
+    return fetch(url,{...options,cache:"no-store",signal:ctrl.signal})
+      .then(r=>{lastNetworkActivity=Date.now();lastFetchProblem=r.status>=500?`HTTP ${r.status}`:"";return r;})
+      .catch(e=>{lastNetworkActivity=Date.now();lastFetchProblem=ctrl.signal.aborted?"timeout":String(e?.message||e);throw e;})
+      .finally(()=>clearTimeout(timer));
   }}
 });
+const serverProblemText=()=>"אין תשובה משרת הנתונים של IzaZoo. בדוק את החיבור לרשת ונסה שוב."+(lastFetchProblem?`<div style="margin-top:8px;font-size:11px;color:#888" dir="ltr">${String(lastFetchProblem).replace(/[&<>]/g,"")}</div>`:"");
 const root=()=>document.getElementById("root"),
 esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c])),
 localDay=v=>{if(!v)return"";const d=v instanceof Date?v:new Date(v);if(Number.isNaN(d.getTime()))return"";return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;},
@@ -4665,7 +4673,11 @@ async function doLogin(){
   if(!username||!password)return alert("יש להזין שם משתמש וסיסמה");
   btn.disabled=true;btn.textContent="מתחבר...";
   const {data,error}=await supabaseClient.auth.signInWithPassword({email:`${username}@izazoo.local`,password});
-  if(error){btn.disabled=false;btn.textContent="כניסה";return alert("ההתחברות נכשלה. בדוק משתמש וסיסמה.");}
+  if(error){
+    btn.disabled=false;btn.textContent="כניסה";
+    const wrongDetails=error.status===400||error.code==="invalid_credentials";
+    return alert(wrongDetails?"ההתחברות נכשלה. בדוק משתמש וסיסמה.":"אין תשובה משרת הנתונים. בדוק את החיבור לרשת ונסה שוב."+(lastFetchProblem?"\n("+lastFetchProblem+")":""));
+  }
   const ok=await loadCurrentUser(data.user);
   if(!ok)return;
   await loadAppData();
@@ -4684,7 +4696,7 @@ async function loadCurrentUser(authUser){
     console.error(error);
     // only sign out if the profile really doesn't exist; otherwise it's probably a connection problem
     if(error.code==="PGRST116"){await supabaseClient.auth.signOut();await login("לא ניתן לטעון את פרטי המשתמש.");}
-    else showStartupError("לא ניתן לטעון את פרטי המשתמש. בדוק את החיבור לרשת ונסה שוב.");
+    else showStartupError(serverProblemText());
     return false;
   }
   if(!data.is_active){await supabaseClient.auth.signOut();await login("המשתמש אינו פעיל. פנה למנהל המערכת.");return false;}
@@ -6327,8 +6339,13 @@ window.addEventListener("error", function(e){
   console.error("IzaZoo runtime error:", e.error || e.message);
 });
 
+let startupFailed=false;
 async function bootstrap(){
-  const {data:{session}}=await supabaseClient.auth.getSession();
+  // renewing a saved login needs the server; don't wait on it for more than 10 seconds
+  const res=await Promise.race([supabaseClient.auth.getSession(),new Promise(r=>setTimeout(()=>r({timedOut:true}),10000))]);
+  if(res.timedOut){startupFailed=true;showStartupError(serverProblemText());return;}
+  if(startupFailed)return;
+  const session=res.data?.session;
   if(session?.user){
     const ok=await loadCurrentUser(session.user);
     if(!ok)return;
@@ -6356,7 +6373,7 @@ function forceRefresh(){
 }
 bootstrap().catch(e=>{console.error("bootstrap",e);showStartupError("אירעה שגיאה בטעינת IzaZoo: "+esc(e?.message||e));});
 // never leave the user on the loading screen forever
-setTimeout(()=>{if(!currentUser&&!document.getElementById("lu")&&!document.querySelector("#root .login-card"))showStartupError("הטעינה לוקחת זמן רב. בדוק את החיבור לרשת ונסה שוב.");},20000);
+setTimeout(()=>{if(!currentUser&&!document.querySelector("#root .login-card")){startupFailed=true;showStartupError(serverProblemText());}},45000);
 </script>
 <script>
 
