@@ -4564,7 +4564,6 @@ body.is-portrait .portrait-single-header .stable-search{margin-top:14px!importan
 // that loading window bypasses all protection.
 history.replaceState({izazoo:true,exitGuard:true},"","#izazoo-exit");
 history.pushState({izazoo:true,view:"home"},"","#home");
-const USERS=[{name:"אלכס",username:"alex",password:"1234"},{name:"אבנר",username:"avner",password:"1234"},{name:"קטיה",username:"katya",password:"1234"},{name:"לי-של",username:"lishel",password:"1234"},{name:"גל",username:"gal",password:"1234"},{name:"ספיר",username:"sapir",password:"1234"}];
 let currentUser=null;
 let problems=[];
 let profilesById={};
@@ -5497,13 +5496,15 @@ async function saveProblemEdit(id,btn){
   if(data)upsertById(problems,normalizeProblem(data));
   showModal(problemFormTemplate(problems.find(p=>Number(p.id)===Number(id)),false));
 }
-async function confirmCloseProblem(id){
-  const {error}=await supabaseClient.rpc("close_problem",{problem_id:Number(id)});
-  if(error){console.error(error);return alert("לא ניתן לסגור את התקלה: "+error.message);}
-  await loadProblems();await loadProblemActivity();
-  problemsScreen();
+function confirmCloseProblem(id){
   const item=problems.find(x=>Number(x.id)===Number(id));
-  showModal(`<h2>לסגור את התקלה?</h2><p>${item?`"${esc(item.title)}" תועבר להיסטוריה.`:"התקלה תועבר להיסטוריה."}</p><div class="actions"><button class="secondary" onclick="undoCloseProblem(${Number(id)})">ביטול</button><button class="primary" onclick="hideModal()">סגור תקלה</button></div>`);
+  showModal(`<h2>לסגור את התקלה?</h2><p>${item?`"${esc(item.title)}" תועבר להיסטוריה.`:"התקלה תועבר להיסטוריה."}</p><div class="actions"><button class="secondary" onclick="openProblemDetails(${Number(id)})">ביטול</button><button class="primary" onclick="doCloseProblem(${Number(id)},this)">סגור תקלה</button></div>`);
+}
+async function doCloseProblem(id,btn){
+  setBusy(btn,true,"סוגר...");
+  const {error}=await supabaseClient.rpc("close_problem",{problem_id:Number(id)});
+  if(error){setBusy(btn,false);console.error(error);return alert("לא ניתן לסגור את התקלה: "+error.message);}
+  await loadProblems();await loadProblemActivity();hideModal();problemsScreen();
 }
 async function undoCloseProblem(id){
   const {error}=await supabaseClient.rpc("reopen_problem",{problem_id:Number(id)});
@@ -5579,7 +5580,7 @@ function updateThreadHTML(u){
   </section>`;
 }
 function updateCardHTML(u){return updateThreadHTML(u);}
-function updatesScreen(){currentScreen="updates";const active=visibleUpdates(false),rows=active.length?active.map(updateThreadHTML).join(""):`<div class="u-sub chat-empty">אין עדכונים עדיין</div>`;const titleHTML=categoryHeaderTitle("עדכונים",active.length,null);page(titleHTML,"","updates",`<div class="page updates-page"><div class="updates-chat-stream">${rows}</div></div>`,"",updateComposerHTML());}
+function updatesScreen(){currentScreen="updates";editingUpdateId=null;const active=visibleUpdates(false),rows=active.length?active.map(updateThreadHTML).join(""):`<div class="u-sub chat-empty">אין עדכונים עדיין</div>`;const titleHTML=categoryHeaderTitle("עדכונים",active.length,null);page(titleHTML,"","updates",`<div class="page updates-page"><div class="updates-chat-stream">${rows}</div></div>`,"",updateComposerHTML());}
 function audiencePickerHTML(prefix,selectedAll=false,selected=[]){const allowed=availableBusinesses(),allAllowed=currentUser.role==="owner"||currentUser.all_businesses_access;return `<div class="audience-picker">${allAllowed?`<label><input type="checkbox" data-all-audience="${prefix}" ${selectedAll?"checked":""} onchange="toggleAllAudience('${prefix}',this)"> כל קבוצת IzaZoo</label>`:""}<div>${allowed.map(b=>`<label><input type="checkbox" class="${prefix}Business" value="${b.id}" ${selected.includes(Number(b.id))?"checked":""}> ${esc(b.name)}</label>`).join("")}</div></div>`;}
 function toggleAllAudience(prefix,source){const scope=source?.closest(".modal-card")||document,all=source||scope.querySelector(`[data-all-audience="${prefix}"]`);scope.querySelectorAll("."+prefix+"Business").forEach(x=>{x.disabled=!!all?.checked;if(all?.checked)x.checked=false;});}
 function selectedAudience(prefix,scope=document){const all=!!scope.querySelector(`[data-all-audience="${prefix}"]`)?.checked,ids=[...scope.querySelectorAll("."+prefix+"Business:checked")].map(x=>Number(x.value));return {all,ids};}
