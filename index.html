@@ -4808,6 +4808,7 @@ async function loadTasks(){
   const {data,error}=await supabaseClient
     .from("tasks")
     .select("id,description,business_id,created_by,created_at,assigned_to,due_date,status,completed_by,completed_at,completion_note,updated_at")
+    .or(`status.is.null,status.neq.done,completed_at.is.null,completed_at.gte."${daysAgoISO(HISTORY_DAYS)}"`)
     .order("created_at",{ascending:false});
   if(error){
     console.error("loadTasks",error);
@@ -4854,30 +4855,34 @@ function switchBusiness(value){
 
 
 async function loadUpdatesV2(){
-  const [u,b,f]=await Promise.all([
-    supabaseClient.from("updates_v2")
-      .select("id,title,body,created_by,created_at,updated_at,expires_at,is_archived,is_pinned,all_businesses")
-      .order("created_at",{ascending:false}),
-    supabaseClient.from("update_businesses").select("update_id,business_id"),
+  const now=new Date().toISOString();
+  const u=await supabaseClient.from("updates_v2")
+    .select("id,title,body,created_by,created_at,updated_at,expires_at,is_archived,is_pinned,all_businesses")
+    .or(`created_at.gte."${daysAgoISO(UPDATES_DAYS)}",and(is_pinned.eq.true,expires_at.is.null),and(is_pinned.eq.true,expires_at.gt."${now}")`)
+    .order("created_at",{ascending:false});
+  if(u.error){console.error("updates_v2",u.error);return false;}
+  updates=u.data||[];
+  const ids=updates.map(x=>Number(x.id));
+  const none={data:[],error:null};
+  const [b,f]=ids.length?await Promise.all([
+    supabaseClient.from("update_businesses").select("update_id,business_id").in("update_id",ids),
     supabaseClient.from("update_followups")
       .select("id,update_id,author_id,body,created_at,updated_at")
+      .in("update_id",ids)
       .order("created_at",{ascending:true})
-  ]);
-  if(u.error){console.error("updates_v2",u.error);}else updates=u.data||[];
+  ]):[none,none];
   if(b.error){console.error("update_businesses",b.error);}else updateBusinesses=b.data||[];
   if(f.error){console.error("update_followups",f.error);}else updateFollowups=f.data||[];
-  return !(u.error||b.error||f.error);
+  return !(b.error||f.error);
 }
 
 async function loadKnowledge(){
-  const [i,b,v,c]=await Promise.all([
+  const v={data:knowledgeVersions,error:null}; // version history isn't shown while the module is closed
+  const [i,b,c]=await Promise.all([
     supabaseClient.from("knowledge_items")
       .select("id,title,body,category_id,created_by,updated_by,created_at,updated_at,is_archived,is_pinned,all_businesses")
       .order("updated_at",{ascending:false}),
     supabaseClient.from("knowledge_businesses").select("knowledge_id,business_id"),
-    supabaseClient.from("knowledge_versions")
-      .select("id,knowledge_id,title,body,edited_by,created_at")
-      .order("created_at",{ascending:false}),
     supabaseClient.from("knowledge_categories")
       .select("id,name,sort_order,is_active,created_at,updated_at")
       .order("sort_order",{ascending:true})
@@ -4940,19 +4945,19 @@ function defaultExpiryDate(){
   return d.toISOString().slice(0,10);
 }
 
+// how much old data to load (keeps the app fast as data grows)
+const HISTORY_DAYS=183;      // closed problems / completed tasks
+const UPDATES_DAYS=30;       // updates (pinned ones always load)
+const ACTIVITY_LIMIT=300;    // latest problem activity rows for the feeds
+const daysAgoISO=days=>new Date(Date.now()-days*86400000).toISOString();
 let appDataLoadPromise=null;
 async function loadAppData(){
   if(appDataLoadPromise)return appDataLoadPromise;
   appDataLoadPromise=(async()=>{
-    const results=[];
-    results.push(await loadProfiles());
-    results.push(await loadBusinesses());
-    results.push(await loadProblems());
-    results.push(await loadProblemActivity());
-    results.push(await loadTasks());
-    results.push(await loadUpdatesV2());
-    results.push(await loadKnowledge());
-    results.push(await loadBetaFeedback());
+    const results=await Promise.all([
+      loadProfiles(),loadBusinesses(),loadProblems(),loadProblemActivity(),
+      loadTasks(),loadUpdatesV2(),loadKnowledge(),loadBetaFeedback()
+    ]);
     if(results.some(ok=>ok===false))toast("חלק מהנתונים לא נטענו. בדוק את החיבור לרשת ונסה שוב.","error");
   })();
   try{return await appDataLoadPromise;}
@@ -4983,9 +4988,22 @@ async function loadProblemActivity(){
   const {data,error}=await supabaseClient
     .from("problem_activity")
     .select("id,problem_id,actor_id,action,details,created_at")
-    .order("created_at",{ascending:false});
+    .order("created_at",{ascending:false})
+    .limit(ACTIVITY_LIMIT);
   if(error){ console.error("loadProblemActivity",error); return false; }
   problemActivity=data||[]; return true;
+}
+// full activity for one problem (older problems may fall outside the latest-N feed)
+async function loadActivityForProblem(id){
+  const {data,error}=await supabaseClient
+    .from("problem_activity")
+    .select("id,problem_id,actor_id,action,details,created_at")
+    .eq("problem_id",Number(id))
+    .order("created_at",{ascending:false});
+  if(error){console.error("loadActivityForProblem",error);return false;}
+  const before=problemActivity.filter(a=>Number(a.problem_id)===Number(id)).length;
+  problemActivity=problemActivity.filter(a=>Number(a.problem_id)!==Number(id)).concat(data||[]);
+  return (data||[]).length!==before;
 }
 function activityText(a){
   const actor=profileName(a.actor_id), problem=problems.find(p=>Number(p.id)===Number(a.problem_id)), title=problem?.title||"תקלה";
@@ -5011,6 +5029,7 @@ async function loadProblems(){
   const {data,error}=await supabaseClient
     .from("problems")
     .select("id,title,description,status,priority,created_by,assigned_to,created_at,updated_at,closed_at,closed_by,business_id")
+    .or(`status.is.null,status.neq.closed,closed_at.is.null,closed_at.gte."${daysAgoISO(HISTORY_DAYS)}"`)
     .order("created_at",{ascending:false});
   if(error){
     console.error("loadProblems",error);
@@ -5465,7 +5484,7 @@ function toggleProblemDescription(id){const el=document.getElementById(`desc-${i
 function problemFormTemplate(x,editing=false){
   const activity=problemActivity.filter(a=>Number(a.problem_id)===Number(x.id)).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
   const assignees=profilesForBusiness(x.business_id);
-  return `<div class="problem-detail">
+  return `<div class="problem-detail" data-problem-id="${Number(x.id)}" data-mode="${editing?"edit":"view"}">
     <h2>${editing?"עריכת תקלה":"פרטי תקלה"}</h2>
     <div class="detail-business">${esc(businessName(x.business_id))}</div>
 
@@ -5503,6 +5522,10 @@ function problemFormTemplate(x,editing=false){
 function openProblemDetails(id){
   const x=problems.find(p=>Number(p.id)===Number(id));if(!x)return;
   showModal(problemFormTemplate(x,false));
+  loadActivityForProblem(id).then(changed=>{
+    if(changed&&document.querySelector(`#modal .problem-detail[data-problem-id="${Number(id)}"][data-mode="view"]`))
+      showModal(problemFormTemplate(problems.find(p=>Number(p.id)===Number(id))||x,false));
+  });
 }
 function editProblem(id){
   const x=problems.find(p=>Number(p.id)===Number(id));if(!x)return;
