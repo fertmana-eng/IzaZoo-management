@@ -4556,8 +4556,8 @@ body.is-portrait .portrait-header-tools-compact .header-icon-btn{flex:0 0 auto;w
 body.is-portrait .portrait-single-header .stable-search{margin-top:14px!important}
 </style>
 </head>
-<body><div id="root"></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<body><div id="root"><div style="min-height:100vh;display:flex;align-items:center;justify-content:center;font:600 16px system-ui,Arial,sans-serif;color:#555">טוען...</div></div>
+<script src="vendor/supabase.js"></script>
 <script>
 // arm the back-button exit guard immediately, before any async work (session
 // check, data loading) has a chance to run - otherwise a back press during
@@ -6354,7 +6354,9 @@ function forceRefresh(){
   __dlog(`forceRefresh() saved value=${sessionStorage.getItem("__izazoo_returnScreen")}, calling location.reload()`);
   location.reload();
 }
-bootstrap();
+bootstrap().catch(e=>{console.error("bootstrap",e);showStartupError("אירעה שגיאה בטעינת IzaZoo: "+esc(e?.message||e));});
+// never leave the user on the loading screen forever
+setTimeout(()=>{if(!currentUser&&!document.getElementById("lu")&&!document.querySelector("#root .login-card"))showStartupError("הטעינה לוקחת זמן רב. בדוק את החיבור לרשת ונסה שוב.");},20000);
 </script>
 <script>
 
