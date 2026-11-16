@@ -4591,6 +4591,13 @@ let appHistoryReady=false;
 let currentSearchContext="home";
 let lastViewportMode=null;
 
+function showStartupError(message){
+  document.getElementById("root").innerHTML=`<div class="login-wrap"><div class="login-card"><div class="login-brand">IzaZoo</div><div style="margin:12px 0;font-size:14px">${message}</div><button class="primary" style="width:100%" onclick="location.reload()">נסה שוב</button></div></div>`;
+}
+if(!window.supabase){
+  showStartupError("לא ניתן לטעון את IzaZoo. בדוק את החיבור לרשת ונסה שוב.");
+  throw new Error("supabase library failed to load");
+}
 const SUPABASE_URL = "https://ocfbgppfpvjfhclpdtao.supabase.co";
 const SUPABASE_KEY = "sb_publishable_tfvkgoOZ5hDt947woGQdSw_PLAaaIa-";
 let lastNetworkActivity=0;
@@ -4604,7 +4611,8 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY,{
 });
 const root=()=>document.getElementById("root"),
 esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c])),
-isoToday=()=>new Date().toISOString().slice(0,10),
+localDay=v=>{if(!v)return"";const d=v instanceof Date?v:new Date(v);if(Number.isNaN(d.getTime()))return"";return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;},
+isoToday=()=>localDay(new Date()),
 save=()=>{};
 const fmtDate=s=>{if(!s)return"";const [y,m,d]=s.split("-");return `${d}/${m}`};
 const fmtFull=()=>new Date().toLocaleDateString("he-IL",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
@@ -4672,7 +4680,13 @@ async function loadCurrentUser(authUser){
     .from("profiles")
     .select("username,first_name,last_name,display_name,role,is_active,must_change_password,all_businesses_access")
     .eq("id",authUser.id).single();
-  if(error){console.error(error);await supabaseClient.auth.signOut();await login("לא ניתן לטעון את פרטי המשתמש.");return false;}
+  if(error){
+    console.error(error);
+    // only sign out if the profile really doesn't exist; otherwise it's probably a connection problem
+    if(error.code==="PGRST116"){await supabaseClient.auth.signOut();await login("לא ניתן לטעון את פרטי המשתמש.");}
+    else showStartupError("לא ניתן לטעון את פרטי המשתמש. בדוק את החיבור לרשת ונסה שוב.");
+    return false;
+  }
   if(!data.is_active){await supabaseClient.auth.signOut();await login("המשתמש אינו פעיל. פנה למנהל המערכת.");return false;}
   currentUser={
     id:authUser.id,
@@ -4780,7 +4794,7 @@ function upsertById(list,row){
 }
 function normalizeProblem(p){
   return {...p,reporter:profileName(p.created_by),
-    date:p.created_at?p.created_at.slice(0,10):"",
+    date:localDay(p.created_at),
     time:p.created_at?new Date(p.created_at).toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"}):""};
 }
 
@@ -4852,6 +4866,7 @@ async function loadUpdatesV2(){
   if(u.error){console.error("updates_v2",u.error);}else updates=u.data||[];
   if(b.error){console.error("update_businesses",b.error);}else updateBusinesses=b.data||[];
   if(f.error){console.error("update_followups",f.error);}else updateFollowups=f.data||[];
+  return !(u.error||b.error||f.error);
 }
 
 async function loadKnowledge(){
@@ -4875,6 +4890,7 @@ async function loadKnowledge(){
   if(b.error)console.error("knowledge_businesses",b.error);
   if(v.error)console.error("knowledge_versions",v.error);
   if(c.error)console.error("knowledge_categories",c.error);
+  return !(i.error||b.error||v.error||c.error);
 }
 
 async function loadBetaFeedback(){
@@ -4928,14 +4944,16 @@ let appDataLoadPromise=null;
 async function loadAppData(){
   if(appDataLoadPromise)return appDataLoadPromise;
   appDataLoadPromise=(async()=>{
-    await loadProfiles();
-    await loadBusinesses();
-    await loadProblems();
-    await loadProblemActivity();
-    await loadTasks();
-    await loadUpdatesV2();
-    await loadKnowledge();
-    await loadBetaFeedback();
+    const results=[];
+    results.push(await loadProfiles());
+    results.push(await loadBusinesses());
+    results.push(await loadProblems());
+    results.push(await loadProblemActivity());
+    results.push(await loadTasks());
+    results.push(await loadUpdatesV2());
+    results.push(await loadKnowledge());
+    results.push(await loadBetaFeedback());
+    if(results.some(ok=>ok===false))toast("חלק מהנתונים לא נטענו. בדוק את החיבור לרשת ונסה שוב.","error");
   })();
   try{return await appDataLoadPromise;}
   finally{appDataLoadPromise=null;}
@@ -5001,7 +5019,7 @@ async function loadProblems(){
   problems=(data||[]).map(p=>({
     ...p,
     reporter:profileName(p.created_by),
-    date:p.created_at?p.created_at.slice(0,10):"",
+    date:localDay(p.created_at),
     time:p.created_at?new Date(p.created_at).toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"}):""
   }));
   return true;
@@ -5013,7 +5031,7 @@ function calendarItems(){
     if(x.date)a.push({type:"problem",title:x.title,date:x.date,time:x.time||"",id:x.id});
   });
   visibleUpdates(false).forEach(x=>{
-    const date=x.created_at?x.created_at.slice(0,10):"";
+    const date=localDay(x.created_at);
     const time=x.created_at?new Date(x.created_at).toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"}):"";
     if(date)a.push({type:"update",title:x.body,date,time,id:x.id});
   });
@@ -5213,6 +5231,9 @@ async function refreshOnResume(){
   if(Date.now()-lastNetworkActivity<1500){__dlog(`refreshOnResume SKIPPED (recent activity)`);return;}
   __dlog(`refreshOnResume PROCEEDING - will reload+render`);
   await loadAppData();
+  // keep the screen as-is if the user is in the middle of typing something
+  const typing=[...root().querySelectorAll("textarea,input:not([type=checkbox]):not([type=radio])")].some(el=>el.value.trim());
+  if(typing)return;
   if(currentScreen==="home")dashboard();
   else if(screenRenderers[currentScreen])screenRenderers[currentScreen]();
   __dlog(`refreshOnResume finished rendering ${currentScreen}`);
@@ -5305,15 +5326,15 @@ function openItems(){
  let a=[];
  visibleProblems().filter(x=>x.status!=="closed").forEach(x=>a.push({
    type:"problem",id:x.id,icon:"⚠️",title:x.title,
-   date:x.created_at?x.created_at.slice(0,10):"",time:x.created_at?new Date(x.created_at).toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"}):"",sub:"תקלה"
+   date:localDay(x.created_at),time:x.created_at?new Date(x.created_at).toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"}):"",sub:"תקלה"
  }));
  visibleTasks().filter(x=>x.status!=="done").forEach(x=>a.push({
    type:"task",id:x.id,icon:"✓",title:x.description,
-   date:x.due_date||x.created_at?.slice(0,10)||"",time:"",sub:isTaskOverdue(x)?"משימה · באיחור":"משימה"
+   date:x.due_date||localDay(x.created_at),time:"",sub:isTaskOverdue(x)?"משימה · באיחור":"משימה"
  }));
  visibleUpdates(false).forEach(x=>a.push({
    type:"update",id:x.id,icon:"↗",title:x.body,
-   date:x.created_at?x.created_at.slice(0,10):"",time:x.created_at?new Date(x.created_at).toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"}):"",sub:isPinActive(x)?"עדכון · מוצמד":"עדכון"
+   date:localDay(x.created_at),time:x.created_at?new Date(x.created_at).toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"}):"",sub:isPinActive(x)?"עדכון · מוצמד":"עדכון"
  }));
  return a.sort((x,y)=>(y.date+y.time).localeCompare(x.date+x.time));
 }
@@ -5669,7 +5690,7 @@ async function addFollowup(id,btn){
   if(data)upsertById(updateFollowups,data);
   updatesScreen();toast("התגובה נוספה");setTimeout(()=>focusUpdateThread(id),80);
 }
-function focusUpdateThread(id){const el=document.querySelector(`.update-thread[data-update-id="${Number(id)}"]`);if(!el)return;el.scrollIntoView({behavior:"smooth",block:"center"});el.classList.remove("chat-highlight");requestAnimationFrame(()=>el.classList.add("chat-highlight"));setTimeout(()=>el.classList.remove("chat-highlight"),1400);}
+function focusUpdateThread(id){const all=[...document.querySelectorAll(`.update-thread[data-update-id="${Number(id)}"]`)],el=all.find(e=>e.offsetParent!==null)||all[0];if(!el)return;el.scrollIntoView({behavior:"smooth",block:"center"});el.classList.remove("chat-highlight");requestAnimationFrame(()=>el.classList.add("chat-highlight"));setTimeout(()=>el.classList.remove("chat-highlight"),1400);}
 async function openUpdateDetails(id){if(currentScreen!=="updates")await goToScreen("updates",{push:true,direction:"forward"});setTimeout(()=>focusUpdateThread(id),60);}
 function editUpdate(id){
   const u=updates.find(x=>Number(x.id)===Number(id));if(!canEditUpdate(u))return;
