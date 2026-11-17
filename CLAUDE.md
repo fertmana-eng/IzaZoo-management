@@ -109,9 +109,8 @@
   (`viewportMode()`) and is redrawn when the orientation changes
   (`onViewportChange`); before, each screen was built twice and one copy hidden.
 - Removed 27 unused JavaScript functions (old login picker, old update/doc
-  modals, debug log viewer, unused animations, etc.). The knowledge module's
-  functions (`newKnowledge`, `openKnowledge`, `editKnowledge`, category
-  functions…) were kept on purpose: the module is closed but planned.
+  modals, debug log viewer, unused animations, etc.).
+- Opened the knowledge module (see "The app" above).
 
 ## Next steps (in order)
 
