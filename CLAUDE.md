@@ -142,6 +142,11 @@ Three project skills hold the checklists; use them as described:
 
 The "Tests" GitHub workflow (`.github/workflows/tests.yml`) runs the behaviour
 tests on every pull request and on `main`. Merge only when it is green.
+A GitHub ruleset on `main` (set up by the owner, Nov 2026) enforces this: the
+`behaviour-tests` check must pass before anything is merged, `main` can't be
+deleted or force-pushed, and nobody is on the bypass list. If the workflow's
+job is ever renamed, the ruleset's required check must be renamed to match
+(Settings → Rules), or nothing can be merged.
 
 ## Testing
 
