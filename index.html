@@ -2226,6 +2226,9 @@ body.is-portrait .portrait-single-header .stable-search{margin-top:14px!importan
 .photo-add span{font-size:12px;font-weight:600}
 .photo-remove{position:absolute;top:4px;left:4px;width:24px;height:24px;border-radius:50%;border:0;padding:0;background:rgba(0,0,0,.6);color:#fff;font-size:13px;line-height:24px}
 .photo-missing{visibility:hidden}
+.uploading img{opacity:.55}
+.photo-uploading{position:absolute;top:50%;left:50%;width:22px;height:22px;margin:-11px 0 0 -11px;border:3px solid rgba(255,255,255,.85);border-top-color:#D12026;border-radius:50%;animation:photoSpin .8s linear infinite}
+@keyframes photoSpin{to{transform:rotate(360deg)}}
 .photo-viewer{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center}
 .photo-viewer img{max-width:100%;max-height:100%;object-fit:contain}
 .photo-viewer button{position:absolute;border:0;background:rgba(255,255,255,.15);color:#fff;border-radius:50%;width:44px;height:44px;font-size:22px;padding:0}
@@ -2355,6 +2358,7 @@ async function doLogin(){
   const ok=await loadCurrentUser(data.user);
   if(!ok)return;
   await loadAppData();
+  reportUnfinishedPhotos();
   initAppHistory();
   dashboard();
   if(currentUser.must_change_password) setTimeout(()=>changePasswordModal(true),80);
@@ -3142,7 +3146,15 @@ async function loadItemPhotos(){
   if(error){console.error("loadItemPhotos",error);return false;}
   itemPhotos=data||[];return true;
 }
-function photosFor(type,id){return itemPhotos.filter(p=>Number(type==="problem"?p.problem_id:p.task_id)===Number(id));}
+// photos still uploading in the background (shown at once, like a chat app): {pending,type,id,url}
+let pendingPhotos=[];
+const PENDING_PHOTOS_KEY="izazoo_pending_photos";
+function photosFor(type,id){
+  return itemPhotos.filter(p=>Number(type==="problem"?p.problem_id:p.task_id)===Number(id))
+    .concat(pendingPhotos.filter(p=>p.type===type&&Number(p.id)===Number(id)));
+}
+// a picture of a stored photo is filled in when it appears; one still uploading uses the copy on the phone
+function photoImgHTML(x,full,alt=""){return x.pending?`<img src="${x.url}" alt="${alt}">`:`<img data-photo="${esc(full?x.file_path:x.thumb_path)}" alt="${alt}">`;}
 function photoUrl(path){
   if(!photoUrls[path])photoUrls[path]=supabaseClient.storage.from(PHOTO_BUCKET).download(path).then(({data,error})=>{
     if(error||!data){delete photoUrls[path];throw error||new Error("missing");}
@@ -3162,11 +3174,12 @@ function cardPhotoHTML(type,id){
   const ph=photosFor(type,id);if(!ph.length)return "";
   // the first photo in front; with more photos, one or two cards peek out behind it
   const behind=Math.min(ph.length-1,2);
-  return `<div class="card-photo stack-${behind}" title="${ph.length} תמונות">${behind>1?`<span class="card-photo-back back-2"></span>`:""}${behind?`<span class="card-photo-back back-1"></span>`:""}<img data-photo="${esc(ph[0].thumb_path)}" alt=""></div>`;
+  const uploading=ph.some(x=>x.pending);
+  return `<div class="card-photo stack-${behind}${uploading?" uploading":""}" title="${ph.length} תמונות">${behind>1?`<span class="card-photo-back back-2"></span>`:""}${behind?`<span class="card-photo-back back-1"></span>`:""}${photoImgHTML(ph[0],false)}${uploading?`<span class="photo-uploading" aria-label="מעלה תמונה"></span>`:""}</div>`;
 }
 function photoGalleryHTML(type,id){
   const ph=photosFor(type,id);if(!ph.length)return "";
-  return `<label>תמונות</label><div class="photo-grid">${ph.map((x,i)=>`<button type="button" class="photo-tile" onclick="openPhotoViewer('${type}',${Number(id)},${i})"><img data-photo="${esc(x.thumb_path)}" alt="תמונה ${i+1}"></button>`).join("")}</div>`;
+  return `<label>תמונות</label><div class="photo-grid">${ph.map((x,i)=>`<button type="button" class="photo-tile${x.pending?" uploading":""}" onclick="openPhotoViewer('${type}',${Number(id)},${i})">${photoImgHTML(x,false,"תמונה "+(i+1))}${x.pending?`<span class="photo-uploading" aria-label="מעלה תמונה"></span>`:""}</button>`).join("")}</div>`;
 }
 // the photo part of a new/edit window
 function photoPickerHTML(){
@@ -3179,12 +3192,13 @@ function photoDraftTilesHTML(){
   const d=photoDraft;if(!d)return "";
   const tiles=d.keep.map(x=>`<div class="photo-tile"><img data-photo="${esc(x.thumb_path)}" alt=""><button type="button" class="photo-remove" aria-label="הסרת תמונה" onclick="removeDraftPhoto('keep',${Number(x.id)})">✕</button></div>`)
     .concat(d.added.map((x,i)=>`<div class="photo-tile"><img src="${x.url}" alt=""><button type="button" class="photo-remove" aria-label="הסרת תמונה" onclick="removeDraftPhoto('added',${i})">✕</button></div>`));
-  const room=PHOTO_MAX-d.keep.length-d.added.length;
-  if(room>0)tiles.push(`<button type="button" class="photo-add" onclick="document.getElementById('photoCamera').click()">📷<span>צילום</span></button>`,
+  if(draftRoom()>0)tiles.push(`<button type="button" class="photo-add" onclick="document.getElementById('photoCamera').click()">📷<span>צילום</span></button>`,
     `<button type="button" class="photo-add" onclick="document.getElementById('photoGallery').click()">🖼️<span>מהגלריה</span></button>`);
   return tiles.join("");
 }
-function startPhotoDraft(type,id){photoDraft={type,id:id??null,keep:id?photosFor(type,id):[],added:[],removed:[]};}
+// photos still uploading can't be removed yet, but they count towards the 5
+function startPhotoDraft(type,id){const ph=id?photosFor(type,id):[];photoDraft={type,id:id??null,keep:ph.filter(x=>!x.pending),uploading:ph.filter(x=>x.pending).length,added:[],removed:[]};}
+function draftRoom(){const d=photoDraft;return d?PHOTO_MAX-d.keep.length-d.added.length-d.uploading:0;}
 function redrawPhotoDraft(){const g=document.getElementById("photoDraftGrid");if(g)g.innerHTML=photoDraftTilesHTML();}
 function removeDraftPhoto(kind,key){
   if(!photoDraft)return;
@@ -3204,7 +3218,7 @@ async function shrinkPhoto(file,max){
 async function photosChosen(input){
   const files=[...(input.files||[])];input.value="";
   if(!photoDraft||!files.length)return;
-  const room=PHOTO_MAX-photoDraft.keep.length-photoDraft.added.length;
+  const room=draftRoom();
   if(files.length>room)toast(`אפשר לצרף עד ${PHOTO_MAX} תמונות`,"error");
   for(const f of files.slice(0,Math.max(0,room))){
     try{
@@ -3215,30 +3229,72 @@ async function photosChosen(input){
   }
   redrawPhotoDraft();
 }
-// after the problem/task itself is saved: remove the photos taken out, upload the new ones
-async function savePhotoDraft(type,id){
-  const d=photoDraft;photoDraft=null;if(!d)return true;
-  let failed=0;
-  for(const x of d.removed){
-    const {data,error}=await supabaseClient.from("item_photos").delete().eq("id",x.id).select("id");
-    if(error||!data?.length){failed++;console.error("photo delete",error);continue;}
+// after the problem/task itself is saved: the window closes at once and the photos are
+// removed / uploaded in the background (all at the same time); the cards show them right away
+function savePhotoDraft(type,id){
+  const d=photoDraft;photoDraft=null;if(!d)return;
+  id=Number(id);
+  const jobs=d.removed.map(x=>{
     itemPhotos=itemPhotos.filter(p=>Number(p.id)!==Number(x.id));
-    await supabaseClient.storage.from(PHOTO_BUCKET).remove([x.file_path,x.thumb_path]);
-  }
-  for(const x of d.added){
+    return removeStoredPhoto(x);
+  }).concat(d.added.map(x=>{
+    const p={pending:true,type,id,url:x.url};pendingPhotos.push(p);
+    return uploadPhoto(type,id,x).then(ok=>{pendingPhotos=pendingPhotos.filter(q=>q!==p);rememberPendingPhotos();redrawPhotos(type,id);return ok;});
+  }));
+  rememberPendingPhotos();
+  Promise.all(jobs).then(results=>{
+    const failed=results.filter(ok=>!ok).length;
+    if(failed)toast(`${failed===1?"תמונה אחת לא נשמרה":failed+" תמונות לא נשמרו"}. אפשר לנסות שוב בעריכה.`,"error");
+    redrawPhotos(type,id);
+  });
+}
+async function removeStoredPhoto(x){
+  const {data,error}=await supabaseClient.from("item_photos").delete().eq("id",x.id).select("id");
+  if(error||!data?.length){console.error("photo delete",error);itemPhotos.push(x);return false;}
+  await supabaseClient.storage.from(PHOTO_BUCKET).remove([x.file_path,x.thumb_path]);
+  return true;
+}
+async function uploadPhoto(type,id,x){
+  try{
     const name=crypto.randomUUID?crypto.randomUUID():Date.now()+"-"+Math.random().toString(36).slice(2);
-    const file_path=`${type}/${Number(id)}/${name}.jpg`,thumb_path=`${type}/${Number(id)}/${name}-t.jpg`;
+    const file_path=`${type}/${id}/${name}.jpg`,thumb_path=`${type}/${id}/${name}-t.jpg`;
     const store=supabaseClient.storage.from(PHOTO_BUCKET);
-    const a=await store.upload(file_path,x.blob,{contentType:"image/jpeg",upsert:false});
-    const b=a.error?a:await store.upload(thumb_path,x.thumb,{contentType:"image/jpeg",upsert:false});
-    if(a.error||b.error){failed++;console.error("photo upload",a.error||b.error);await store.remove([file_path,thumb_path]);continue;}
-    const row={[type==="problem"?"problem_id":"task_id"]:Number(id),file_path,thumb_path,created_by:currentUser?.id};
+    const [a,b]=await Promise.all([store.upload(file_path,x.blob,{contentType:"image/jpeg",upsert:false}),store.upload(thumb_path,x.thumb,{contentType:"image/jpeg",upsert:false})]);
+    if(a.error||b.error){console.error("photo upload",a.error||b.error);await store.remove([file_path,thumb_path]);return false;}
+    const row={[type==="problem"?"problem_id":"task_id"]:id,file_path,thumb_path,created_by:currentUser?.id};
     const {data,error}=await supabaseClient.from("item_photos").insert(row).select("id,problem_id,task_id,file_path,thumb_path,created_at").single();
-    if(error||!data){failed++;console.error("photo row",error);await store.remove([file_path,thumb_path]);continue;}
-    itemPhotos.push(data);photoUrls[thumb_path]=Promise.resolve(x.url);
-  }
-  if(failed)toast(`${failed===1?"תמונה אחת לא נשמרה":failed+" תמונות לא נשמרו"}. אפשר לנסות שוב בעריכה.`,"error");
-  return !failed;
+    if(error||!data){console.error("photo row",error);await store.remove([file_path,thumb_path]);return false;}
+    photoUrls[thumb_path]=Promise.resolve(x.url);
+    if(!itemPhotos.some(p=>Number(p.id)===Number(data.id)))itemPhotos.push(data); // a reload may have brought it already
+    return true;
+  }catch(e){console.error("photo upload",e);return false;}
+}
+// draw the list and an open details window again once a photo has arrived
+function redrawPhotos(type,id){
+  const typing=document.activeElement?.closest?.("#root")&&/INPUT|TEXTAREA/.test(document.activeElement.tagName);
+  if(!typing)refreshScreenBehindModal(type==="problem"?"problems":"tasks",type==="problem"?problemsScreen:tasksScreen);
+  if(document.getElementById("photoViewer"))return;
+  if(type==="problem"&&document.querySelector(`#modal .problem-detail[data-problem-id="${id}"][data-mode="view"]`))
+    showModal(problemFormTemplate(problems.find(p=>Number(p.id)===id),false));
+  if(type==="task"&&document.querySelector(`#modal .task-detail[data-task-id="${id}"][data-mode="view"]`))
+    showModal(taskFormTemplate(tasks.find(t=>Number(t.id)===id),false));
+}
+// remember on the phone which items still have photos uploading, so that if the app is
+// closed before they finish, the next start can say which ones did not arrive
+function rememberPendingPhotos(){
+  try{
+    if(pendingPhotos.length)localStorage.setItem(PENDING_PHOTOS_KEY,JSON.stringify(pendingPhotos.map(p=>({type:p.type,id:p.id}))));
+    else localStorage.removeItem(PENDING_PHOTOS_KEY);
+  }catch(e){}
+}
+function reportUnfinishedPhotos(){
+  let left=[];try{left=JSON.parse(localStorage.getItem(PENDING_PHOTOS_KEY)||"[]");localStorage.removeItem(PENDING_PHOTOS_KEY);}catch(e){}
+  if(!left.length)return;
+  const names=[...new Set(left.map(x=>{
+    const it=x.type==="problem"?problems.find(p=>Number(p.id)===Number(x.id)):tasks.find(t=>Number(t.id)===Number(x.id));
+    const t=it?(x.type==="problem"?it.title:it.description):"";return t?`"${t.length>30?t.slice(0,30)+"…":t}"`:"";
+  }).filter(Boolean))];
+  toast(`האפליקציה נסגרה לפני שהעלאת תמונות הסתיימה${names.length?" ("+names.join(", ")+")":""}. אפשר להוסיף אותן שוב בעריכה.`,"error");
 }
 // full-screen photo, above the open window; back or a tap closes it
 let photoViewerList=[],photoViewerIndex=0;
@@ -3251,7 +3307,7 @@ function openPhotoViewer(type,id,i){
 function drawPhotoViewer(){
   const v=document.getElementById("photoViewer"),x=photoViewerList[photoViewerIndex];if(!v||!x)return;
   const n=photoViewerList.length;
-  v.innerHTML=`<img data-photo="${esc(x.file_path)}" alt="תמונה ${photoViewerIndex+1}">
+  v.innerHTML=`${photoImgHTML(x,true,"תמונה "+(photoViewerIndex+1))}
     <button type="button" class="photo-viewer-close" aria-label="סגירה" onclick="closePhotoViewer()">✕</button>
     ${n>1?`<button type="button" class="photo-viewer-prev" aria-label="הקודמת" onclick="stepPhotoViewer(-1)">›</button><button type="button" class="photo-viewer-next" aria-label="הבאה" onclick="stepPhotoViewer(1)">‹</button><div class="photo-viewer-count" dir="ltr">${photoViewerIndex+1} / ${n}</div>`:""}`;
 }
@@ -3354,7 +3410,7 @@ async function saveProblemEdit(id,btn){
     .select("id,title,description,status,priority,created_by,assigned_to,created_at,updated_at,closed_at,closed_by,business_id").single();
   if(error){setBusy(btn,false);console.error(error);return alert("לא ניתן לעדכן את התקלה: "+error.message);}
   if(data)upsertById(problems,normalizeProblem(data));
-  await savePhotoDraft("problem",id);
+  savePhotoDraft("problem",id);
   refreshScreenBehindModal("problems",problemsScreen);
   showModal(problemFormTemplate(problems.find(p=>Number(p.id)===Number(id)),false));
 }
@@ -3613,13 +3669,13 @@ async function createTask(btn){
     return alert("לא ניתן ליצור את המשימה: "+error.message);
   }
 
-  if(data){upsertById(tasks,data);setBusy(btn,true,"מעלה תמונות...");await savePhotoDraft("task",data.id);}
+  if(data){upsertById(tasks,data);savePhotoDraft("task",data.id);}
   hideModal();tasksScreen();
 }
 
 function taskFormTemplate(t,editing=false){
   const assignees=profilesForBusiness(t.business_id);
-  return `<div class="task-detail">
+  return `<div class="task-detail" data-task-id="${Number(t.id)}" data-mode="${editing?"edit":"view"}">
     <h2>${editing?"עריכת משימה":"פרטי משימה"}</h2>
     <div class="detail-business">${esc(businessName(t.business_id))}</div>
 
@@ -3697,7 +3753,7 @@ async function saveTaskEdit(id,btn){
   }
 
   if(data)upsertById(tasks,data);
-  await savePhotoDraft("task",id);
+  savePhotoDraft("task",id);
   refreshScreenBehindModal("tasks",tasksScreen);
   showModal(taskFormTemplate(tasks.find(x=>Number(x.id)===Number(id)),false));
 }
@@ -4231,7 +4287,7 @@ async function createProblem(btn){
   const {data,error}=await supabaseClient.from("problems").insert(payload)
     .select("id,title,description,status,priority,created_by,assigned_to,created_at,updated_at,closed_at,closed_by,business_id").single();
   if(error){setBusy(btn,false);console.error(error);return alert("לא ניתן לשמור את התקלה בענן: "+error.message);}
-  if(data){upsertById(problems,normalizeProblem(data));setBusy(btn,true,"מעלה תמונות...");await savePhotoDraft("problem",data.id);}
+  if(data){upsertById(problems,normalizeProblem(data));savePhotoDraft("problem",data.id);}
   hideModal();problemsScreen();
 }
 function calendarDay(ds){
@@ -4281,6 +4337,7 @@ async function bootstrap(){
     const ok=await loadCurrentUser(session.user);
     if(!ok)return;
     await loadAppData();
+    reportUnfinishedPhotos();
     initAppHistory();
     const savedScreen=sessionStorage.getItem("__izazoo_returnScreen");
     __dlog(`bootstrap: savedScreen from sessionStorage = ${savedScreen}, screenRenderers has it = ${savedScreen?!!screenRenderers[savedScreen]:"n/a"}`);
