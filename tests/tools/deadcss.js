@@ -5,9 +5,9 @@ const fs=require('fs'),postcss=require('postcss'),sp=require('postcss-selector-p
 const file=process.argv[2],write=process.argv[3]==='--write';
 let html=fs.readFileSync(file,'utf8');
 const styleRe=/<style>([\s\S]*?)<\/style>/g;
-// class names the app builds at runtime (module-${active}, calendar-${x.type}, nav-${id})
+// class names the app builds at runtime (module-${active}, calendar-${x.type}, nav-${id}, stack-${behind})
 const DYNAMIC=['problems','tasks','updates','docs','user','feedback','admin','home'].flatMap(n=>['module-'+n,'nav-'+n])
-  .concat(['problem','task','update'].map(t=>'calendar-'+t));
+  .concat(['problem','task','update'].map(t=>'calendar-'+t)).concat(['stack-1','stack-2']);
 const nonCss=html.replace(styleRe,'')+'\n'+DYNAMIC.join(' ');
 const used=new Map();const isUsed=n=>{if(!used.has(n)){const re=new RegExp('(?<![\\w-])'+n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?![\\w-])');used.set(n,re.test(nonCss));}return used.get(n);};
 let removedSel=0,removedRules=0;const deadNames=new Set();

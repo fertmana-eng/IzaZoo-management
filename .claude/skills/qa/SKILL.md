@@ -21,7 +21,7 @@ Work in plain, non-technical language for the owner (see CLAUDE.md).
 5. **Wait for the automatic GitHub check** ("Tests" workflow) on the pull
    request to be green before merging. If it is red, read its log and fix it.
 6. **Tell the owner what to check on the phone:** a short numbered list of
-   concrete steps, always with the app link
-   https://fertmana-eng.github.io/IzaZoo-management/ and a reminder to close
-   and reopen the app first.
+   concrete steps and a reminder to fully close and reopen the installed app
+   first. Give the app link (https://fertmana-eng.github.io/IzaZoo-management/)
+   only when something should be checked in the browser too (owner's rule).
 7. Report in a few lines: what was tested, the result, anything not covered.

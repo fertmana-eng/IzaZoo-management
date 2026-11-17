@@ -10,7 +10,7 @@
 do $checks$
 declare
   own uuid; mgr uuid; mgr_biz bigint; other_biz bigint;
-  k_own bigint; k_other bigint; k_arch bigint; k_new bigint; u_owner bigint; u_mgr bigint; p_new bigint;
+  k_own bigint; k_other bigint; k_arch bigint; k_new bigint; u_owner bigint; u_mgr bigint; p_new bigint; p_other bigint; t_new bigint;
   n int; total int := 0; failed text[] := '{}';
 begin
   -- who to test as: an active owner, and an active manager with a business
@@ -40,7 +40,8 @@ begin
       ('updates_v2','INSERT'),('updates_v2','UPDATE'),('update_businesses','INSERT'),
       ('update_followups','INSERT'),('update_followups','UPDATE'),('beta_feedback','INSERT'),('beta_feedback','UPDATE'),
       ('knowledge_items','INSERT'),('knowledge_items','UPDATE'),('knowledge_items','DELETE'),
-      ('knowledge_businesses','INSERT'),('knowledge_versions','INSERT')) v(t,op)
+      ('knowledge_businesses','INSERT'),('knowledge_versions','INSERT'),
+      ('item_photos','INSERT'),('item_photos','DELETE')) v(t,op)
     loop
       total:=total+1;
       if not exists(select 1 from information_schema.role_table_grants g where g.table_schema='public' and g.table_name=r.t and g.grantee='authenticated' and g.privilege_type=r.op)
@@ -58,6 +59,9 @@ begin
   insert into storage.objects(bucket_id,name) values('knowledge','chk-own.pdf'),('knowledge','chk-other.pdf'),('knowledge','chk-arch.pdf');
   insert into public.updates_v2(title,body,created_by,all_businesses) values('chk','chk',own,false) returning id into u_owner;
   insert into public.update_businesses values(u_owner,other_biz);
+  insert into public.problems(title,status,priority,created_by,business_id) values('chk other','open','normal',own,other_biz) returning id into p_other;
+  insert into storage.objects(bucket_id,name) values('photos','problem/'||p_other||'/chk.jpg');
+  insert into public.item_photos(problem_id,file_path,thumb_path,created_by) values(p_other,'problem/'||p_other||'/chk.jpg','problem/'||p_other||'/chk-t.jpg',own);
 
   perform set_config('role','authenticated',true);
 
@@ -87,7 +91,7 @@ begin
   begin insert into public.problems(title,status,priority,created_by,business_id) values('chk','open','normal',mgr,other_biz); failed:=failed||'manager CAN open a problem in another business'::text;
   exception when others then null; end;
   total:=total+1;
-  begin insert into public.tasks(description,created_by,business_id) values('chk',mgr,mgr_biz) returning id into n;
+  begin insert into public.tasks(description,created_by,business_id) values('chk',mgr,mgr_biz) returning id into t_new;
   exception when others then failed:=failed||('manager cannot add a task in own business: '||sqlerrm); end;
   total:=total+1;
   begin insert into public.tasks(description,created_by,business_id) values('chk',mgr,other_biz); failed:=failed||'manager CAN add a task in another business'::text;
@@ -133,6 +137,38 @@ begin
   total:=total+1;
   begin perform public.get_login_users(); failed:=failed||'the staff list function is reachable'::text;
   exception when others then null; end;
+  -- photos on problems and tasks: own business works, another business is closed
+  total:=total+1;
+  begin
+    insert into storage.objects(bucket_id,name) values('photos','problem/'||p_new||'/chk.jpg'),('photos','problem/'||p_new||'/chk-t.jpg'),('photos','task/'||t_new||'/chk.jpg');
+    -- as the app does it: the new row is read back right away
+    insert into public.item_photos(problem_id,file_path,thumb_path,created_by) values(p_new,'problem/'||p_new||'/chk.jpg','problem/'||p_new||'/chk-t.jpg',mgr) returning id into n;
+    insert into public.item_photos(task_id,file_path,thumb_path,created_by) values(t_new,'task/'||t_new||'/chk.jpg','task/'||t_new||'/chk-t.jpg',mgr) returning id into n;
+  exception when others then failed:=failed||('manager cannot add a photo in own business: '||sqlerrm); end;
+  total:=total+1;
+  select count(*) into n from public.item_photos where problem_id=p_new or task_id=t_new;
+  if n<>2 then failed:=failed||('manager sees '||n||' of 2 own photos'); end if;
+  total:=total+1;
+  begin insert into storage.objects(bucket_id,name) values('photos','problem/'||p_other||'/x.jpg'); failed:=failed||'manager CAN upload a photo to another business''s problem'::text;
+  exception when others then null; end;
+  total:=total+1;
+  begin insert into public.item_photos(problem_id,file_path,thumb_path) values(p_other,'problem/'||p_other||'/y.jpg','problem/'||p_other||'/y-t.jpg'); failed:=failed||'manager CAN attach a photo to another business''s problem'::text;
+  exception when others then null; end;
+  total:=total+1;
+  begin insert into public.item_photos(problem_id,file_path,thumb_path) values(p_new,'problem/'||p_other||'/z.jpg','problem/'||p_new||'/z-t.jpg'); failed:=failed||'a photo row can point at another problem''s file'::text;
+  exception when others then null; end;
+  total:=total+1;
+  select count(*) into n from public.item_photos where problem_id=p_other;
+  if n<>0 then failed:=failed||'manager sees another business''s photos'::text; end if;
+  total:=total+1;
+  select count(*) into n from storage.objects where bucket_id='photos' and name like 'problem/'||p_other||'/%';
+  if n<>0 then failed:=failed||'manager can open another business''s photo files'::text; end if;
+  total:=total+1;
+  begin
+    insert into public.item_photos(problem_id,file_path,thumb_path) select p_new,'problem/'||p_new||'/n'||g||'.jpg','problem/'||p_new||'/n'||g||'-t.jpg' from generate_series(1,5) g;
+    failed:=failed||'more than 5 photos can be attached'::text;
+  exception when others then null; end;
+
   total:=total+1;
   select count(*) into n from public.admin_activity;
   if n<>0 then failed:=failed||'manager can read the admin log'::text; end if;

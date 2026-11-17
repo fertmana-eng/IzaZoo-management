@@ -95,6 +95,80 @@ describe('problems and tasks',()=>{
   });
 });
 
+describe('photos on problems and tasks',()=>{
+  const fs=require('fs'),path=require('path');
+  const PIC={name:'pic.png',mimeType:'image/png',buffer:fs.readFileSync(path.join(__dirname,'..','icon-512.png'))};
+  const seeded=[{id:7,problem_id:1,task_id:null,file_path:'problem/1/a.jpg',thumb_path:'problem/1/a-t.jpg',created_at:'2026-09-03T22:31:00Z'},
+                {id:8,problem_id:1,task_id:null,file_path:'problem/1/b.jpg',thumb_path:'problem/1/b-t.jpg',created_at:'2026-09-03T22:32:00Z'}];
+  const ops=page=>page.evaluate(()=>__ops.filter(o=>o.bucket==='photos'||o.table==='item_photos').map(o=>o.storage?`${o.storage} ${o.path||o.paths.join(',')}`:`${o.op} ${o.op==='insert'?JSON.stringify(o.payload):o.filters.map(f=>f.join('=')).join(',')}`));
+  test('a new problem with a photo: the photo is shrunk, stored under the problem, and shows on its card',async()=>{
+    const {page,ctx,errors}=await open();
+    await page.evaluate(()=>{currentBusinessId=1;navigateModule('problems');});await page.waitForTimeout(300);
+    await page.evaluate(()=>newProblem());
+    await page.setInputFiles('#photoGallery',PIC);await page.waitForSelector('#photoDraftGrid .photo-tile img');
+    await page.fill('#pt','Broken door');await page.click('#modal .primary');await page.waitForTimeout(600);
+    const r=await page.evaluate(()=>{const p=__db.problems.find(x=>x.title==='Broken door'),ph=__db.item_photos[0],
+      card=[...document.querySelectorAll('.problem-card')].find(c=>c.offsetParent&&/Broken door/.test(c.innerText));
+      return {sameProblem:ph.problem_id===p.id,file:ph.file_path.startsWith(`problem/${p.id}/`)&&ph.file_path.endsWith('.jpg'),thumb:ph.thumb_path.endsWith('-t.jpg'),
+        files:Object.keys(__files).filter(k=>k.startsWith('photos/')).map(k=>__files[k].type),
+        small:__files['photos/'+ph.file_path].size<__files['photos/'+ph.file_path].size+1&&__files['photos/'+ph.thumb_path].size<__files['photos/'+ph.file_path].size,
+        cardPhoto:!!card?.querySelector('.card-photo img[src^="blob:"]'),modal:!!document.getElementById('modal')};});
+    assert.deepEqual(r,{sameProblem:true,file:true,thumb:true,files:['image/jpeg','image/jpeg'],small:true,cardPhoto:true,modal:false});
+    assert.deepEqual(errors,[]);await ctx.close();
+  });
+  test('at most 5 photos; the add buttons disappear when full',async()=>{
+    const {page,ctx,errors}=await open();
+    await page.evaluate(()=>{currentBusinessId=1;navigateModule('tasks');});await page.waitForTimeout(300);
+    await page.evaluate(()=>newTask());
+    await page.setInputFiles('#photoGallery',Array.from({length:6},(_,i)=>({...PIC,name:`p${i}.png`})));
+    await page.waitForFunction(()=>document.querySelectorAll('#photoDraftGrid .photo-tile').length===5);
+    const r=await page.evaluate(()=>({tiles:document.querySelectorAll('#photoDraftGrid .photo-tile').length,add:document.querySelectorAll('#photoDraftGrid .photo-add').length,toast:document.querySelector('.app-toast')?.textContent}));
+    assert.deepEqual(r,{tiles:5,add:0,toast:'אפשר לצרף עד 5 תמונות'});
+    await page.fill('#taskDescription','Fix shelf');await page.click('#modal .primary');await page.waitForTimeout(800);
+    assert.equal(await page.evaluate(()=>__db.item_photos.filter(p=>p.task_id===__db.tasks.find(t=>t.description==='Fix shelf').id).length),5);
+    assert.deepEqual(errors,[]);await ctx.close();
+  });
+  test('editing: a removed photo is deleted with its files, a new one is added',async()=>{
+    const {page,ctx,errors}=await open({cfg:{photos:structuredClone(seeded)}});
+    await page.click(visible('.portrait-bottom-cat.problem'));await page.waitForTimeout(300);
+    assert.equal(await page.locator(visible('.problem-card .card-photo')).getAttribute('class'),'card-photo stack-1');
+    await page.click(visible('.problem-card'));await page.click('#modal button:has-text("עריכה")');
+    await page.click('#photoDraftGrid .photo-tile:first-child .photo-remove');
+    await page.setInputFiles('#photoCamera',PIC);await page.waitForFunction(()=>document.querySelectorAll('#photoDraftGrid .photo-tile').length===2);
+    await page.click('#modal .primary');await page.waitForTimeout(600);
+    const o=await ops(page);
+    assert.ok(o.includes('delete id=7'),o.join('\n'));
+    assert.ok(o.includes('remove problem/1/a.jpg,problem/1/a-t.jpg'),o.join('\n'));
+    assert.equal(o.filter(x=>x.startsWith('upload problem/1/')).length,2);
+    const r=await page.evaluate(()=>({rows:__db.item_photos.map(p=>p.id),shown:document.querySelectorAll('#modal .photo-grid .photo-tile').length}));
+    assert.deepEqual(r.rows.length,2);assert.ok(r.rows.includes(8));assert.equal(r.shown,2);
+    assert.deepEqual(errors,[]);await ctx.close();
+  });
+  test('a photo opens full screen; back closes the photo, keeps the problem window, and back again closes the window',async()=>{
+    const {page,ctx,errors}=await open({cfg:{photos:structuredClone(seeded)}});
+    await page.click(visible('.portrait-bottom-cat.problem'));await page.waitForTimeout(300);
+    await page.click(visible('.problem-card'));await page.click('#modal .photo-tile >> nth=1');
+    const r1=await page.evaluate(()=>({img:document.querySelector('#photoViewer img')?.dataset.photo,count:document.querySelector('.photo-viewer-count')?.textContent}));
+    assert.deepEqual(r1,{img:'problem/1/b.jpg',count:'2 / 2'});
+    await back(page);
+    const r2=await page.evaluate(()=>({viewer:!!document.getElementById('photoViewer'),modal:!!document.querySelector('#modal .problem-detail')}));
+    assert.deepEqual(r2,{viewer:false,modal:true});
+    await back(page);
+    assert.deepEqual(await state(page),{screen:'problems',history:'problems',drawn:'problems',modal:null});
+    assert.deepEqual(errors,[]);await ctx.close();
+  });
+  test('if a photo cannot be uploaded the task is still saved and the user is told',async()=>{
+    const {page,ctx,errors}=await open({cfg:{failUpload:true}});
+    await page.evaluate(()=>{currentBusinessId=1;navigateModule('tasks');});await page.waitForTimeout(300);
+    await page.evaluate(()=>newTask());
+    await page.setInputFiles('#photoGallery',PIC);await page.waitForSelector('#photoDraftGrid .photo-tile img');
+    await page.fill('#taskDescription','Call plumber');await page.click('#modal .primary');await page.waitForTimeout(600);
+    const r=await page.evaluate(()=>({saved:__db.tasks.some(t=>t.description==='Call plumber'),rows:__db.item_photos.length,toast:document.querySelector('.app-toast')?.textContent}));
+    assert.deepEqual(r,{saved:true,rows:0,toast:'תמונה אחת לא נשמרה. אפשר לנסות שוב בעריכה.'});
+    assert.deepEqual(errors,[]);await ctx.close();
+  });
+});
+
 describe('updates',()=>{
   test('an edit survives returning to the app, and is cancelled (not applied to a new post) after a redraw',async()=>{
     const {page,ctx,errors}=await open();
