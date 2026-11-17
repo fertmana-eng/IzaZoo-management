@@ -102,10 +102,11 @@
 ## Next steps (in order)
 
 1. **CSS cleanup and building each screen once.** Opus, in small steps with
-   before/after screenshots. Done so far: step 1, removed 292 CSS selectors that
-   target class names the app never uses (about 21 KB). Next: rules overridden
-   by later rules, merging the two `<style>` blocks, then rendering each screen
-   once instead of twice (portrait + landscape). Each
+   before/after screenshots. Done so far: (1) removed 292 CSS selectors that
+   target class names the app never uses (about 21 KB); (2) removed 1,155 CSS
+   settings always overridden by a later rule with the identical selector in the
+   same context (about 38 KB). Next: merging the two `<style>` blocks, then
+   rendering each screen once instead of twice (portrait + landscape). Each
    screen is currently rendered twice (portrait and landscape) and the CSS has many
    overriding rules; removing the wrong one can quietly break a screen.
 
