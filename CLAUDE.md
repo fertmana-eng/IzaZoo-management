@@ -72,6 +72,10 @@
   loading that the user is still on that screen (`currentScreen`) before drawing.
   Otherwise a back press during a slow load is undone by the late drawing.
 
+- **After saving inside a details window, redraw the list behind it**
+  (`refreshScreenBehindModal`), otherwise the list shows old data until the user
+  leaves and returns.
+
 ## Done so far
 
 - Removed hard-coded user list and passwords, the debug-log button, and the way to

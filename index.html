@@ -5516,6 +5516,7 @@ async function saveProblemEdit(id,btn){
     .select("id,title,description,status,priority,created_by,assigned_to,created_at,updated_at,closed_at,closed_by,business_id").single();
   if(error){setBusy(btn,false);console.error(error);return alert("לא ניתן לעדכן את התקלה: "+error.message);}
   if(data)upsertById(problems,normalizeProblem(data));
+  refreshScreenBehindModal("problems",problemsScreen);
   showModal(problemFormTemplate(problems.find(p=>Number(p.id)===Number(id)),false));
 }
 function confirmCloseProblem(id){
@@ -5851,6 +5852,7 @@ async function saveTaskEdit(id,btn){
   }
 
   if(data)upsertById(tasks,data);
+  refreshScreenBehindModal("tasks",tasksScreen);
   showModal(taskFormTemplate(tasks.find(x=>Number(x.id)===Number(id)),false));
 }
 
@@ -6178,6 +6180,13 @@ function focusFieldIntoView(target){if(!target||!target.matches("input,textarea,
 window.visualViewport?.addEventListener("resize",syncVisualViewport);window.visualViewport?.addEventListener("scroll",syncVisualViewport);document.addEventListener("focusin",e=>focusFieldIntoView(e.target));syncVisualViewport();
 function showModal(inner,options={}){document.getElementById("modal")?.remove();document.body.insertAdjacentHTML("beforeend",`<div class="modal" id="modal" data-exit-modal="${options.exitModal?"1":"0"}"><div class="modal-card">${inner}</div></div>`);syncVisualViewport();}
 function hideModal(){const modal=document.getElementById("modal");if(!modal){calendarReturnDate=null;return;}modal.remove();calendarReturnDate=null;}
+// redraw the list behind an open window after its data changed, keeping the scroll position
+function refreshScreenBehindModal(name,render){
+  if(currentScreen!==name)return;
+  const y=window.scrollY;
+  render();
+  window.scrollTo(0,y);
+}
 function setBusy(btn,busy,label=""){
   if(!btn)return;
   if(busy){
