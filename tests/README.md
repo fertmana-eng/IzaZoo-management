@@ -12,6 +12,17 @@ node --test tests/app.test.js
 
 Each test checks its own result (pass / fail). Run them after every change.
 
+## Database access check (real database)
+
+`tests/db/checks.sql` tests the access rules on the real Supabase database:
+both permission layers for every action the app performs, nothing reachable
+without logging in, and what the owner and a manager can and cannot do. It
+runs inside one block that rolls everything back, so nothing is changed, and
+reports `DB CHECKS: ALL n PASSED` or the list of failed checks. Run it through
+the Supabase connector (execute_sql) or paste it into the SQL Editor. It is
+not run on GitHub on purpose: that would need the live database's password
+stored on GitHub.
+
 ## Screenshot comparison (for styling changes)
 
 ```

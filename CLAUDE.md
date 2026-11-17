@@ -199,6 +199,9 @@ against a fake database (`tests/fake-supabase.js`), never the real project.
   `tests/visual/screenshots.js` and compare with `tests/visual/compare.js`
   (`cd tests && npm install` first). Accept only zero differences, or
   differences the owner asked for.
+- **Real-database check:** `tests/db/checks.sql` (40 checks, rolled back),
+  run by the security check. Not run on GitHub on purpose (it would need the
+  live database password there).
 - **Clean-up tools:** `tests/tools/deadcss.js`, `tests/tools/overridden.js`,
   `tests/tools/unused-functions.js` (report only unless `--write`).
 - Class names built at runtime (`module-${active}`, `calendar-${x.type}`,
@@ -217,7 +220,6 @@ against a fake database (`tests/fake-supabase.js`), never the real project.
   the whole document library), style block about 73 KB; PDF viewer 1.9 MB in
   `vendor/pdfjs`, loaded only when a document is opened. Follow-ups: test added
   for the file-size display; the two unused category functions removed
-  (`supabase/migrations/20261117_remove_category_functions.sql`). Still open:
-  the two database fixes from this batch have no automated test (the fake
-  database has no access rules; the security check covers them by hand).
+  (`supabase/migrations/20261117_remove_category_functions.sql`); saved
+  real-database check added (`tests/db/checks.sql`, all 40 pass). Nothing open.
 
