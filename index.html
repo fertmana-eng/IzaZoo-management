@@ -2206,7 +2206,7 @@ body.is-portrait .portrait-single-header .stable-search{margin-top:14px!importan
 .doc-viewer-actions{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
 .doc-viewer-actions:empty{display:none}
 .doc-viewer-actions button{padding:6px 12px;font-size:12px}
-.doc-pages{flex:1;min-height:0;overflow:auto;background:#e9e7e1;border-radius:8px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.doc-pages{direction:ltr;flex:1;min-height:0;overflow:auto;background:#e9e7e1;border-radius:8px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:8px}
 .doc-page{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15);max-width:100%;flex:0 0 auto}
 .doc-loading{padding:24px;text-align:center}
 </style>
@@ -3751,6 +3751,9 @@ async function renderKnowledgeFile(k){
       const vp=pageObj.getViewport({scale:scale*dpr});
       const canvas=document.createElement("canvas");
       canvas.className="doc-page";canvas.width=Math.floor(vp.width);canvas.height=Math.floor(vp.height);
+      // PDF pages are drawn left-to-right; inheriting the app's right-to-left
+      // direction shifts every letter and scrambles the text
+      canvas.dir="ltr";
       canvas.style.width=width+"px";canvas.setAttribute("aria-label",`עמוד ${n} מתוך ${pdf.numPages}`);
       box()?.appendChild(canvas);
       await pageObj.render({canvas,canvasContext:canvas.getContext("2d"),viewport:vp}).promise;
