@@ -241,11 +241,15 @@ describe('knowledge (ידע ונהלים): documents',()=>{
     const {page,ctx,errors}=await open();
     await seed(page,[{id:1,title:'למחיקה'},{id:2,title:'בארכיון',is_archived:true}]);await page.waitForTimeout(300);
     await page.click(visible('.knowledge-card:has-text("למחיקה")'));await page.click('#modal button:has-text("הסרה")');
-    await page.click('#modal button:has-text("מחיקה לצמיתות")');await page.waitForTimeout(400);
+    await page.click('#modal button:has-text("מחיקה לצמיתות")');
+    // a warning comes first; nothing is deleted yet
+    assert.match((await state(page)).modal||'',/מחיקה לצמיתות.*יוסר לצמיתות מהאפליקציה.*לא ניתן לבטל/s);
+    assert.equal(await page.evaluate(()=>__db.knowledge_items.length),2);
+    await page.click('#modal .danger-btn');await page.waitForTimeout(400);
     let r=await page.evaluate(()=>({items:__db.knowledge_items.map(k=>k.id),files:Object.keys(window.__files)}));
     assert.deepEqual(r,{items:[2],files:['knowledge/f2.pdf']});
     await page.click(visible('.knowledge-card:has-text("בארכיון")'));await page.click('#modal button:has-text("מחיקה לצמיתות")');
-    assert.match((await state(page)).modal||'',/למחוק לצמיתות/);
+    assert.match((await state(page)).modal||'',/יוסר לצמיתות מהאפליקציה/);
     await page.click('#modal .danger-btn');await page.waitForTimeout(400);
     r=await page.evaluate(()=>({items:__db.knowledge_items.length,files:Object.keys(window.__files).length}));
     assert.deepEqual(r,{items:0,files:0});
