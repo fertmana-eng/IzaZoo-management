@@ -16,6 +16,12 @@
 - **Say up front when something can't be done.** If a request runs into a browser
   or platform rule that code can't change, say so before writing code, and offer
   the best alternative. (Example below: a web app cannot close itself.)
+- **Keep this file up to date.** Whenever something worth remembering happens (a fix
+  merged, a decision made, a new rule from the owner, a lesson learned, the next
+  steps changing), update this file and merge it, so a new session can continue
+  without losing progress.
+- **Always show the app link when asking the owner to test something:**
+  https://fertmana-eng.github.io/IzaZoo-management/
 
 ## The app
 
