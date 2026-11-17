@@ -101,6 +101,11 @@
   to the database, test the write as the real user in the real database
   (security-check step 4). This is how the first document upload failed.
 
+- **Database access has two layers:** the table permission (GRANT) and the row
+  rules (policies). Adding a delete policy did nothing because the table had no
+  DELETE permission, so the first permanent delete was refused. Check both
+  (security-check step 4).
+
 - **Anything drawn on a canvas must be left-to-right.** The app is RTL and a
   canvas inherits the direction, which shifts every letter PDF.js draws (the
   document viewer showed scrambled text). The viewer sets `dir="ltr"`.

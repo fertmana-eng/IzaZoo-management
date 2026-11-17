@@ -33,6 +33,10 @@ in CLAUDE.md (owner / full admin / limited admin / manager).
    business links). It must succeed for those roles and fail for the others.
    (Avoid UPDATE/DELETE in these blocks: they trigger a confirmation prompt that
    times out; check those rules by reading the policy.)
+   Access has two layers: the table permission (`grant select/insert/update/
+   delete ... to authenticated`, see `information_schema.role_table_grants`) and
+   then the row rules (policies). A policy does nothing without the matching
+   table permission, so for every operation the app performs check both.
 5. **Edge function** `admin-users`: compare the deployed code with
    `supabase/functions/admin-users/Index.ts`; admin actions must be allowed only
    for the owner or an admin with access to all businesses.
