@@ -50,6 +50,14 @@
 - Install banner ("התקנת האפליקציה" / "המשך באתר"): shown on every start in the
   browser until the app is installed, on purpose (owner's decision: staff
   should install it). Don't make it remember "המשך באתר".
+- App icon (Nov 2026, owner's choice): the IzaZoo logo from the business site
+  (izazoo.ussl.co.il), white "IZAZOO" in one line on red `#D12026`, rounded
+  square. Files: `icon-192.png`, `icon-512.png` (rounded corners), `icon-maskable-512.png`
+  (full square; Android's launcher decides the final shape, which code can't
+  control), `apple-touch-icon.png`. The site's logo file is tiny (300x40), so
+  the icons were rebuilt by smoothing it up; the script is not kept. The owner
+  wants the logo used in the app's design too (sign-in screen, header): do that
+  as part of the design work, not before.
 - Backend: Supabase (auth with `<username>@izazoo.local`, tables, RPCs and an
   `admin-users` edge function). Only the publishable key is in the page.
 - Published with GitHub Pages from `main`:
@@ -211,7 +219,7 @@ job is ever renamed, the ruleset's required check must be renamed to match
 Tests live in `tests/` (see `tests/README.md`). They run in headless Chromium
 against a fake database (`tests/fake-supabase.js`), never the real project.
 
-- **Behaviour tests:** `node --test tests/app.test.js` (35 tests, each checks its
+- **Behaviour tests:** `node --test tests/app.test.js` (36 tests, each checks its
   own result). Run them after every change, and add a test for every bug fixed.
 - **Styling changes:** take screenshots before and after with
   `tests/visual/screenshots.js` and compare with `tests/visual/compare.js`
