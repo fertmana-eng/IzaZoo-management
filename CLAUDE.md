@@ -57,10 +57,12 @@
   square. Files: `icon-192.png`, `icon-512.png` (rounded corners), `icon-maskable-512.png`
   (full square; Android's launcher decides the final shape, which code can't
   control), `apple-touch-icon.png`. The site's logo file is tiny (300x40), so
-  the icons were rebuilt by smoothing it up; the script is not kept. The owner
-  The startup screen shows this logo (gently pulsing) instead of "טוען..." (owner's
-  request); the manifest's background colour matches the app's (`#f2f1ec`) so
-  the phone's launch screen flows into it. The owner
+  the icons were rebuilt by smoothing it up; the script is not kept.
+  Startup screen: three animated red dots (no "טוען..." text). In the browser the
+  logo shows above them; in the installed app it is hidden, because Android's own
+  launch screen shows the icon first (automatic, size and shape chosen by the
+  phone, can't be changed) and a second logo of another size made a jump. The
+  manifest's background colour matches the app's (`#f2f1ec`). The owner
   wants the logo used in the app's design too (sign-in screen, header): do that
   as part of the design work, not before.
 - Backend: Supabase (auth with `<username>@izazoo.local`, tables, RPCs and an
