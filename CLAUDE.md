@@ -29,7 +29,7 @@
 - A single-page Hebrew (RTL) management app for the IzaZoo businesses: problems
   (תקלות), tasks (משימות), updates (עדכונים), knowledge (ידע ונהלים, still closed),
   an admin screen and user feedback.
-- Everything is in `index.html` (CSS + JS, roughly 130 KB of CSS). `sw.js` is the
+- Everything is in `index.html` (one style block of roughly 70 KB, then the JS). `sw.js` is the
   service worker; `vendor/supabase.js` is a bundled copy of supabase-js v2.119.0.
   Bump the cache name in `sw.js` when you change files it caches.
 - Backend: Supabase (auth with `<username>@izazoo.local`, tables, RPCs and an
@@ -105,8 +105,10 @@
    before/after screenshots. Done so far: (1) removed 292 CSS selectors that
    target class names the app never uses (about 21 KB); (2) removed 1,155 CSS
    settings always overridden by a later rule with the identical selector in the
-   same context (about 38 KB). Next: merging the two `<style>` blocks, then
-   rendering each screen once instead of twice (portrait + landscape). Each
+   same context (about 38 KB); (3) merged the two style blocks into one. Next:
+   rendering each screen once instead of twice (portrait + landscape). This is
+   the riskiest step: plan it, do it one screen at a time, and have the owner
+   check each screen on the phone. Each
    screen is currently rendered twice (portrait and landscape) and the CSS has many
    overriding rules; removing the wrong one can quietly break a screen.
 
