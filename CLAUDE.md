@@ -9,13 +9,11 @@
   `main` without asking first, then tell the owner what was done and how to test it
   on their phone. Still ask before anything that cannot be undone, such as deleting
   data or changing the database.
-- **Model advice.** Before starting a task, tell the owner which model to use:
-  - Fable for hard or risky work: security and database permissions, large
-    restructures, the CSS cleanup, or a bug that has resisted earlier attempts.
-  - Opus for everything else, and switch back to Opus once the hard part is done.
-  - The owner's Fable allowance is limited (it renews over time). Suggest Fable
-    only when it really matters, and always offer an Opus alternative (e.g. the
-    same work in smaller steps with before/after screenshots).
+- **Model:** the owner is on the Pro plan and no longer has Fable (the trial
+  ended). Use Opus for everything. For hard or risky work (security, large
+  restructures, the CSS cleanup), compensate by working in small steps, testing
+  each one (before/after screenshots for visual changes), and asking the owner to
+  check each step on their phone.
 - **Say up front when something can't be done.** If a request runs into a browser
   or platform rule that code can't change, say so before writing code, and offer
   the best alternative. (Example below: a web app cannot close itself.)
@@ -103,8 +101,8 @@
 
 ## Next steps (in order)
 
-1. **CSS cleanup and building each screen once.** Fable if the owner has
-   allowance, otherwise Opus in small steps with before/after screenshots. Each
+1. **CSS cleanup and building each screen once.** Opus, in small steps with
+   before/after screenshots. Each
    screen is currently rendered twice (portrait and landscape) and the CSS has many
    overriding rules; removing the wrong one can quietly break a screen.
 
