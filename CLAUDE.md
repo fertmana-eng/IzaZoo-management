@@ -129,8 +129,10 @@ needed a long review to fix. These rules keep that from happening again:
   check on the phone.
 - **Clean up as you go:** when replacing something, remove the old code/CSS in
   the same change instead of adding overrides on top.
-- **Keep this file current**, and run **/health-check** after a batch of changes
-  or about once a month.
+- **Keep this file current.** Never schedule /health-check (owner's decision).
+  Instead, *suggest* it to the owner when it's appropriate (after a batch of
+  several changes, about a month since the last one, or before a big new
+  feature), and run it only if the owner agrees.
 
 ## Checks ("departments")
 
@@ -138,7 +140,8 @@ Three project skills hold the checklists; use them as described:
 - `/qa` (`.claude/skills/qa/SKILL.md`): after every change, before merging.
 - `/design-check`: when anything visual could change.
 - `/security-check`: when data, logins, permissions or Supabase code change.
-- `/health-check`: after a batch of changes or about once a month.
+- `/health-check`: suggest it (don't run or schedule it on your own) after a
+  batch of changes, about a month after the last one, or before a big feature.
 
 The "Tests" GitHub workflow (`.github/workflows/tests.yml`) runs the behaviour
 tests on every pull request and on `main`. Merge only when it is green.
