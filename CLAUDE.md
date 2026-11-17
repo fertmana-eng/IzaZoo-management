@@ -40,7 +40,8 @@
   deleted) and archive (asks first; archive visible to admins only). Everyone
   else views and downloads the documents for their business. Previous versions
   are recorded in `knowledge_versions` but not shown. The database enforces
-  this (`supabase/migrations/20261117_knowledge_documents.sql`, applied).
+  this (`supabase/migrations/20261117_knowledge_documents.sql` and
+  `20261117_knowledge_admins_see_all.sql`: administrators see every item).
   Supabase free plan: 1 GB storage in total.
 - Everything is in `index.html` (one style block of roughly 70 KB, then the JS). `sw.js` is the
   service worker; `vendor/supabase.js` is a bundled copy of supabase-js v2.119.0.
@@ -85,6 +86,12 @@
 - **Screens that load data before drawing** (admin, feedback) must check after
   loading that the user is still on that screen (`currentScreen`) before drawing.
   Otherwise a back press during a slow load is undone by the late drawing.
+
+- **The test suite's fake database has no access rules.** A database rule
+  that refuses the app's own writes (e.g. reading back a new row before it is
+  linked to a business) passes every test. Before merging anything that writes
+  to the database, test the write as the real user in the real database
+  (security-check step 4). This is how the first document upload failed.
 
 - **After saving inside a details window, redraw the list behind it**
   (`refreshScreenBehindModal`), otherwise the list shows old data until the user

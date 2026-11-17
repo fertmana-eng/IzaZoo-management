@@ -24,12 +24,21 @@ in CLAUDE.md (owner / full admin / limited admin / manager).
    business problems, tasks, updates, replies) and cannot see or change other
    businesses' data, post to all businesses, or perform admin actions. Repeat
    for anything the change touched.
-4. **Edge function** `admin-users`: compare the deployed code with
+4. **Test every write the app does, as a real user, exactly as the app does it.**
+   The tests in `tests/` use a fake database with no access rules, so they can't
+   catch a rule that refuses the app's own writes. For each insert/update the
+   change adds or touches, run it in the rolled-back DO block as the owner (and
+   as the role that should be allowed), including `returning` when the app reads
+   the row back (`.select()` after `.insert()`), and any follow-up rows (e.g.
+   business links). It must succeed for those roles and fail for the others.
+   (Avoid UPDATE/DELETE in these blocks: they trigger a confirmation prompt that
+   times out; check those rules by reading the policy.)
+5. **Edge function** `admin-users`: compare the deployed code with
    `supabase/functions/admin-users/Index.ts`; admin actions must be allowed only
    for the owner or an admin with access to all businesses.
-5. **App code:** no passwords, keys (other than the publishable key) or user
+6. **App code:** no passwords, keys (other than the publishable key) or user
    lists in `index.html`; anything built from user text goes through `esc()`.
-6. Keep `supabase/` in step: if a database change or function deploy happened,
+7. Keep `supabase/` in step: if a database change or function deploy happened,
    save it there.
-7. Report in plain language: what was checked, anything found, and what you
+8. Report in plain language: what was checked, anything found, and what you
    propose (ask before applying).
