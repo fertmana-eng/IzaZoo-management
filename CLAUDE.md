@@ -193,7 +193,7 @@ job is ever renamed, the ruleset's required check must be renamed to match
 Tests live in `tests/` (see `tests/README.md`). They run in headless Chromium
 against a fake database (`tests/fake-supabase.js`), never the real project.
 
-- **Behaviour tests:** `node --test tests/app.test.js` (34 tests, each checks its
+- **Behaviour tests:** `node --test tests/app.test.js` (35 tests, each checks its
   own result). Run them after every change, and add a test for every bug fixed.
 - **Styling changes:** take screenshots before and after with
   `tests/visual/screenshots.js` and compare with `tests/visual/compare.js`
@@ -210,3 +210,14 @@ against a fake database (`tests/fake-supabase.js`), never the real project.
 - 2026-11-17 (end of the full review): all 26 tests pass; no unused functions
   or CSS; security review done. `index.html` about 187 KB, style block about
   71 KB.
+- 2026-11-17 (after the document library batch): 35 tests pass, GitHub green;
+  no unused functions or CSS; security check clean (advisor shows only the two
+  known warnings; every app write has both permission layers; owner/manager
+  write tests pass; no orphan files). `index.html` about 198 KB (+11 KB for
+  the whole document library), style block about 73 KB; PDF viewer 1.9 MB in
+  `vendor/pdfjs`, loaded only when a document is opened. Open items: two unused
+  database functions (`admin_create_knowledge_category`,
+  `admin_update_knowledge_category`); the two database fixes from this batch
+  have no automated test (the fake database has no access rules); the file-size
+  display has no test.
+
