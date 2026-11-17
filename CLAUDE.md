@@ -27,7 +27,7 @@
 ## The app
 
 - A single-page Hebrew (RTL) management app for the IzaZoo businesses: problems
-  (תקלות), tasks (משימות), updates (עדכונים), knowledge (ידע ונהלים, still closed),
+  (תקלות), tasks (משימות), updates (עדכונים), knowledge (ידע ונהלים, a document library),
   an admin screen and user feedback.
 - Knowledge = a document library (Nov 2026; owner's decisions): PDF files
   (other types possibly later), up to 20 MB each, in the private Supabase
@@ -40,8 +40,9 @@
   deleted) and archive (asks first; archive visible to admins only). Everyone
   else views and downloads the documents for their business. Previous versions
   are recorded in `knowledge_versions` but not shown. The database enforces
-  this (`supabase/migrations/20261117_knowledge_documents.sql` and
-  `20261117_knowledge_admins_see_all.sql`: administrators see every item).
+  this (`supabase/migrations/20261117_knowledge_*.sql`; administrators see
+  every item). "הסרה" asks: archive (restorable) or delete for good (document
+  and file; also available on archived documents).
   Supabase free plan: 1 GB storage in total.
 - Everything is in `index.html` (one style block of roughly 70 KB, then the JS). `sw.js` is the
   service worker; `vendor/supabase.js` is a bundled copy of supabase-js v2.119.0.
@@ -56,7 +57,11 @@
   available to Claude. Its confirmation prompts for database changes do not reach
   the owner's phone and time out; instead give the owner the SQL to paste into the
   dashboard's SQL Editor and press Run. Read-only queries and edge-function
-  deploys work through the connector. Role-simulated tests in a DO block that
+  deploys work through the connector, and so do changes that only add something
+  (e.g. `create policy`, `add column`): apply those directly with
+  apply_migration. Only changes that drop or replace something trigger the
+  prompt; for those, put the SQL alone at the top of a short message for the
+  owner. Role-simulated tests in a DO block that
   ends with `raise exception` (so everything is rolled back) work too, as long as
   they contain no UPDATE/DELETE (those trigger the prompt). Dry-run a migration
   the same way (EXECUTE each statement, then raise) before giving it to the owner.
@@ -92,6 +97,10 @@
   linked to a business) passes every test. Before merging anything that writes
   to the database, test the write as the real user in the real database
   (security-check step 4). This is how the first document upload failed.
+
+- **Anything drawn on a canvas must be left-to-right.** The app is RTL and a
+  canvas inherits the direction, which shifts every letter PDF.js draws (the
+  document viewer showed scrambled text). The viewer sets `dir="ltr"`.
 
 - **After saving inside a details window, redraw the list behind it**
   (`refreshScreenBehindModal`), otherwise the list shows old data until the user
