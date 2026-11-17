@@ -3756,7 +3756,8 @@ async function renderKnowledgeFile(k){
       canvas.dir="ltr";
       canvas.style.width=width+"px";canvas.setAttribute("aria-label",`עמוד ${n} מתוך ${pdf.numPages}`);
       box()?.appendChild(canvas);
-      await pageObj.render({canvas,canvasContext:canvas.getContext("2d"),viewport:vp}).promise;
+      const ctx=canvas.getContext("2d");ctx.direction="ltr";
+      await pageObj.render({canvas,canvasContext:ctx,viewport:vp}).promise;
     }
   }catch(e){
     console.error("document",e);

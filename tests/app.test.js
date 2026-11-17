@@ -188,10 +188,10 @@ describe('knowledge (ידע ונהלים): documents',()=>{
     await page.waitForFunction(()=>document.querySelectorAll('#docPages canvas.doc-page').length===2,null,{timeout:15000});
     const r=await page.evaluate(()=>({sizes:[...document.querySelectorAll('#docPages canvas')].map(c=>c.width>0&&c.height>0),
       // pages must be drawn left-to-right: inheriting the app's right-to-left direction scrambles the text
-      directions:[...document.querySelectorAll('#docPages canvas')].map(c=>c.getContext('2d').direction),
+      directions:[...document.querySelectorAll('#docPages canvas')].map(c=>getComputedStyle(c).direction+'/'+c.getContext('2d').direction),
       buttons:[...document.querySelectorAll('#modal button')].map(b=>b.textContent.trim())}));
     assert.deepEqual(r.sizes,[true,true]);
-    assert.deepEqual(r.directions,['ltr','ltr']);
+    assert.deepEqual(r.directions,['ltr/ltr','ltr/ltr']);
     assert.ok(r.buttons.includes('הורדה')&&r.buttons.includes('פרטים')&&r.buttons.includes('הסרה'));
     await back(page);assert.equal((await state(page)).modal,null,'back closes the viewer');
     assert.deepEqual(errors,[]);await ctx.close();
