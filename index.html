@@ -3043,7 +3043,11 @@ async function saveFeedback(id,btn){
 function page(title,sub,active,content,fab="",stickyExtra=""){
   currentSearchContext=active;const moduleClass=`module-${active}`;const showSearch=["problems","tasks","updates"].includes(active);
   const bizTag=showSearch?`<div class="active-business-tag">עסק פעיל: <b>${esc(activeBusinessLabel())}</b></div>`:"";
-  root().innerHTML=`<div class="${moduleClass}"><div class="desktop-layout">${sidebar(active)}<main class="main full-module-main"><div class="desktop-sticky-head"><div class="topbar module-topbar"><button class="module-back" aria-label="חזרה" onclick="appBack()">‹</button><div class="greeting module-heading"><h1>${title}</h1><div class="date">${sub}</div></div><div class="module-top-tools">${businessSelectorHTML()}</div></div>${bizTag}${showSearch?searchBoxHTML(active):""}${stickyExtra}</div><div data-search-context="${active}">${content}</div>${fab}</main></div><div class="mobile-layout"><div class="mobile-sticky-head"><div class="mobile-header module-mobile-header"><button class="module-back" aria-label="חזרה" onclick="appBack()">‹</button><div class="mobile-title-wrap module-heading"><div class="mobile-brand">${title}</div><div class="date">${sub}</div></div><div class="module-top-tools">${businessSelectorHTML()}</div></div>${bizTag}${showSearch?searchBoxHTML(active):""}${stickyExtra}</div><div data-search-context="${active}">${content}</div>${fab}</div></div>`;renderOfflineBar();
+  // build only the layout for the current orientation (the other one would be hidden anyway)
+  const layout=viewportMode()==="portrait"
+    ?`<div class="mobile-layout"><div class="mobile-sticky-head"><div class="mobile-header module-mobile-header"><button class="module-back" aria-label="חזרה" onclick="appBack()">‹</button><div class="mobile-title-wrap module-heading"><div class="mobile-brand">${title}</div><div class="date">${sub}</div></div><div class="module-top-tools">${businessSelectorHTML()}</div></div>${bizTag}${showSearch?searchBoxHTML(active):""}${stickyExtra}</div><div data-search-context="${active}">${content}</div>${fab}</div>`
+    :`<div class="desktop-layout">${sidebar(active)}<main class="main full-module-main"><div class="desktop-sticky-head"><div class="topbar module-topbar"><button class="module-back" aria-label="חזרה" onclick="appBack()">‹</button><div class="greeting module-heading"><h1>${title}</h1><div class="date">${sub}</div></div><div class="module-top-tools">${businessSelectorHTML()}</div></div>${bizTag}${showSearch?searchBoxHTML(active):""}${stickyExtra}</div><div data-search-context="${active}">${content}</div>${fab}</main></div>`;
+  root().innerHTML=`<div class="${moduleClass}">${layout}</div>`;renderOfflineBar();
   __forceRepaint();
 }
 function __forceRepaint(){
@@ -3866,16 +3870,22 @@ async function openCalendarItem(type,id,ds){const module=type==="problem"?"probl
 
 
 
+function viewportMode(){return window.matchMedia("(orientation: portrait)").matches?"portrait":"landscape";}
 function applyViewportMode(){
-  const mode=window.matchMedia("(orientation: portrait)").matches?"portrait":"landscape";
+  const mode=viewportMode();
   const changed=lastViewportMode!==null && lastViewportMode!==mode;
   lastViewportMode=mode;
   document.body.classList.toggle("is-portrait",mode==="portrait");
   document.body.classList.toggle("is-landscape",mode==="landscape");
   return changed;
 }
-window.addEventListener("resize",()=>{applyViewportMode();});
-window.addEventListener("orientationchange",()=>setTimeout(()=>{const changed=applyViewportMode();if(changed&&currentUser){if(currentScreen==="home")dashboard();else moduleRenderers[currentScreen]?.();}},180));
+// screens are built for one orientation only, so redraw the current screen when it changes
+function onViewportChange(){
+  const changed=applyViewportMode();
+  if(changed&&currentUser&&screenRenderers[currentScreen])screenRenderers[currentScreen]();
+}
+window.addEventListener("resize",onViewportChange);
+window.addEventListener("orientationchange",()=>setTimeout(onViewportChange,180));
 applyViewportMode();
 
 window.addEventListener("error", function(e){
