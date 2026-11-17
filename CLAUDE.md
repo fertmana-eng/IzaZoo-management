@@ -13,6 +13,9 @@
   - Fable for hard or risky work: security and database permissions, large
     restructures, the CSS cleanup, or a bug that has resisted earlier attempts.
   - Opus for everything else, and switch back to Opus once the hard part is done.
+  - The owner's Fable allowance is limited (it renews over time). Suggest Fable
+    only when it really matters, and always offer an Opus alternative (e.g. the
+    same work in smaller steps with before/after screenshots).
 - **Say up front when something can't be done.** If a request runs into a browser
   or platform rule that code can't change, say so before writing code, and offer
   the best alternative. (Example below: a web app cannot close itself.)
