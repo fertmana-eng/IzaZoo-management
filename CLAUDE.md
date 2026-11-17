@@ -193,6 +193,19 @@
    design (same table/bucket rules, background upload, the card stack).
    Suggest the planning step (short interview) before building.
 
+2. **Redesign, in this order (owner's decision, Nov 2026):** (a) first redesign
+   the functionality with the owner (what the home screen and each module should
+   do, e.g. one-tap reporting, notifications, comments, checklists); (b) then
+   Claude makes a fresh design handoff package for ChatGPT, describing the app
+   *after* that functionality change (the first package, built from the current
+   app, is outdated by then); (c) ChatGPT designs until the owner likes it, then
+   sends Claude a handoff including an **asset package** (logo, illustrations,
+   icons, brush strokes as separate files, transparent background, no baked-in
+   text); (d) Claude implements it in small, tested steps. Lesson from a failed
+   experiment: copying a ChatGPT mock-up picture into the real app (cutting
+   artwork out of the picture, approximating its fonts) looked very bad. Don't
+   do that again; wait for the real assets and specs.
+
 Otherwise nothing pending. (Supabase's leaked-password protection needs a paid Supabase
 plan; the project is on the free plan, so don't suggest it unless that changes.)
 
