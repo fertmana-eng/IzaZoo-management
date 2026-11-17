@@ -215,9 +215,9 @@ against a fake database (`tests/fake-supabase.js`), never the real project.
   known warnings; every app write has both permission layers; owner/manager
   write tests pass; no orphan files). `index.html` about 198 KB (+11 KB for
   the whole document library), style block about 73 KB; PDF viewer 1.9 MB in
-  `vendor/pdfjs`, loaded only when a document is opened. Open items: two unused
-  database functions (`admin_create_knowledge_category`,
-  `admin_update_knowledge_category`); the two database fixes from this batch
-  have no automated test (the fake database has no access rules); the file-size
-  display has no test.
+  `vendor/pdfjs`, loaded only when a document is opened. Follow-ups: test added
+  for the file-size display; the two unused category functions removed
+  (`supabase/migrations/20261117_remove_category_functions.sql`). Still open:
+  the two database fixes from this batch have no automated test (the fake
+  database has no access rules; the security check covers them by hand).
 
