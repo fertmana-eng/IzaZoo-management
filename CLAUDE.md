@@ -185,7 +185,15 @@
 
 ## Next steps (in order)
 
-Nothing pending. (Supabase's leaked-password protection needs a paid Supabase
+1. **Videos on problems and tasks** (owner wants it, later: "when the tokens
+   reset"). Things to settle first: the free plan has 1 GB storage in total,
+   and a phone video is about 50-100 MB per minute, so a short time limit
+   (e.g. 15-30 seconds) and/or a size limit is needed; a browser can't shrink
+   videos the way it shrinks photos without heavy extra code. Reuse the photo
+   design (same table/bucket rules, background upload, the card stack).
+   Suggest the planning step (short interview) before building.
+
+Otherwise nothing pending. (Supabase's leaked-password protection needs a paid Supabase
 plan; the project is on the free plan, so don't suggest it unless that changes.)
 
 Ideas the owner put on hold (Nov 2026); suggest them again only when relevant:
