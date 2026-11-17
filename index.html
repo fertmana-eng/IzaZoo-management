@@ -5192,8 +5192,11 @@ document.addEventListener("keydown",ensureExitGuard,true);
 let exitReady=false; // "exit" was tapped but the browser can't close the app: next back press exits
 function showExitConfirmation(){
   if(exitConfirmOpen)return;
-  exitConfirmOpen=true;exitReady=false;
-  showModal(`<div class="confirm-card"><h2>לצאת מ־IzaZoo?</h2><p class="u-sub" id="exitHint">האם לצאת מהאפליקציה?</p><div class="actions"><button class="secondary" onclick="cancelAppExit()">ביטול</button><button class="danger-action" id="exitYesBtn" onclick="confirmAppExit(this)">יציאה</button></div></div>`,{exitModal:true});
+  exitConfirmOpen=true;exitReady=true;
+  showModal(`<div class="confirm-card"><h2>לצאת מ־IzaZoo?</h2><p class="u-sub" id="exitHint">לחץ שוב על כפתור החזרה של המכשיר כדי לצאת.</p><div class="actions"><button class="secondary" onclick="cancelAppExit()">ביטול</button></div></div>`,{exitModal:true});
+  // a web app can't close itself, so move to the app's first history entry:
+  // from there, one more press on the device's back button leaves the app
+  if(history.state?.exitGuard&&history.state.level===1)history.back();
 }
 function cancelAppExit(){
   const level=history.state?.exitGuard?history.state.level:null;
@@ -5204,26 +5207,7 @@ function cancelAppExit(){
   // safety net: if that entry wasn't there, create it
   setTimeout(()=>{if(history.state?.exitGuard&&!exitConfirmOpen)ensureExitGuard();},400);
 }
-function showExitReadyHint(){
-  const hint=document.getElementById("exitHint"),yes=document.getElementById("exitYesBtn");
-  if(hint){hint.textContent="כדי לסיים את היציאה, לחץ עכשיו על כפתור החזרה של המכשיר.";hint.style.fontWeight="700";hint.style.color="var(--ink)";}
-  if(yes)yes.remove();
-}
-function confirmAppExit(btn){
-  setBusy(btn,true,"יוצא...");
-  // leaves the app when there is a page before it; otherwise does nothing
-  const level=history.state?.exitGuard?history.state.level:1;
-  history.go(level===0?-1:-2);
-  setTimeout(()=>{try{window.close();}catch(e){}},150);
-  // browsers don't let a web app close itself. If we're still here, move to the very
-  // first history entry so that one press on the device's back button exits.
-  setTimeout(()=>{
-    if(!exitConfirmOpen)return;
-    exitReady=true;
-    if(history.state?.exitGuard&&history.state.level===0)showExitReadyHint();
-    else history.back(); // -> guard 0; the popstate handler shows the hint
-  },700);
-}
+function showExitReadyHint(){} // the dialog already explains how to exit
 function closeModalSmart(){
   if(calendarReturnDate){
     // opened from the calendar: step back to home in history too, then reopen that day
