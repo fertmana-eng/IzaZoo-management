@@ -58,6 +58,12 @@
   behind it when there are more (owner's design). Tapping a photo opens it full
   screen; back closes the photo, then the window. The aim is to replace the
   WhatsApp groups: a photo of the problem plus what needs doing.
+  Saving doesn't wait for photos (owner: "in WhatsApp it's instant"): the
+  window closes at once, the card shows the photo with a small spinner while
+  it uploads in the background (photos in parallel), and a failure shows a
+  message. If the app is closed mid-upload those photos are lost (same as any
+  web app); the phone remembers which items were uploading and the next start
+  says so (`izazoo_pending_photos` in local storage).
 - Everything is in `index.html` (one style block of roughly 70 KB, then the JS). `sw.js` is the
   service worker; `vendor/supabase.js` is a bundled copy of supabase-js v2.119.0.
   Bump the cache name in `sw.js` when you change files it caches.
@@ -240,7 +246,7 @@ job is ever renamed, the ruleset's required check must be renamed to match
 Tests live in `tests/` (see `tests/README.md`). They run in headless Chromium
 against a fake database (`tests/fake-supabase.js`), never the real project.
 
-- **Behaviour tests:** `node --test tests/app.test.js` (42 tests, each checks its
+- **Behaviour tests:** `node --test tests/app.test.js` (44 tests, each checks its
   own result). Run them after every change, and add a test for every bug fixed.
 - **Styling changes:** take screenshots before and after with
   `tests/visual/screenshots.js` and compare with `tests/visual/compare.js`

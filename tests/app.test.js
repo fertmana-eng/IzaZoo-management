@@ -116,6 +116,29 @@ describe('photos on problems and tasks',()=>{
     assert.deepEqual(r,{sameProblem:true,file:true,thumb:true,files:['image/jpeg','image/jpeg'],small:true,cardPhoto:true,modal:false});
     assert.deepEqual(errors,[]);await ctx.close();
   });
+  test('saving does not wait for photos: the window closes at once and the card shows the photo uploading',async()=>{
+    const {page,ctx,errors}=await open({cfg:{uploadDelay:1500}});
+    await page.evaluate(()=>{currentBusinessId=1;navigateModule('problems');});await page.waitForTimeout(300);
+    await page.evaluate(()=>newProblem());
+    await page.setInputFiles('#photoGallery',[PIC,{...PIC,name:'b.png'}]);await page.waitForFunction(()=>document.querySelectorAll('#photoDraftGrid .photo-tile').length===2);
+    await page.fill('#pt','Window cracked');await page.click('#modal .primary');await page.waitForTimeout(250);
+    const card=()=>page.evaluate(()=>{const c=[...document.querySelectorAll('.problem-card')].find(c=>c.offsetParent&&/Window cracked/.test(c.innerText));
+      return {modal:!!document.getElementById('modal'),uploading:!!c?.querySelector('.card-photo.uploading .photo-uploading'),stack:c?.querySelector('.card-photo')?.className,rows:__db.item_photos.length,
+        remembered:localStorage.getItem('izazoo_pending_photos')?JSON.parse(localStorage.getItem('izazoo_pending_photos')).length:0};});
+    assert.deepEqual(await card(),{modal:false,uploading:true,stack:'card-photo stack-1 uploading',rows:0,remembered:2});
+    await page.waitForTimeout(1800);
+    assert.deepEqual(await card(),{modal:false,uploading:false,stack:'card-photo stack-1',rows:2,remembered:0});
+    const ups=await page.evaluate(()=>__ops.filter(o=>o.storage==='upload').length);assert.equal(ups,4);
+    assert.deepEqual(errors,[]);await ctx.close();
+  });
+  test('if the app was closed while photos were uploading, the next start says which item',async()=>{
+    const {page,ctx,errors}=await open({cfg:{}});
+    await page.evaluate(()=>{localStorage.setItem('izazoo_pending_photos',JSON.stringify([{type:'problem',id:1},{type:'problem',id:1}]));location.reload();});
+    await page.waitForTimeout(800);
+    const r=await page.evaluate(()=>({toast:document.querySelector('.app-toast')?.textContent,left:localStorage.getItem('izazoo_pending_photos')}));
+    assert.deepEqual(r,{toast:'האפליקציה נסגרה לפני שהעלאת תמונות הסתיימה ("Leak"). אפשר להוסיף אותן שוב בעריכה.',left:null});
+    assert.deepEqual(errors,[]);await ctx.close();
+  });
   test('at most 5 photos; the add buttons disappear when full',async()=>{
     const {page,ctx,errors}=await open();
     await page.evaluate(()=>{currentBusinessId=1;navigateModule('tasks');});await page.waitForTimeout(300);

@@ -1,7 +1,7 @@
 // Fake Supabase client used by the tests instead of the real database.
 // It keeps a small in-memory database (window.__db) and records every call (window.__ops).
 // Options are read from window.__cfg: noSession, mustChange, failTables[], profileError,
-// role ("owner" by default; "manager" or "admin" are limited to business 1), failUpload,
+// role ("owner" by default; "manager" or "admin" are limited to business 1), failUpload, uploadDelay (ms),
 // photos (rows for item_photos; their files are made up on download).
 (function(){
   const cfg=window.__cfg||{};
@@ -66,7 +66,7 @@
     },
     // file storage: files are kept in window.__files ("bucket/path" -> Blob)
     storage:{from(bucket){const files=window.__files||(window.__files={});return {
-      upload:async(path,file)=>{window.__ops.push({storage:"upload",bucket,path});
+      upload:async(path,file)=>{window.__ops.push({storage:"upload",bucket,path});if(cfg.uploadDelay)await new Promise(r=>setTimeout(r,cfg.uploadDelay));
         if(cfg.failUpload)return {data:null,error:{message:"upload failed"}};files[bucket+"/"+path]=file;return {data:{path},error:null};},
       download:async path=>{window.__ops.push({storage:"download",bucket,path});const f=files[bucket+"/"+path]||(bucket==="photos"&&(cfg.photos||[]).some(p=>p.file_path===path||p.thumb_path===path)?new Blob(["x"],{type:"image/jpeg"}):null);return f?{data:f,error:null}:{data:null,error:{message:"Object not found"}};},
       remove:async paths=>{window.__ops.push({storage:"remove",bucket,paths});paths.forEach(p=>delete files[bucket+"/"+p]);return {data:[],error:null};}
