@@ -61,7 +61,10 @@
   (e.g. `create policy`, `add column`): apply those directly with
   apply_migration. Only changes that drop or replace something trigger the
   prompt; for those, put the SQL alone at the top of a short message for the
-  owner. Role-simulated tests in a DO block that
+  owner. Never work around the prompt by rewriting a removal as an addition
+  (extra rules that override or neutralise old ones): that leaves dead or
+  conflicting rules behind, and since access rules add up (OR), an added rule
+  can never take away access an old rule grants. Role-simulated tests in a DO block that
   ends with `raise exception` (so everything is rolled back) work too, as long as
   they contain no UPDATE/DELETE (those trigger the prompt). Dry-run a migration
   the same way (EXECUTE each statement, then raise) before giving it to the owner.
