@@ -189,7 +189,7 @@ describe('knowledge (ידע ונהלים): documents',()=>{
     const r=await page.evaluate(()=>({sizes:[...document.querySelectorAll('#docPages canvas')].map(c=>c.width>0&&c.height>0),
       buttons:[...document.querySelectorAll('#modal button')].map(b=>b.textContent.trim())}));
     assert.deepEqual(r.sizes,[true,true]);
-    assert.ok(r.buttons.includes('הורדה')&&r.buttons.includes('פרטים')&&r.buttons.includes('ארכוב'));
+    assert.ok(r.buttons.includes('הורדה')&&r.buttons.includes('פרטים')&&r.buttons.includes('הסרה'));
     await back(page);assert.equal((await state(page)).modal,null,'back closes the viewer');
     assert.deepEqual(errors,[]);await ctx.close();
   });
@@ -221,16 +221,32 @@ describe('knowledge (ידע ונהלים): documents',()=>{
     assert.equal(r.version.title,'ישן');assert.equal(r.version.file_name,'f1.pdf');
     assert.deepEqual(errors,[]);await ctx.close();
   });
-  test('archiving asks first; archived documents go to an admin-only archive and can be restored',async()=>{
+  test('"הסרה" asks: archive (can be restored) or delete for good; cancel changes nothing',async()=>{
     const {page,ctx,errors}=await open();
     await seed(page,[{id:1,title:'נוהל ישן'}]);await page.waitForTimeout(300);
-    await page.click(visible('.knowledge-card'));await page.click('#modal button:has-text("ארכוב")');
-    assert.match((await state(page)).modal||'',/להעביר לארכיון/);
-    assert.equal(await page.evaluate(()=>__db.knowledge_items[0].is_archived),false);
-    await page.click('#modal .primary');await page.waitForTimeout(400);
+    await page.click(visible('.knowledge-card'));await page.click('#modal button:has-text("הסרה")');
+    assert.match((await state(page)).modal||'',/להסיר את המסמך.*העברה לארכיון.*מחיקה לצמיתות/s);
+    await page.click('#modal button:has-text("ביטול")');
+    assert.equal(await page.evaluate(()=>__db.knowledge_items[0].is_archived),false,'cancel changes nothing');
+    await page.click('#modal button:has-text("הסרה")');await page.click('#modal button:has-text("העברה לארכיון")');await page.waitForTimeout(400);
     assert.match(await page.innerText(visible('.knowledge-page')),/ארכיון/);
     await page.click(visible('.knowledge-card'));await page.click('#modal button:has-text("החזר לפעילים")');await page.waitForTimeout(400);
     assert.doesNotMatch(await page.innerText(visible('.knowledge-page')),/ארכיון/);
+    assert.deepEqual(errors,[]);await ctx.close();
+  });
+  test('deleting for good removes the document and its file (from "הסרה" or from the archive)',async()=>{
+    const {page,ctx,errors}=await open();
+    await seed(page,[{id:1,title:'למחיקה'},{id:2,title:'בארכיון',is_archived:true}]);await page.waitForTimeout(300);
+    await page.click(visible('.knowledge-card:has-text("למחיקה")'));await page.click('#modal button:has-text("הסרה")');
+    await page.click('#modal button:has-text("מחיקה לצמיתות")');await page.waitForTimeout(400);
+    let r=await page.evaluate(()=>({items:__db.knowledge_items.map(k=>k.id),files:Object.keys(window.__files)}));
+    assert.deepEqual(r,{items:[2],files:['knowledge/f2.pdf']});
+    await page.click(visible('.knowledge-card:has-text("בארכיון")'));await page.click('#modal button:has-text("מחיקה לצמיתות")');
+    assert.match((await state(page)).modal||'',/למחוק לצמיתות/);
+    await page.click('#modal .danger-btn');await page.waitForTimeout(400);
+    r=await page.evaluate(()=>({items:__db.knowledge_items.length,files:Object.keys(window.__files).length}));
+    assert.deepEqual(r,{items:0,files:0});
+    assert.match(await page.innerText(visible('.knowledge-page')),/אין עדיין מסמכים/);
     assert.deepEqual(errors,[]);await ctx.close();
   });
   test('a manager can view and download, but cannot upload, edit or archive',async()=>{

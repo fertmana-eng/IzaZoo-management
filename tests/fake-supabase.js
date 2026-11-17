@@ -25,6 +25,7 @@
       in(k,v){st.inF=[k,v];return b},
       insert(p){st.op="insert";st.payload=p;return b},
       update(p){st.op="update";st.payload=p;return b},
+      delete(){st.op="delete";return b},
       single(){st.single=true;return b},
       then(res,rej){
         window.__ops.push({table,op:st.op,payload:st.payload,filters:st.filters,or:st.or,inF:st.inF});
@@ -35,6 +36,7 @@
         let out;
         if(st.op==="insert"){const arr=Array.isArray(st.payload)?st.payload:[st.payload];out=arr.map(p=>{const r={id:rows.length+1000,created_at:now(),updated_at:now(),status:"open",...p};rows.push(r);return r;});}
         else if(st.op==="update"){out=rows.filter(match);out.forEach(r=>Object.assign(r,st.payload));}
+        else if(st.op==="delete"){out=rows.filter(match);db[table]=rows.filter(r=>!match(r));}
         else out=rows.filter(match);
         return Promise.resolve({data:st.single?(out[0]||null):out,error:null}).then(res,rej);
       }
