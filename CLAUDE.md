@@ -150,6 +150,21 @@
 Nothing pending. (Supabase's leaked-password protection needs a paid Supabase
 plan; the project is on the free plan, so don't suggest it unless that changes.)
 
+Ideas the owner put on hold (Nov 2026); suggest them again only when relevant:
+- More "departments" (skills): **Planning** (`/plan-feature`: a short interview
+  and one-page plan before any new feature, to avoid rework like the knowledge
+  module being rebuilt), **Operations** (`/ops-check`: storage use vs the 1 GB
+  free limit, Supabase pause risk, orphan files, stale items, inactive users,
+  and a safe data export since the free plan has no automatic backups; never
+  export data to GitHub, the repository is public), **Design** (`/design`: a
+  `DESIGN.md` design guide taken from the existing styles, options shown as
+  screenshots before building; better with reference apps/brand colours from
+  the owner), **Team feedback** (`/feedback-review`), **Release notes**
+  (`/whats-new`, a Hebrew "what's new" post for staff).
+- Connecting to Tabit / Restigo / Tabit Shift for management tools: depends on
+  what access Tabit gives (its API appears to be partner-only). Ask Tabit for
+  API access to the owner's own data, or use report exports; never scrape.
+
 ## How we make changes (always)
 
 The app was first built in Claude chat, without history, tests or checks, and
