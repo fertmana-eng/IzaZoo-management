@@ -2190,6 +2190,7 @@ body.is-portrait .portrait-single-header .stable-search{margin-top:14px!importan
 
 /* knowledge: document library */
 .danger-btn{background:#a33a3a;color:#fff;border:1px solid #a33a3a}
+.delete-warning{color:#a33a3a;font-weight:700}
 .doc-chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}
 .doc-chips::-webkit-scrollbar{display:none}
 .doc-chip{flex:0 0 auto;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:600;min-height:0;line-height:1.2}
@@ -3820,11 +3821,13 @@ function confirmRemoveKnowledge(id){
   const k=docs.find(x=>Number(x.id)===Number(id));if(!k)return;
   showModal(`<h2>להסיר את המסמך?</h2><p>"${esc(k.title)}"</p>
     <p class="u-sub"><b>העברה לארכיון:</b> המסמך לא יוצג למשתמשים, ואפשר להחזיר אותו בכל עת.<br><b>מחיקה לצמיתות:</b> המסמך והקובץ יימחקו ולא ניתן יהיה לשחזר אותם.</p>
-    <div class="actions"><button class="secondary" onclick="openKnowledge(${Number(id)})">ביטול</button><button class="primary" onclick="archiveKnowledge(${Number(id)},false,this)">העברה לארכיון</button><button class="danger-btn" onclick="deleteKnowledge(${Number(id)},this)">מחיקה לצמיתות</button></div>`);
+    <div class="actions"><button class="secondary" onclick="openKnowledge(${Number(id)})">ביטול</button><button class="primary" onclick="archiveKnowledge(${Number(id)},false,this)">העברה לארכיון</button><button class="danger-btn" onclick="confirmDeleteKnowledge(${Number(id)})">מחיקה לצמיתות</button></div>`);
 }
+// always shown before deleting for good
 function confirmDeleteKnowledge(id){
   const k=docs.find(x=>Number(x.id)===Number(id));if(!k)return;
-  showModal(`<h2>למחוק לצמיתות?</h2><p>"${esc(k.title)}" והקובץ שלו יימחקו ולא ניתן יהיה לשחזר אותם.</p>
+  showModal(`<h2>⚠️ מחיקה לצמיתות</h2><p>"${esc(k.title)}" יוסר לצמיתות מהאפליקציה, יחד עם הקובץ שלו.</p>
+    <p class="delete-warning">לא ניתן לבטל פעולה זו, והמסמך לא יופיע גם בארכיון.</p>
     <div class="actions"><button class="secondary" onclick="openKnowledge(${Number(id)})">ביטול</button><button class="danger-btn" onclick="deleteKnowledge(${Number(id)},this)">מחיקה לצמיתות</button></div>`);
 }
 async function deleteKnowledge(id,btn){
