@@ -368,3 +368,17 @@ describe('real Supabase library (fake server)',()=>{
     await ctx.close();
   });
 });
+
+describe('installed app files',()=>{
+  test('every icon and offline file the app lists exists, and the icons have the right sizes',()=>{
+    const fs=require('fs'),path=require('path'),root=path.resolve(__dirname,'..');
+    const manifest=JSON.parse(fs.readFileSync(path.join(root,'manifest.webmanifest'),'utf8'));
+    const pngSize=f=>{const b=fs.readFileSync(path.join(root,f));return `${b.readUInt32BE(16)}x${b.readUInt32BE(20)}`;};
+    for(const icon of manifest.icons){assert.ok(fs.existsSync(path.join(root,icon.src)),icon.src+' is missing');assert.equal(pngSize(icon.src),icon.sizes,icon.src);}
+    assert.ok(manifest.icons.some(i=>i.purpose==='maskable'),'a maskable icon is needed for Android home screens');
+    const shell=JSON.parse(fs.readFileSync(path.join(root,'sw.js'),'utf8').match(/const SHELL=(\[[^\]]*\])/)[1]);
+    for(const f of shell)if(f!=='./')assert.ok(fs.existsSync(path.join(root,f)),f+' is listed for offline use but missing');
+    const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+    for(const [,f] of html.matchAll(/<link rel="(?:apple-touch-icon|icon|manifest)"[^>]*href="([^"]+)"/g))assert.ok(fs.existsSync(path.join(root,f)),f+' is missing');
+  });
+});
