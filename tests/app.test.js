@@ -19,11 +19,15 @@ describe('startup and login',()=>{
     assert.equal(await page.evaluate(()=>typeof USERS),'undefined');
     assert.deepEqual(errors,[]);await ctx.close();
   });
-  test('the startup screen shows the logo instead of a loading text',async()=>{
+  test('the startup screen shows three loading dots, and the logo only outside the installed app',async()=>{
     const ctx=await browser.newContext({viewport:PORTRAIT,javaScriptEnabled:false});const page=await ctx.newPage();
     await page.goto(server.url);
-    const r=await page.evaluate(()=>{const img=document.querySelector('#root .boot-screen img');return {src:img?.getAttribute('src'),loaded:img?.complete&&img.naturalWidth>0,label:document.querySelector('#root [role=status]')?.getAttribute('aria-label'),text:document.getElementById('root').innerText.trim()};});
-    assert.deepEqual(r,{src:'icon-512.png',loaded:true,label:'טוען...',text:''});await ctx.close();
+    const r=await page.evaluate(()=>{const img=document.querySelector('#root .boot-screen img');
+      const standalone=[...document.styleSheets[0].cssRules].filter(x=>x.media&&/display-mode:\s*standalone/.test(x.media.mediaText)).flatMap(x=>[...x.cssRules]);
+      return {src:img?.getAttribute('src'),loaded:img?.complete&&img.naturalWidth>0,dots:document.querySelectorAll('#root .boot-dots span').length,
+        label:document.querySelector('#root [role=status]')?.getAttribute('aria-label'),text:document.getElementById('root').innerText.trim(),
+        hiddenWhenInstalled:standalone.some(x=>img.matches(x.selectorText)&&x.style.display==='none')};});
+    assert.deepEqual(r,{src:'icon-512.png',loaded:true,dots:3,label:'טוען...',text:'',hiddenWhenInstalled:true});await ctx.close();
   });
   test('if the database library cannot load, a try-again screen is shown',async()=>{
     const {page,ctx}=await open({blockLibrary:true});
