@@ -47,6 +47,9 @@
 - Everything is in `index.html` (one style block of roughly 70 KB, then the JS). `sw.js` is the
   service worker; `vendor/supabase.js` is a bundled copy of supabase-js v2.119.0.
   Bump the cache name in `sw.js` when you change files it caches.
+- Install banner ("התקנת האפליקציה" / "המשך באתר"): shown on every start in the
+  browser until the app is installed, on purpose (owner's decision: staff
+  should install it). Don't make it remember "המשך באתר".
 - Backend: Supabase (auth with `<username>@izazoo.local`, tables, RPCs and an
   `admin-users` edge function). Only the publishable key is in the page.
 - Published with GitHub Pages from `main`:
