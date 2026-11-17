@@ -1,18 +1,19 @@
 // Fake Supabase client used by the tests instead of the real database.
 // It keeps a small in-memory database (window.__db) and records every call (window.__ops).
-// Options are read from window.__cfg: noSession, mustChange, failTables[], profileError.
+// Options are read from window.__cfg: noSession, mustChange, failTables[], profileError,
+// role ("owner" by default; "manager" or "admin" are limited to business 1), failUpload.
 (function(){
   const cfg=window.__cfg||{};
   const now=()=>new Date().toISOString();
   const db={
-    profiles:[{id:"u1",username:"alex",first_name:"Alex",last_name:"A",display_name:"Alex A",role:"owner",is_active:true,must_change_password:!!cfg.mustChange,all_businesses_access:true,business_ids:[1,2]}],
+    profiles:[{id:"u1",username:"alex",first_name:"Alex",last_name:"A",display_name:"Alex A",role:cfg.role||"owner",is_active:true,must_change_password:!!cfg.mustChange,all_businesses_access:!cfg.role||cfg.role==="owner",business_ids:[1,2]}],
     businesses:[{id:1,name:"Biz1",is_active:true},{id:2,name:"Biz2",is_active:true}],
     user_businesses:[{user_id:"u1",business_id:1}],
     problems:[{id:1,title:"Leak",description:"d",status:"open",priority:"normal",created_by:"u1",assigned_to:null,created_at:"2026-09-03T22:30:00Z",updated_at:now(),closed_at:null,closed_by:null,business_id:1}],
     problem_activity:[],
     tasks:[{id:1,description:"Task due 4th",business_id:1,created_by:"u1",created_at:"2026-09-01T10:00:00Z",assigned_to:null,due_date:"2026-09-04",status:"open"}],
     updates_v2:Array.from({length:30},(_,i)=>({id:i+1,title:"u"+(i+1),body:"Update number "+(i+1),created_by:"u1",created_at:new Date(Date.UTC(2026,7,1+i,10)).toISOString(),updated_at:now(),expires_at:null,is_archived:false,is_pinned:false,all_businesses:true})),
-    update_businesses:[],update_followups:[],knowledge_items:[],knowledge_businesses:[],knowledge_versions:[],knowledge_categories:[],beta_feedback:[],admin_activity:[]
+    update_businesses:[],update_followups:[],knowledge_items:[],knowledge_businesses:[],knowledge_versions:[],knowledge_categories:[{id:1,name:"פתיחה",sort_order:1,is_active:true},{id:2,name:"מטבח",sort_order:2,is_active:true}],beta_feedback:[],admin_activity:[]
   };
   window.__db=db;window.__ops=[];
   function q(table){
@@ -53,8 +54,20 @@
       if(name==="get_visible_profiles")return {data:db.profiles,error:null};
       if(name==="close_problem"){const p=db.problems.find(x=>x.id===args.problem_id);p.status="closed";p.closed_at=now();p.closed_by="u1";db.problem_activity.push({id:db.problem_activity.length+1,problem_id:p.id,actor_id:"u1",action:"closed",created_at:now()});}
       if(name==="reopen_problem"){const p=db.problems.find(x=>x.id===args.problem_id);p.status="open";}
+      if(name==="replace_knowledge_targets"){
+        const k=db.knowledge_items.find(x=>x.id===args.target_knowledge_id);if(k)k.all_businesses=args.new_all_businesses;
+        db.knowledge_businesses=db.knowledge_businesses.filter(x=>x.knowledge_id!==args.target_knowledge_id)
+          .concat(args.new_all_businesses?[]:args.business_ids.map(b=>({knowledge_id:args.target_knowledge_id,business_id:b})));
+      }
       return {data:null,error:null};
     },
+    // file storage: files are kept in window.__files ("bucket/path" -> Blob)
+    storage:{from(bucket){const files=window.__files||(window.__files={});return {
+      upload:async(path,file)=>{window.__ops.push({storage:"upload",bucket,path});
+        if(cfg.failUpload)return {data:null,error:{message:"upload failed"}};files[bucket+"/"+path]=file;return {data:{path},error:null};},
+      download:async path=>{const f=files[bucket+"/"+path];return f?{data:f,error:null}:{data:null,error:{message:"Object not found"}};},
+      remove:async paths=>{window.__ops.push({storage:"remove",bucket,paths});paths.forEach(p=>delete files[bucket+"/"+p]);return {data:[],error:null};}
+    };}},
     functions:{invoke:async(n,o)=>{window.__ops.push({fn:n,body:o.body});return {data:{},error:null}}}
   }}};
 })();

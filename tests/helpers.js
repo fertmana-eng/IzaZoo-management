@@ -5,7 +5,7 @@ const fs=require('fs'),http=require('http'),path=require('path');
 
 const ROOT=path.resolve(__dirname,'..');
 const FAKE=fs.readFileSync(path.join(__dirname,'fake-supabase.js'),'utf8');
-const TYPES={'.html':'text/html; charset=utf-8','.js':'text/javascript','.svg':'image/svg+xml','.png':'image/png','.webmanifest':'application/manifest+json'};
+const TYPES={'.html':'text/html; charset=utf-8','.js':'text/javascript','.mjs':'text/javascript','.svg':'image/svg+xml','.png':'image/png','.webmanifest':'application/manifest+json'};
 
 function startServer(root=ROOT){
   const srv=http.createServer((req,res)=>{

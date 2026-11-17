@@ -123,6 +123,138 @@ describe('updates',()=>{
   });
 });
 
+describe('knowledge (ידע ונהלים): documents',()=>{
+  // a small valid PDF with the given number of pages (each page a coloured box)
+  const makePdf=(pages=1)=>{
+    const objs=['<</Type/Catalog/Pages 2 0 R>>',`<</Type/Pages/Kids[${Array.from({length:pages},(_,i)=>`${3+i*2} 0 R`).join(' ')}]/Count ${pages}>>`];
+    for(let i=0;i<pages;i++){const c=`0 0 ${i%2?1:0.5} rg 30 30 240 340 re f`;
+      objs.push(`<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 400]/Contents ${4+i*2} 0 R/Resources<<>>>>`);
+      objs.push(`<</Length ${c.length}>>stream\n${c}\nendstream`);}
+    let out='%PDF-1.4\n';const offs=[];
+    objs.forEach((o,i)=>{offs.push(out.length);out+=`${i+1} 0 obj${o}endobj\n`;});
+    const x=out.length;
+    out+=`xref\n0 ${objs.length+1}\n0000000000 65535 f \n`+offs.map(o=>String(o).padStart(10,'0')+' 00000 n \n').join('')+`trailer<</Root 1 0 R/Size ${objs.length+1}>>\nstartxref\n${x}\n%%EOF`;
+    return Buffer.from(out,'latin1');
+  };
+  // put documents straight into the fake database and file store
+  const seed=(page,items)=>page.evaluate(async([items,b64])=>{
+    const bytes=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+    for(const k of items){
+      __db.knowledge_items.push({body:'',category_id:null,all_businesses:false,is_archived:false,is_pinned:false,updated_at:'2026-11-01T10:00:00Z',file_path:`f${k.id}.pdf`,file_name:`f${k.id}.pdf`,file_type:'application/pdf',file_size:bytes.length,...k});
+      (window.__files||(window.__files={}))[`knowledge/f${k.id}.pdf`]=new Blob([bytes],{type:'application/pdf'});
+      if(!k.all_businesses)(k.businesses||[1]).forEach(b=>__db.knowledge_businesses.push({knowledge_id:k.id,business_id:b}));
+    }
+    await loadKnowledge();navigateModule('docs');
+  },[items,makePdf(2).toString('base64')]);
+  const cards=page=>page.evaluate(()=>[...document.querySelectorAll('.knowledge-card')].filter(e=>e.offsetParent).map(e=>e.innerText.replace(/\s+/g,' ')));
+  const chips=page=>page.evaluate(()=>[...document.querySelectorAll('.doc-chips')].filter(e=>e.offsetParent).map(r=>[...r.querySelectorAll('.doc-chip')].map(c=>(c.classList.contains('active')?'*':'')+c.textContent)));
+  const toastText=page=>page.evaluate(()=>document.querySelector('.app-toast')?.textContent||'');
+
+  test('an admin uploads a PDF; it appears in the list with its size',async()=>{
+    const {page,ctx,errors}=await open();
+    await page.evaluate(()=>navigateModule('docs'));await page.waitForTimeout(300);
+    assert.match(await page.innerText(visible('.knowledge-page')),/אין עדיין מסמכים/);
+    await page.click(visible('.cat-plus-btn'));
+    await page.setInputFiles('#nkFile',{name:'נוהל פתיחה.pdf',mimeType:'application/pdf',buffer:makePdf(1)});
+    assert.equal(await page.inputValue('#nkTitle'),'נוהל פתיחה','title is taken from the file name');
+    await page.selectOption('#nkCategory','1');
+    await page.click('#modal .primary');await page.waitForTimeout(500);
+    assert.match((await cards(page))[0],/נוהל פתיחה.*פתיחה.*KB/);
+    const r=await page.evaluate(()=>({row:__db.knowledge_items[0],files:Object.keys(window.__files||{})}));
+    assert.match(r.row.file_path,/\.pdf$/);assert.equal(r.row.file_name,'נוהל פתיחה.pdf');assert.equal(r.row.category_id,1);
+    assert.deepEqual(r.files,['knowledge/'+r.row.file_path]);
+    assert.deepEqual(errors,[]);await ctx.close();
+  });
+  test('only PDF files up to 20 MB are accepted, and a failed upload saves nothing',async()=>{
+    const {page,ctx}=await open({cfg:{failUpload:true}});
+    await page.evaluate(()=>navigateModule('docs'));await page.waitForTimeout(300);
+    await page.click(visible('.cat-plus-btn'));
+    await page.setInputFiles('#nkFile',{name:'notes.txt',mimeType:'text/plain',buffer:Buffer.from('hello')});
+    await page.click('#modal .primary');await page.waitForTimeout(200);
+    assert.match(await toastText(page),/רק קובצי PDF/);
+    await page.setInputFiles('#nkFile',{name:'big.pdf',mimeType:'application/pdf',buffer:Buffer.alloc(21*1024*1024)});
+    await page.click('#modal .primary');await page.waitForTimeout(200);
+    assert.match(await toastText(page),/גדול מדי/);
+    await page.setInputFiles('#nkFile',{name:'ok.pdf',mimeType:'application/pdf',buffer:makePdf(1)});
+    await page.click('#modal .primary');await page.waitForTimeout(400);
+    assert.match(await toastText(page),/העלאת הקובץ נכשלה/);
+    assert.equal(await page.evaluate(()=>__db.knowledge_items.length),0);
+    await ctx.close();
+  });
+  test('opening a document shows its pages inside the app',async()=>{
+    const {page,ctx,errors}=await open();
+    await seed(page,[{id:1,title:'נוהל סגירה'}]);await page.waitForTimeout(300);
+    await page.click(visible('.knowledge-card'));
+    await page.waitForFunction(()=>document.querySelectorAll('#docPages canvas.doc-page').length===2,null,{timeout:15000});
+    const r=await page.evaluate(()=>({sizes:[...document.querySelectorAll('#docPages canvas')].map(c=>c.width>0&&c.height>0),
+      buttons:[...document.querySelectorAll('#modal button')].map(b=>b.textContent.trim())}));
+    assert.deepEqual(r.sizes,[true,true]);
+    assert.ok(r.buttons.includes('הורדה')&&r.buttons.includes('פרטים')&&r.buttons.includes('ארכוב'));
+    await back(page);assert.equal((await state(page)).modal,null,'back closes the viewer');
+    assert.deepEqual(errors,[]);await ctx.close();
+  });
+  test('documents are filtered by business and by category within the business',async()=>{
+    const {page,ctx,errors}=await open();
+    await page.evaluate(()=>switchBusiness('1'));
+    await seed(page,[{id:1,title:'A פתיחה',category_id:1,businesses:[1]},{id:2,title:'B מטבח',category_id:2,businesses:[1]},{id:3,title:'C עסק שני',category_id:1,businesses:[2]}]);
+    await page.waitForTimeout(300);
+    assert.deepEqual(await chips(page),[['כל העסקים','*Biz1','Biz2'],['*הכל','פתיחה','מטבח']]);
+    assert.equal((await cards(page)).length,2);
+    await page.click(visible('.doc-chip:has-text("מטבח")'));
+    let c=await cards(page);assert.equal(c.length,1);assert.match(c[0],/B מטבח/);
+    await page.click(visible('.doc-chip:has-text("Biz2")'));await page.waitForTimeout(200);
+    c=await cards(page);assert.equal(c.length,1);assert.match(c[0],/C עסק שני/);
+    assert.deepEqual((await chips(page)).length,1,'one category in this business: no category filter');
+    assert.deepEqual(errors,[]);await ctx.close();
+  });
+  test('editing details and replacing the file; the old file is removed',async()=>{
+    const {page,ctx,errors}=await open();
+    await seed(page,[{id:1,title:'ישן'}]);await page.waitForTimeout(300);
+    await page.click(visible('.knowledge-card'));await page.click('#modal button:has-text("פרטים")');
+    await page.fill('#ekTitle','חדש');
+    await page.setInputFiles('#ekFile',{name:'v2.pdf',mimeType:'application/pdf',buffer:makePdf(1)});
+    await page.click('#modal .primary');await page.waitForTimeout(600);
+    assert.match((await cards(page))[0],/חדש/);
+    const r=await page.evaluate(()=>({row:__db.knowledge_items[0],files:Object.keys(window.__files),version:__db.knowledge_versions[0]}));
+    assert.equal(r.row.file_name,'v2.pdf');
+    assert.ok(!r.files.includes('knowledge/f1.pdf'),'old file removed');assert.ok(r.files.includes('knowledge/'+r.row.file_path));
+    assert.equal(r.version.title,'ישן');assert.equal(r.version.file_name,'f1.pdf');
+    assert.deepEqual(errors,[]);await ctx.close();
+  });
+  test('archiving asks first; archived documents go to an admin-only archive and can be restored',async()=>{
+    const {page,ctx,errors}=await open();
+    await seed(page,[{id:1,title:'נוהל ישן'}]);await page.waitForTimeout(300);
+    await page.click(visible('.knowledge-card'));await page.click('#modal button:has-text("ארכוב")');
+    assert.match((await state(page)).modal||'',/להעביר לארכיון/);
+    assert.equal(await page.evaluate(()=>__db.knowledge_items[0].is_archived),false);
+    await page.click('#modal .primary');await page.waitForTimeout(400);
+    assert.match(await page.innerText(visible('.knowledge-page')),/ארכיון/);
+    await page.click(visible('.knowledge-card'));await page.click('#modal button:has-text("החזר לפעילים")');await page.waitForTimeout(400);
+    assert.doesNotMatch(await page.innerText(visible('.knowledge-page')),/ארכיון/);
+    assert.deepEqual(errors,[]);await ctx.close();
+  });
+  test('a manager can view and download, but cannot upload, edit or archive',async()=>{
+    const {page,ctx,errors}=await open({cfg:{role:'manager'}});
+    await seed(page,[{id:1,title:'בטיחות'},{id:2,title:'ישן',is_archived:true}]);await page.waitForTimeout(300);
+    assert.equal(await page.locator(visible('.cat-plus-btn')).count(),0);
+    assert.equal((await cards(page)).length,1,'archived documents are hidden');
+    await page.click(visible('.knowledge-card'));
+    assert.deepEqual(await page.evaluate(()=>[...document.querySelectorAll('#modal button')].map(b=>b.textContent.trim())),['חזרה','הורדה']);
+    await page.waitForFunction(()=>document.querySelectorAll('#docPages canvas').length===2,null,{timeout:15000});
+    assert.deepEqual(errors,[]);await ctx.close();
+  });
+  test('search finds documents, on home and in the knowledge screen',async()=>{
+    const {page,ctx}=await open();
+    await seed(page,[{id:9,title:'הכנת קפה',all_businesses:true}]);
+    await page.evaluate(()=>dashboard());
+    await page.fill(visible('.stable-search input'),'קפה');await page.waitForTimeout(200);
+    assert.match(await page.innerText('.search-result-row'),/הכנת קפה/);
+    await page.click('.search-result-row');await page.waitForTimeout(400);
+    const s=await state(page);assert.equal(s.screen,'docs');assert.match(s.modal||'',/הכנת קפה/);
+    await ctx.close();
+  });
+});
+
 describe('back button and exit',()=>{
   test('back closes the window, then goes home, then asks to exit; "ביטול" stays; back on the question exits',async()=>{
     const {page,ctx,errors}=await open();
