@@ -1836,7 +1836,6 @@ body{overscroll-behavior:none}
 .audience-picker{border:1px solid var(--line);padding:10px;background:var(--paper-2)}
 .audience-picker label,.inline-check{display:flex!important;align-items:center;gap:7px;margin:6px 0!important;font-size:12px}
 .audience-picker input,.inline-check input{width:auto!important}
-.knowledge-preview{font-size:12.5px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .knowledge-category{display:inline-block;margin-top:7px;font-size:10px;font-weight:700;color:var(--module-update);background:var(--module-update-soft);padding:3px 6px}
 .knowledge-full-body{white-space:pre-wrap;line-height:1.65;padding:12px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:10px 0}
 .knowledge-card{cursor:pointer}
@@ -2188,6 +2187,27 @@ body.is-portrait .portrait-header-tools-compact .business-select,
 body.is-portrait .portrait-header-tools-compact .business-static{flex:1 1 auto;min-width:0;height:30px!important;font-size:10.5px!important;padding:0 4px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 body.is-portrait .portrait-header-tools-compact .header-icon-btn{flex:0 0 auto;width:30px;height:30px;padding:0!important;font-size:14px!important;display:flex!important;align-items:center;justify-content:center;line-height:1!important;overflow:visible}
 body.is-portrait .portrait-single-header .stable-search{margin-top:14px!important}
+
+/* knowledge: document library */
+.doc-chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}
+.doc-chips::-webkit-scrollbar{display:none}
+.doc-chip{flex:0 0 auto;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:600;min-height:0;line-height:1.2}
+.doc-chip.active{background:var(--module-doc);border-color:var(--module-doc);color:#fff}
+.doc-row{display:flex;gap:10px;align-items:flex-start}
+.doc-icon{font-size:24px;line-height:1;flex:0 0 auto}
+.doc-main{min-width:0;flex:1}
+.doc-main .item-meta{margin-top:5px}
+.modal-card.doc-viewer{width:min(900px,100%);height:calc(var(--app-vvh,100vh) - 24px);display:flex;flex-direction:column;padding:12px;overflow:hidden}
+.doc-viewer-head{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.doc-viewer-title{min-width:0;flex:1}
+.doc-viewer-title h2{margin:0 0 3px;font-size:17px;overflow-wrap:anywhere}
+.doc-viewer-head>button{flex:0 0 auto;padding:6px 12px;font-size:12px}
+.doc-viewer-actions{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.doc-viewer-actions:empty{display:none}
+.doc-viewer-actions button{padding:6px 12px;font-size:12px}
+.doc-pages{flex:1;min-height:0;overflow:auto;background:#e9e7e1;border-radius:8px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.doc-page{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15);max-width:100%;flex:0 0 auto}
+.doc-loading{padding:24px;text-align:center}
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -2509,7 +2529,7 @@ async function loadUpdatesV2(){
 async function loadKnowledge(){
   const [i,b,c]=await Promise.all([
     supabaseClient.from("knowledge_items")
-      .select("id,title,body,category_id,created_by,updated_by,created_at,updated_at,is_archived,is_pinned,all_businesses")
+      .select("id,title,body,category_id,created_by,updated_by,created_at,updated_at,is_archived,is_pinned,all_businesses,file_path,file_name,file_type,file_size")
       .order("updated_at",{ascending:false}),
     supabaseClient.from("knowledge_businesses").select("knowledge_id,business_id"),
     supabaseClient.from("knowledge_categories")
@@ -2843,7 +2863,7 @@ function searchMatches(context,q){
   if(context==="home"||context==="problems")visibleProblems().forEach(x=>push("problem",x.id,"תקלה",x.title,x.description||""));
   if(context==="home"||context==="tasks")visibleTasks().forEach(x=>push("task",x.id,"משימה",x.description));
   if(context==="home"||context==="updates")visibleUpdates(false).forEach(x=>push("update",x.id,"עדכון",x.body));
-  if(context==="home"||context==="docs")visibleKnowledge(false).forEach(x=>push("doc",x.id,"ידע",x.title,x.body+" "+categoryName(x.category_id)));
+  if(context==="home"||context==="docs")visibleKnowledge(false).forEach(x=>push("doc",x.id,"מסמך",x.title,(x.file_name||"")+" "+(x.body||"")+" "+categoryName(x.category_id)));
   return matches;
 }
 function renderSearchResults(context,q,sourceInput){
@@ -3565,82 +3585,227 @@ async function reopenTask(id,btn){
   tasksScreen();
 }
 
+// ---- Knowledge (ידע ונהלים): a library of documents (PDF for now) ----
+// Everyone sees the documents meant for their business; the owner and full
+// administrators upload, edit, replace and archive them. Files live in the
+// private "knowledge" storage bucket; the database decides who may read them.
+const DOC_BUCKET="knowledge";
+const DOC_MAX_BYTES=20*1024*1024; // 20 MB per file (owner's decision)
+let docsCategoryFilter="all";      // "all", a category id, or "none"
+let docViewerToken=0;              // stops drawing pages once the viewer is closed
+const docFileCache=new Map();      // file path -> downloaded file (this visit only)
+
+function formatFileSize(n){
+  if(!n&&n!==0)return "";
+  if(n<1024*1024)return Math.max(1,Math.round(n/1024))+" KB";
+  return (n/1024/1024).toFixed(1)+" MB";
+}
+const docCategoryKey=k=>k.category_id==null?"none":String(k.category_id);
+function knowledgeMeta(k){
+  return [k.file_size?formatFileSize(k.file_size):"","עודכן "+formatProblemDateTime(k.updated_at)].filter(Boolean).join(" · ");
+}
 function knowledgeCardHTML(k){
-  return `<div class="list-card knowledge-card" data-search-text="${esc((k.title+" "+k.body+" "+categoryName(k.category_id)).toLowerCase())}" onclick="openKnowledge(${Number(k.id)})">
-    <div class="knowledge-title">${k.is_pinned?"📌 ":""}${esc(k.title)}</div>
-    <div class="knowledge-category">${esc(categoryName(k.category_id))}</div>
-    <div class="knowledge-preview">${esc(k.body)}</div>
-    <div class="item-meta">עודכן ${esc(formatProblemDateTime(k.updated_at))} · ${esc(audienceLabel(k.all_businesses,knowledgeTargetIds(k.id)))}</div>
+  const audience=currentBusinessId==="all"?`<div class="bus-label">${esc(audienceLabel(k.all_businesses,knowledgeTargetIds(k.id)))}</div>`:"";
+  return `<div class="list-card knowledge-card" onclick="openKnowledge(${Number(k.id)})">
+    <div class="doc-row"><span class="doc-icon" aria-hidden="true">📄</span><div class="doc-main">
+      <div class="knowledge-title">${k.is_pinned?"📌 ":""}${esc(k.title)}</div>
+      <div class="knowledge-category">${esc(categoryName(k.category_id))}</div>
+      <div class="item-meta">${esc(knowledgeMeta(k))}</div>${audience}
+    </div></div>
   </div>`;
 }
+// business filter: the app-wide active business (only when there is a choice)
+function docsBusinessChipsHTML(){
+  const bs=availableBusinesses();
+  const chips=(canAdmin()?[{v:"all",label:"כל העסקים"}]:[]).concat(bs.map(b=>({v:String(b.id),label:b.name})));
+  if(chips.length<2)return "";
+  return `<div class="doc-chips" role="group" aria-label="עסק">${chips.map(c=>`<button type="button" class="doc-chip ${String(currentBusinessId)===c.v?"active":""}" onclick="switchBusiness('${c.v}')">${esc(c.label)}</button>`).join("")}</div>`;
+}
+// category filter: only categories that have documents for the selected business
+function docsCategoryChipsHTML(items){
+  const present=new Set(items.map(docCategoryKey));
+  if(present.size<2)return "";
+  const cats=knowledgeCategories.filter(c=>present.has(String(c.id))).map(c=>({v:String(c.id),label:c.name}));
+  if(present.has("none"))cats.push({v:"none",label:"ללא קטגוריה"});
+  const chips=[{v:"all",label:"הכל"}].concat(cats);
+  return `<div class="doc-chips" role="group" aria-label="קטגוריה">${chips.map(c=>`<button type="button" class="doc-chip ${docsCategoryFilter===c.v?"active":""}" onclick="setDocsCategory('${c.v}')">${esc(c.label)}</button>`).join("")}</div>`;
+}
+function setDocsCategory(v){docsCategoryFilter=v;docsScreen();}
 function docsScreen(){
   currentScreen="docs";
-  const active=visibleKnowledge(false);
-  const rows=active.length?active.map(knowledgeCardHTML).join(""):`<div class="u-sub">${canAdmin()?"אין עדיין פריטי ידע. אפשר להוסיף בכפתור ״פריט חדש״.":"אין עדיין פריטי ידע."}</div>`;
-  // archived items: only administrators see them (to bring them back)
+  const all=visibleKnowledge(false);
+  if(docsCategoryFilter!=="all"&&!all.some(k=>docCategoryKey(k)===docsCategoryFilter))docsCategoryFilter="all";
+  const shown=docsCategoryFilter==="all"?all:all.filter(k=>docCategoryKey(k)===docsCategoryFilter);
+  const empty=canAdmin()?"אין עדיין מסמכים. אפשר להעלות בכפתור ״מסמך חדש״.":"אין עדיין מסמכים.";
+  const rows=shown.length?shown.map(knowledgeCardHTML).join(""):`<div class="u-sub">${empty}</div>`;
+  // archived documents: only administrators see them (to bring them back)
   const archived=canAdmin()?visibleKnowledge(true):[];
   const archive=archived.length?`<h3 style="margin:20px 0 10px">ארכיון</h3>${archived.map(knowledgeCardHTML).join("")}`:"";
-  const titleHTML=categoryHeaderTitle("ידע ונהלים",active.length,canAdmin()?"newKnowledge()":null,"פריט חדש");
-  page(titleHTML,"","docs",`<div class="page knowledge-page">${rows}${archive}</div>`);
+  const titleHTML=categoryHeaderTitle("ידע ונהלים",all.length,canAdmin()?"newKnowledge()":null,"מסמך חדש");
+  page(titleHTML,"","docs",`<div class="page knowledge-page">${docsBusinessChipsHTML()}${docsCategoryChipsHTML(all)}${rows}${archive}</div>`);
+}
+
+// ---- uploading ----
+function docCategoryOptions(selected){
+  return `<option value="">ללא קטגוריה</option>${knowledgeCategories.filter(c=>c.is_active||Number(c.id)===Number(selected)).map(c=>`<option value="${c.id}" ${Number(c.id)===Number(selected)?"selected":""}>${esc(c.name)}</option>`).join("")}`;
+}
+function docFileChosen(input,titleId){
+  const f=input.files?.[0],t=document.getElementById(titleId);
+  if(f&&t&&!t.value.trim())t.value=f.name.replace(/\.[^.]+$/,"");
+}
+function checkDocFile(f){
+  if(!f)return "יש לבחור קובץ";
+  if(!(f.type==="application/pdf"||/\.pdf$/i.test(f.name)))return "אפשר להעלות רק קובצי PDF";
+  if(f.size>DOC_MAX_BYTES)return "הקובץ גדול מדי (עד 20MB)";
+  return "";
+}
+async function uploadDocFile(f){
+  const id=crypto.randomUUID?crypto.randomUUID():Date.now()+"-"+Math.random().toString(36).slice(2);
+  const path=`${id}.pdf`;
+  const {error}=await supabaseClient.storage.from(DOC_BUCKET).upload(path,f,{contentType:"application/pdf",upsert:false});
+  return {path,error};
 }
 function newKnowledge(){
-  showModal(`<h2>פריט ידע חדש</h2>
+  const preset=currentBusinessId==="all"?[]:[Number(currentBusinessId)];
+  showModal(`<h2>מסמך חדש</h2>
+    <label>קובץ PDF <span class="u-sub">(עד 20MB)</span></label><input id="nkFile" type="file" accept="application/pdf,.pdf" onchange="docFileChosen(this,'nkTitle')">
     <label>כותרת</label><input id="nkTitle">
-    <label>קטגוריה</label><select id="nkCategory">${knowledgeCategories.filter(c=>c.is_active).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select>
-    <label>תוכן</label><textarea id="nkBody" style="min-height:180px"></textarea>
-    <label>עסקים רלוונטיים</label>${audiencePickerHTML("nk")}
-    <label class="inline-check"><input id="nkPinned" type="checkbox"> 📌 הצמד</label>
-    <div class="actions"><button class="secondary" onclick="hideModal()">ביטול</button><button class="primary" onclick="createKnowledge(this)">שמירה</button></div>`);
+    <label>קטגוריה</label><select id="nkCategory">${docCategoryOptions(null)}</select>
+    <label>למי מיועד?</label>${audiencePickerHTML("nk",false,preset)}
+    <label class="inline-check"><input id="nkPinned" type="checkbox"> 📌 הצמד לראש הרשימה</label>
+    <div class="actions"><button class="secondary" onclick="hideModal()">ביטול</button><button class="primary" onclick="createKnowledge(this)">העלאה</button></div>`);
 }
 async function createKnowledge(btn){
-  const title=nkTitle.value.trim(),body=nkBody.value.trim(),aud=selectedAudience("nk");
-  if(!title||!body)return toast("יש להזין כותרת ותוכן","error");
+  const modal=btn.closest(".modal-card"),f=modal.querySelector("#nkFile").files?.[0];
+  const title=modal.querySelector("#nkTitle").value.trim(),aud=selectedAudience("nk",modal);
+  const bad=checkDocFile(f);if(bad)return toast(bad,"error");
+  if(!title)return toast("יש להזין כותרת","error");
   if(!aud.all&&!aud.ids.length)return toast("יש לבחור לפחות עסק אחד","error");
-  if(!checkOnline())return;setBusy(btn,true,"שומר...");
+  if(!checkOnline())return;setBusy(btn,true,"מעלה...");
+  const up=await uploadDocFile(f);
+  if(up.error){setBusy(btn,false);console.error("knowledge upload",up.error);return toast("העלאת הקובץ נכשלה: "+up.error.message,"error");}
   const {data,error}=await supabaseClient.from("knowledge_items").insert({
-    title,body,category_id:Number(nkCategory.value)||null,created_by:currentUser.id,updated_by:currentUser.id,
-    is_pinned:nkPinned.checked,all_businesses:aud.all
+    title,body:"",category_id:Number(modal.querySelector("#nkCategory").value)||null,created_by:currentUser.id,updated_by:currentUser.id,
+    is_pinned:modal.querySelector("#nkPinned").checked,all_businesses:aud.all,
+    file_path:up.path,file_name:f.name,file_type:"application/pdf",file_size:f.size
   }).select("id").single();
-  if(error){setBusy(btn,false);console.error("knowledge_items insert",error);return toast("לא ניתן ליצור את הפריט: "+error.message,"error");}
-  if(!aud.all&&aud.ids.length){
-    const {error:e}=await supabaseClient.from("knowledge_businesses").insert(aud.ids.map(business_id=>({knowledge_id:data.id,business_id})));
-    if(e){setBusy(btn,false);return toast("הפריט נוצר אך שיוך העסקים נכשל","error");}
+  if(error){
+    await supabaseClient.storage.from(DOC_BUCKET).remove([up.path]); // don't leave an orphan file
+    setBusy(btn,false);console.error("knowledge_items insert",error);return toast("לא ניתן לשמור את המסמך: "+error.message,"error");
   }
-  await loadKnowledge();hideModal();toast("פריט הידע נשמר");docsScreen();
+  if(!aud.all){
+    const {error:e}=await supabaseClient.from("knowledge_businesses").insert(aud.ids.map(business_id=>({knowledge_id:data.id,business_id})));
+    if(e){console.error("knowledge_businesses insert",e);toast("המסמך נשמר אך שיוך העסקים נכשל","error");}
+  }
+  await loadKnowledge();hideModal();toast("המסמך הועלה");docsScreen();
+}
+
+// ---- viewing ----
+let pdfjsLib=null;
+async function loadPdfJs(){
+  if(!pdfjsLib){
+    pdfjsLib=await import("./vendor/pdfjs/pdf.min.mjs");
+    pdfjsLib.GlobalWorkerOptions.workerSrc="./vendor/pdfjs/pdf.worker.min.mjs";
+  }
+  return pdfjsLib;
+}
+async function fetchDocFile(k){
+  if(docFileCache.has(k.file_path))return docFileCache.get(k.file_path);
+  const {data,error}=await supabaseClient.storage.from(DOC_BUCKET).download(k.file_path);
+  if(error)throw error;
+  docFileCache.set(k.file_path,data);return data;
 }
 function openKnowledge(id){
   const k=docs.find(x=>Number(x.id)===Number(id));if(!k)return;
-  showModal(`<h2>${k.is_pinned?"📌 ":""}${esc(k.title)}</h2>
-    <div class="knowledge-category">${esc(categoryName(k.category_id))}</div>
-    <div class="knowledge-full-body">${esc(k.body)}</div>
-    <div class="detail-meta">${esc(audienceLabel(k.all_businesses,knowledgeTargetIds(k.id)))}<br>עודכן ${esc(formatProblemDateTime(k.updated_at))}</div>
-    <div class="actions"><button class="secondary" onclick="hideModal()">חזרה</button>${canAdmin()?`<button class="secondary" onclick="editKnowledge(${id})">עריכה</button><button class="primary" onclick="${k.is_archived?`archiveKnowledge(${id},true,this)`:`confirmArchiveKnowledge(${id})`}">${k.is_archived?"החזר לפעילים":"ארכוב"}</button>`:""}</div>`);
+  const admin=canAdmin()?`<button type="button" class="secondary" onclick="editKnowledge(${Number(id)})">פרטים</button><button type="button" class="secondary" onclick="${k.is_archived?`archiveKnowledge(${Number(id)},true,this)`:`confirmArchiveKnowledge(${Number(id)})`}">${k.is_archived?"החזר לפעילים":"ארכוב"}</button>`:"";
+  const download=k.file_path?`<button type="button" class="secondary" onclick="downloadKnowledge(${Number(id)},this)">הורדה</button>`:"";
+  showModal(`<div class="doc-viewer-head">
+      <div class="doc-viewer-title"><h2>${k.is_pinned?"📌 ":""}${esc(k.title)}</h2><div class="item-meta">${esc(categoryName(k.category_id))} · ${esc(knowledgeMeta(k))}</div></div>
+      <button type="button" class="secondary" onclick="hideModal()">חזרה</button>
+    </div>
+    <div class="doc-viewer-actions">${download}${admin}</div>
+    <div class="doc-pages" id="docPages"><div class="u-sub doc-loading">טוען מסמך...</div></div>`,{cardClass:"doc-viewer"});
+  renderKnowledgeFile(k);
 }
+async function renderKnowledgeFile(k){
+  const token=++docViewerToken;
+  const box=()=>token===docViewerToken?document.getElementById("docPages"):null;
+  if(!k.file_path){const b=box();if(b)b.innerHTML=`<div class="knowledge-full-body">${esc(k.body||"")}</div>`;return;}
+  let task=null;
+  try{
+    const [lib,file]=await Promise.all([loadPdfJs(),fetchDocFile(k)]);
+    task=lib.getDocument({data:new Uint8Array(await file.arrayBuffer())});
+    const pdf=await task.promise;
+    const b=box();if(!b)return;
+    b.innerHTML="";
+    const width=Math.max(200,b.clientWidth-16);
+    const dpr=Math.min(window.devicePixelRatio||1,2);
+    for(let n=1;n<=pdf.numPages;n++){
+      if(!box())return; // the viewer was closed
+      const pageObj=await pdf.getPage(n);
+      const scale=width/pageObj.getViewport({scale:1}).width;
+      const vp=pageObj.getViewport({scale:scale*dpr});
+      const canvas=document.createElement("canvas");
+      canvas.className="doc-page";canvas.width=Math.floor(vp.width);canvas.height=Math.floor(vp.height);
+      canvas.style.width=width+"px";canvas.setAttribute("aria-label",`עמוד ${n} מתוך ${pdf.numPages}`);
+      box()?.appendChild(canvas);
+      await pageObj.render({canvas,canvasContext:canvas.getContext("2d"),viewport:vp}).promise;
+    }
+  }catch(e){
+    console.error("document",e);
+    const b=box();if(b)b.innerHTML=`<div class="u-sub doc-loading">לא ניתן להציג את המסמך. ${navigator.onLine?"נסה שוב מאוחר יותר.":"בדוק את החיבור לרשת."}</div>`;
+  }finally{task?.destroy();} // free the viewer's memory
+}
+async function downloadKnowledge(id,btn){
+  const k=docs.find(x=>Number(x.id)===Number(id));if(!k?.file_path)return;
+  setBusy(btn,true,"מוריד...");
+  try{
+    const url=URL.createObjectURL(await fetchDocFile(k));
+    const a=document.createElement("a");a.href=url;a.download=k.file_name||(k.title+".pdf");
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),30000);
+  }catch(e){console.error("download",e);toast("ההורדה נכשלה","error");}
+  setBusy(btn,false);
+}
+
+// ---- editing details, replacing the file, archiving ----
 function editKnowledge(id){
   const k=docs.find(x=>Number(x.id)===Number(id));if(!k)return;
-  showModal(`<h2>עריכת פריט ידע</h2>
+  showModal(`<h2>פרטי מסמך</h2>
     <label>כותרת</label><input id="ekTitle" value="${esc(k.title)}">
-    <label>קטגוריה</label><select id="ekCategory">${knowledgeCategories.map(c=>`<option value="${c.id}" ${Number(c.id)===Number(k.category_id)?"selected":""}>${esc(c.name)}</option>`).join("")}</select>
-    <label>תוכן</label><textarea id="ekBody" style="min-height:180px">${esc(k.body)}</textarea>
-    <label>עסקים</label>${audiencePickerHTML("ek",k.all_businesses,knowledgeTargetIds(k.id))}
-    <label class="inline-check"><input id="ekPinned" type="checkbox" ${k.is_pinned?"checked":""}> 📌 מוצמד</label>
-    <div class="actions"><button class="secondary" onclick="openKnowledge(${id})">ביטול</button><button class="primary" onclick="saveKnowledge(${id},this)">שמירה</button></div>`);
+    <label>קטגוריה</label><select id="ekCategory">${docCategoryOptions(k.category_id)}</select>
+    <label>למי מיועד?</label>${audiencePickerHTML("ek",k.all_businesses,knowledgeTargetIds(k.id))}
+    <label class="inline-check"><input id="ekPinned" type="checkbox" ${k.is_pinned?"checked":""}> 📌 הצמד לראש הרשימה</label>
+    <label>החלפת קובץ <span class="u-sub">(לא חובה${k.file_name?" · הקובץ הנוכחי: "+esc(k.file_name):""})</span></label><input id="ekFile" type="file" accept="application/pdf,.pdf">
+    <div class="actions"><button class="secondary" onclick="openKnowledge(${Number(id)})">ביטול</button><button class="primary" onclick="saveKnowledge(${Number(id)},this)">שמירה</button></div>`);
   toggleAllAudience("ek");
 }
 async function saveKnowledge(id,btn){
-  const k=docs.find(x=>Number(x.id)===Number(id)),title=ekTitle.value.trim(),body=ekBody.value.trim(),aud=selectedAudience("ek");
-  if(!title||!body)return toast("יש להזין כותרת ותוכן","error");
+  const k=docs.find(x=>Number(x.id)===Number(id));if(!k)return;
+  const oldPath=k.file_path; // remember it before saving, to remove the old file afterwards
+  const modal=btn.closest(".modal-card"),title=modal.querySelector("#ekTitle").value.trim(),aud=selectedAudience("ek",modal);
+  const f=modal.querySelector("#ekFile").files?.[0];
+  if(!title)return toast("יש להזין כותרת","error");
   if(!aud.all&&!aud.ids.length)return toast("יש לבחור לפחות עסק אחד","error");
-  if(!checkOnline())return;setBusy(btn,true,"שומר...");
+  if(f){const bad=checkDocFile(f);if(bad)return toast(bad,"error");}
+  if(!checkOnline())return;setBusy(btn,true,f?"מעלה...":"שומר...");
+  let up=null;
+  if(f){up=await uploadDocFile(f);if(up.error){setBusy(btn,false);console.error("knowledge upload",up.error);return toast("העלאת הקובץ נכשלה: "+up.error.message,"error");}}
   // the previous version is kept in the database (not shown in the app)
-  await supabaseClient.from("knowledge_versions").insert({knowledge_id:id,title:k.title,body:k.body,edited_by:currentUser.id});
-  const {error}=await supabaseClient.from("knowledge_items").update({
-    title,body,category_id:Number(ekCategory.value)||null,updated_by:currentUser.id,updated_at:new Date().toISOString(),is_pinned:ekPinned.checked
-  }).eq("id",id);
-  if(error){setBusy(btn,false);console.error("knowledge_items update",error);return toast("לא ניתן לשמור: "+error.message,"error");}
+  await supabaseClient.from("knowledge_versions").insert({knowledge_id:id,title:k.title,body:k.body||null,file_name:k.file_name||null,edited_by:currentUser.id});
+  const changes={title,category_id:Number(modal.querySelector("#ekCategory").value)||null,is_pinned:modal.querySelector("#ekPinned").checked,updated_by:currentUser.id,updated_at:new Date().toISOString()};
+  if(up)Object.assign(changes,{file_path:up.path,file_name:f.name,file_type:"application/pdf",file_size:f.size});
+  const {error}=await supabaseClient.from("knowledge_items").update(changes).eq("id",id);
+  if(error){
+    if(up)await supabaseClient.storage.from(DOC_BUCKET).remove([up.path]);
+    setBusy(btn,false);console.error("knowledge_items update",error);return toast("לא ניתן לשמור: "+error.message,"error");
+  }
+  if(up&&oldPath){await supabaseClient.storage.from(DOC_BUCKET).remove([oldPath]);docFileCache.delete(oldPath);} // the old file is no longer needed
   const {error:rerr}=await supabaseClient.rpc("replace_knowledge_targets",{target_knowledge_id:id,business_ids:aud.ids,new_all_businesses:aud.all});
-  if(rerr){setBusy(btn,false);return toast("התוכן נשמר אך שיוך העסקים לא עודכן","error");}
-  await loadKnowledge();refreshScreenBehindModal("docs",docsScreen);toast("פריט הידע עודכן");openKnowledge(id);
+  if(rerr){console.error("replace_knowledge_targets",rerr);toast("המסמך נשמר אך שיוך העסקים לא עודכן","error");}
+  await loadKnowledge();refreshScreenBehindModal("docs",docsScreen);
+  if(!rerr)toast("המסמך עודכן");
+  openKnowledge(id);
 }
 function confirmArchiveKnowledge(id){
   const k=docs.find(x=>Number(x.id)===Number(id));if(!k)return;
@@ -3649,8 +3814,8 @@ function confirmArchiveKnowledge(id){
 async function archiveKnowledge(id,isArchived,btn){
   if(!checkOnline())return;setBusy(btn,true,"שומר...");
   const {error}=await supabaseClient.from("knowledge_items").update({is_archived:!isArchived,updated_at:new Date().toISOString(),updated_by:currentUser.id}).eq("id",id);
-  if(error){setBusy(btn,false);return toast("הפעולה נכשלה","error");}
-  await loadKnowledge();hideModal();toast(isArchived?"הפריט הוחזר":"הפריט אורכב");docsScreen();
+  if(error){setBusy(btn,false);console.error("knowledge archive",error);return toast("הפעולה נכשלה","error");}
+  await loadKnowledge();hideModal();toast(isArchived?"המסמך הוחזר":"המסמך הועבר לארכיון");docsScreen();
 }
 
 async function loadAdminData(){
@@ -3815,7 +3980,7 @@ async function toggleBusiness(id,newActive,btn){
 function syncVisualViewport(){const vv=window.visualViewport,h=vv?.height||window.innerHeight,top=vv?.offsetTop||0,keyboard=Math.max(0,window.innerHeight-h-top);document.documentElement.style.setProperty("--app-vvh",h+"px");document.documentElement.style.setProperty("--app-vvtop",top+"px");document.documentElement.style.setProperty("--keyboard-inset",keyboard+"px");}
 function focusFieldIntoView(target){if(!target||!target.matches("input,textarea,select"))return;setTimeout(()=>target.scrollIntoView({behavior:"smooth",block:"center",inline:"nearest"}),180);}
 window.visualViewport?.addEventListener("resize",syncVisualViewport);window.visualViewport?.addEventListener("scroll",syncVisualViewport);document.addEventListener("focusin",e=>focusFieldIntoView(e.target));syncVisualViewport();
-function showModal(inner,options={}){document.getElementById("modal")?.remove();document.body.insertAdjacentHTML("beforeend",`<div class="modal" id="modal" data-exit-modal="${options.exitModal?"1":"0"}"><div class="modal-card">${inner}</div></div>`);syncVisualViewport();}
+function showModal(inner,options={}){document.getElementById("modal")?.remove();document.body.insertAdjacentHTML("beforeend",`<div class="modal" id="modal" data-exit-modal="${options.exitModal?"1":"0"}"><div class="modal-card ${options.cardClass||""}">${inner}</div></div>`);syncVisualViewport();}
 function hideModal(){const modal=document.getElementById("modal");if(!modal){calendarReturnDate=null;return;}modal.remove();calendarReturnDate=null;}
 // redraw the list behind an open window after its data changed, keeping the scroll position
 function refreshScreenBehindModal(name,render){
