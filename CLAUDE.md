@@ -113,12 +113,32 @@ asks: open the knowledge module (ידע ונהלים; its functions are already 
 code). (Supabase's leaked-password protection needs a paid Supabase plan; the
 project is on the free plan, so don't suggest it unless that changes.)
 
+## How we make changes (always)
+
+The app was first built in Claude chat, without history, tests or checks, and
+needed a long review to fix. These rules keep that from happening again:
+
+- **All changes go through Claude Code on this repository**, never by pasting a
+  whole new `index.html` from a chat. Ideas from a chat are fine; bring the idea,
+  not the file.
+- **Small changes, one at a time:** one pull request per fix or feature, so a
+  problem is easy to find and undo.
+- **Every change gets /qa** (and /design-check or /security-check when they
+  apply). Every bug fixed gets a test that would have caught it.
+- **Merge only when the GitHub "Tests" check is green**, then ask the owner to
+  check on the phone.
+- **Clean up as you go:** when replacing something, remove the old code/CSS in
+  the same change instead of adding overrides on top.
+- **Keep this file current**, and run **/health-check** after a batch of changes
+  or about once a month.
+
 ## Checks ("departments")
 
 Three project skills hold the checklists; use them as described:
 - `/qa` (`.claude/skills/qa/SKILL.md`): after every change, before merging.
 - `/design-check`: when anything visual could change.
 - `/security-check`: when data, logins, permissions or Supabase code change.
+- `/health-check`: after a batch of changes or about once a month.
 
 The "Tests" GitHub workflow (`.github/workflows/tests.yml`) runs the behaviour
 tests on every pull request and on `main`. Merge only when it is green.
@@ -134,7 +154,14 @@ against a fake database (`tests/fake-supabase.js`), never the real project.
   `tests/visual/screenshots.js` and compare with `tests/visual/compare.js`
   (`cd tests && npm install` first). Accept only zero differences, or
   differences the owner asked for.
-- **CSS clean-up tools:** `tests/tools/deadcss.js`, `tests/tools/overridden.js`.
+- **Clean-up tools:** `tests/tools/deadcss.js`, `tests/tools/overridden.js`,
+  `tests/tools/unused-functions.js` (report only unless `--write`).
 - Class names built at runtime (`module-${active}`, `calendar-${x.type}`,
   `nav-${id}`) don't appear literally in the code; the CSS tools account for them.
 - Always finish by asking the owner to check the change on their phone.
+
+## Health checks
+
+- 2026-11-17 (end of the full review): all 26 tests pass; no unused functions
+  or CSS; security review done. `index.html` about 187 KB, style block about
+  71 KB.

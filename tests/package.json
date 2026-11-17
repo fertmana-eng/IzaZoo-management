@@ -8,6 +8,7 @@
     "compare": "node visual/compare.js"
   },
   "devDependencies": {
+    "acorn": "^8.19.0",
     "pixelmatch": "^5.3.0",
     "pngjs": "^7.0.0",
     "postcss": "^8.4.0",
