@@ -115,18 +115,16 @@ project is on the free plan, so don't suggest it unless that changes.)
 
 ## Testing
 
-For CSS changes, take full-page screenshots of every screen and window in
-portrait (390x844) and landscape (1280x800) before and after the change and
-compare them pixel by pixel; the change is accepted only with zero differences
-(or differences the owner asked for). Wait for focus/scroll animations to settle
-before taking a screenshot, or the comparison will show false differences.
-Class names built at runtime (`module-${active}`, `calendar-${x.type}`,
-`nav-${id}`) don't appear literally in the code; account for them when deciding
-whether a CSS rule is unused.
+Tests live in `tests/` (see `tests/README.md`). They run in headless Chromium
+against a fake database (`tests/fake-supabase.js`), never the real project.
 
-
-There is no automated test suite in the repository. Test changes in headless
-Chromium (Playwright is pre-installed) by serving the folder locally and replacing
-`vendor/supabase.js` with a small fake client, or by routing `*.supabase.co`
-requests to fake responses while using the real library. Always finish by asking
-the owner to check the change on their phone.
+- **Behaviour tests:** `node --test tests/app.test.js` (26 tests, each checks its
+  own result). Run them after every change, and add a test for every bug fixed.
+- **Styling changes:** take screenshots before and after with
+  `tests/visual/screenshots.js` and compare with `tests/visual/compare.js`
+  (`cd tests && npm install` first). Accept only zero differences, or
+  differences the owner asked for.
+- **CSS clean-up tools:** `tests/tools/deadcss.js`, `tests/tools/overridden.js`.
+- Class names built at runtime (`module-${active}`, `calendar-${x.type}`,
+  `nav-${id}`) don't appear literally in the code; the CSS tools account for them.
+- Always finish by asking the owner to check the change on their phone.
