@@ -206,6 +206,21 @@
    artwork out of the picture, approximating its fonts) looked very bad. Don't
    do that again; wait for the real assets and specs.
 
+   **New structure agreed so far (step a, Nov 2026; the owner liked the layout of
+   a ChatGPT "evening shift" mock-up, layout only, not its shift content):**
+   - Header: IzaZoo logo, business picker, date.
+   - **Bottom bar** (like the PlayStation app): בית · תקלות · משימות · **＋** ·
+     עדכונים · נהלים, with red counts.
+   - **＋ creates a new item in the current section** (owner's choice); on בית,
+     where there is no single section, it opens a short menu (problem / task /
+     update).
+   - **Side rail** of sub-views that changes most of the screen (proposal, not yet
+     confirmed in detail): בית: אצלי · דחוף · פעילות. תקלות: פתוחות · דחופות ·
+     אצלי · סגורות. משימות: להיום · באיחור · אצלי · כל הפתוחות · בוצעו.
+     עדכונים: מוצמדים · כל העדכונים · שלי. נהלים: the 7 document categories.
+   - The app opens on the בית tab (owner's choice). No calendar.
+   - Shifts/shift stages are not part of the app; only as a possible new feature later.
+
 Otherwise nothing pending. (Supabase's leaked-password protection needs a paid Supabase
 plan; the project is on the free plan, so don't suggest it unless that changes.)
 
