@@ -4622,13 +4622,6 @@ isoToday=()=>localDay(new Date()),
 save=()=>{};
 const fmtDate=s=>{if(!s)return"";const [y,m,d]=s.split("-");return `${d}/${m}`};
 const fmtFull=()=>new Date().toLocaleDateString("he-IL",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
-function visibleElementById(id){
-  const nodes=[...document.querySelectorAll(`[id="${CSS.escape(id)}"]`)];
-  return nodes.find(el=>{
-    const r=el.getBoundingClientRect(),cs=getComputedStyle(el);
-    return cs.display!=="none"&&cs.visibility!=="hidden"&&r.width>0&&r.height>0;
-  })||nodes[0]||null;
-}
 function counts(){
   return {
     p:visibleProblems().filter(x=>x.status!=="closed").length,
@@ -4639,12 +4632,6 @@ function counts(){
 }
 
 
-async function loadLoginUsers(){
-  const {data,error}=await supabaseClient.rpc("get_login_users");
-  if(error){console.error("get_login_users",error);return false;}
-  loginUsers=data||[];
-  return true;
-}
 
 async function login(message=""){
   selectedLoginUsername="";
@@ -4656,12 +4643,6 @@ async function login(message=""){
     <button class="primary" id="loginBtn" style="width:100%;margin-top:16px" onclick="doLogin()">כניסה</button>
   </div></div>`;
   setTimeout(()=>document.getElementById("lu")?.focus(),50);
-}
-function selectLoginUser(username,btn){
-  selectedLoginUsername=username;
-  document.querySelectorAll(".login-user-btn").forEach(x=>x.classList.remove("selected"));
-  btn?.classList.add("selected");
-  document.getElementById("lp")?.focus();
 }
 
 async function doLogin(){
@@ -4949,11 +4930,6 @@ function visibleKnowledge(includeArchive=false){
 function categoryName(id){
   return knowledgeCategories.find(c=>Number(c.id)===Number(id))?.name || "ללא קטגוריה";
 }
-function defaultExpiryDate(){
-  const d=new Date();
-  d.setMonth(d.getMonth()+1);
-  return d.toISOString().slice(0,10);
-}
 
 // how much old data to load (keeps the app fast as data grows)
 const HISTORY_DAYS=183;      // closed problems / completed tasks
@@ -5071,14 +5047,6 @@ function calendarItems(){
 }
 const typeClass=t=>t==="problem"?"event-problem":t==="update"?"event-update":"event-task",typeIcon=t=>t==="problem"?"⚠️":t==="update"?"📣":"✅";
 
-function activityItems(){
-  let a=[];
-  problems.forEach(x=>a.push({at:(x.createdAt||x.date||"1970-01-01")+" "+(x.time||"00:00"),icon:"⚠️",title:"תקלה נוספה",sub:x.title}));
-  updates.forEach(x=>a.push({at:(x.createdAt||x.date||"1970-01-01")+" "+(x.time||"00:00"),icon:"📣",title:"עדכון נוסף",sub:x.title}));
-  tasks.forEach(x=>a.push({at:(x.createdAt||x.due||"1970-01-01")+" "+(x.time||"00:00"),icon:"✅",title:"משימה נוספה",sub:x.title}));
-  docs.forEach(x=>a.push({at:(x.createdAt||"1970-01-01")+" 00:00",icon:"📖",title:"מסמך נוסף",sub:x.title}));
-  return a.sort((x,y)=>y.at.localeCompare(x.at));
-}
 
 
 function toast(message,type="success"){
@@ -5117,34 +5085,6 @@ const screenRenderers={
   feedback:()=>feedbackScreen(false),
   admin:()=>adminScreen(false)
 };
-function animateRootOut(direction){
-  const child=root().firstElementChild;
-  if(!child||!child.animate)return Promise.resolve();
-  child.style.willChange="transform";
-  const anim=child.animate(
-    [{transform:"translate3d(0,0,0)"},{transform:`translate3d(${direction==="forward"?"100%":"-100%"},0,0)`}],
-    {duration:185,easing:"cubic-bezier(.4,0,.2,1)",fill:"both"}
-  );
-  return anim.finished.catch(()=>{}).finally(()=>{
-    child.style.transform="";
-    child.style.willChange="";
-    anim.cancel();
-  });
-}
-function animateRootIn(direction){
-  const child=root().firstElementChild;
-  if(!child||!child.animate)return;
-  child.style.willChange="transform";
-  const anim=child.animate(
-    [{transform:`translate3d(${direction==="forward"?"-100%":"100%"},0,0)`},{transform:"translate3d(0,0,0)"}],
-    {duration:200,easing:"cubic-bezier(.2,.8,.2,1)",fill:"both"}
-  );
-  anim.finished.catch(()=>{}).finally(()=>{
-    child.style.transform="";
-    child.style.willChange="";
-    anim.cancel();
-  });
-}
 
 const moduleNames=new Set(["problems","tasks","updates","docs"]);
 let calendarReturnDate=null;
@@ -5164,7 +5104,6 @@ async function goToScreen(name,{push=true,direction="forward"}={}){
   if(push)history.pushState({izazoo:true,view:name},"",`#${name}`);
 }
 function navigateModule(name,push=true){return goToScreen(name,{push,direction:"forward"});}
-function navigateHome(push=true,backAnimation=true){return goToScreen("home",{push,direction:backAnimation?"back":"forward"});}
 function appBack(){history.back();}
 function initAppHistory(){currentScreen="home";appHistoryReady=true;}
 // History layout while the app is in use:  [guard 0] [guard 1] [home] [module...]
@@ -5377,10 +5316,9 @@ function dashboard(){
   </div>`;
   renderOfflineBar();
   __forceRepaint();
-}function portraitCat(ico,name,count,action,kind){return `<button class="portrait-cat ${kind}" onclick="${action}"><span class="portrait-cat-icon">${ico}</span><span class="portrait-cat-name">${name}</span><span class="portrait-cat-count">${count}</span></button>`}
+}
 function portraitBottomCat(ico,name,count,action,kind){return `<button class="portrait-bottom-cat ${kind}" onclick="${action}"><span class="portrait-bottom-icon">${ico}</span><span class="portrait-bottom-name">${name}</span><span class="portrait-bottom-count">${count}</span></button>`}
 function landscapeCat(ico,name,count,action,kind){return `<button class="landscape-cat ${kind}" onclick="${action}"><span class="landscape-cat-icon">${ico}</span><span class="landscape-cat-name">${name}</span><span class="landscape-cat-count">${count}</span></button>`}
-function mobileCat(ico,name,count,action){return `<div class="cat-card" onclick="${action}"><div class="ico">${ico}</div><div class="name">${name}</div><div class="count">${count}</div></div>`}
 
 function openItems(){
  let a=[];
@@ -5398,10 +5336,7 @@ function openItems(){
  }));
  return a.sort((x,y)=>(y.date+y.time).localeCompare(x.date+x.time));
 }
-function openItemsHTML(n){const a=openItems().slice(0,n);return a.length?a.map(x=>`<div class="open-item clickable-open-item" onclick="openItemFromDashboard('${x.type}','${x.id||""}')"><div class="item-title">${x.icon} ${esc(x.title)}</div><div class="item-meta">${x.sub}${x.date?" · "+fmtDate(x.date):""}${x.time?" · "+x.time:""}</div></div>`).join(""):`<div class="item-meta">אין פריטים פתוחים</div>`;}
 function mobileOpenItemsHTML(n){const a=openItems().slice(0,n);return a.length?a.map(x=>`<div class="mobile-list-item clickable-open-item" onclick="openItemFromDashboard('${x.type}','${x.id||""}')"><div class="item-title">${x.icon} ${esc(x.title)}</div><div class="item-meta">${x.sub}${x.date?" · "+fmtDate(x.date):""}${x.time?" · "+x.time:""}</div></div>`).join(""):`<div class="item-meta">אין פריטים פתוחים</div>`;}
-function activityHTML(n){const a=activityItems().slice(0,n);return a.length?a.map(x=>`<div class="activity-item"><div class="item-title">${x.icon} ${esc(x.title)}</div><div class="item-meta">${esc(x.sub)}<br>${esc(x.at.replace("T"," "))}</div></div>`).join(""):`<div class="item-meta">אין פעילות עדיין</div>`}
-function mobileActivityHTML(n){const a=activityItems().slice(0,n);return a.length?a.map(x=>`<div class="mobile-list-item"><div class="item-title">${x.icon} ${esc(x.title)}</div><div class="item-meta">${esc(x.sub)}<br>${esc(x.at.replace("T"," "))}</div></div>`).join(""):`<div class="item-meta">אין פעילות עדיין</div>`}
 
 async function openItemFromDashboard(type,id){id=Number(id);if(type==="problem"){if(currentScreen!=="problems")await goToScreen("problems",{push:true,direction:"forward"});return openProblemDetails(id);}if(type==="task"){if(currentScreen!=="tasks")await goToScreen("tasks",{push:true,direction:"forward"});return openTaskDetails(id);}if(type==="update"){if(currentScreen!=="updates")await goToScreen("updates",{push:true,direction:"forward"});return focusUpdateThread(id);}}
 
@@ -5522,7 +5457,6 @@ function problemsScreen(){
 function categoryHeaderTitle(name,count,plusOnclick,plusLabel){
   return `<span class="cat-title-row"><span class="cat-badge">${count}</span><span class="cat-title-text">${esc(name)}</span>${plusOnclick?`<button type="button" class="cat-plus-btn" onclick="${plusOnclick}"><span class="cat-plus-icon">+</span>${plusLabel?`<span class="cat-plus-label">${esc(plusLabel)}</span>`:""}</button>`:""}</span>`;
 }
-function toggleProblemDescription(id){const el=document.getElementById(`desc-${id}`),btn=document.getElementById(`desc-btn-${id}`);if(!el||!btn)return;if(el.classList.contains("is-collapsed")){el.classList.remove("is-collapsed");btn.textContent="הצג פחות";}else{el.classList.add("is-collapsed");btn.textContent="הצג עוד";}}
 function problemFormTemplate(x,editing=false){
   const activity=problemActivity.filter(a=>Number(a.problem_id)===Number(x.id)).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
   const assignees=profilesForBusiness(x.business_id);
@@ -5594,31 +5528,8 @@ async function doCloseProblem(id,btn){
   if(error){setBusy(btn,false);console.error(error);return alert("לא ניתן לסגור את התקלה: "+error.message);}
   await loadProblems();await loadProblemActivity();hideModal();problemsScreen();
 }
-async function undoCloseProblem(id){
-  const {error}=await supabaseClient.rpc("reopen_problem",{problem_id:Number(id)});
-  if(error){console.error(error);return alert("לא ניתן לפתוח מחדש את התקלה: "+error.message);}
-  await loadProblems();await loadProblemActivity();
-  hideModal();
-  problemsScreen();
-}
-function showUndoToast(message,undoFn){
-  document.querySelector(".app-toast")?.remove();
-  const el=document.createElement("div");
-  el.className="app-toast success";
-  el.innerHTML=`<span></span><button type="button" class="app-toast-undo">בטל</button>`;
-  el.querySelector("span").textContent=message;
-  el.querySelector("button").onclick=()=>{el.remove();undoFn();};
-  document.body.appendChild(el);
-  requestAnimationFrame(()=>el.classList.add("show"));
-  setTimeout(()=>{el.classList.remove("show");setTimeout(()=>el.remove(),180)},4000);
-}
 function __dlog(msg){} // debug logging disabled
 try{localStorage.removeItem("__izazoo_dlog");}catch(e){}
-function __showDlog(){
-  let log=[];
-  try{log=JSON.parse(localStorage.getItem("__izazoo_dlog")||"[]");}catch(e){}
-  showModal(`<h2>יומן דיבאג (${log.length})</h2><pre style="white-space:pre-wrap;font-size:10.5px;direction:ltr;text-align:left;max-height:65vh;overflow:auto;background:#111;color:#0f0;padding:8px;border-radius:8px">${esc(log.join("\n"))}</pre><div class="actions"><button class="secondary" onclick="localStorage.removeItem('__izazoo_dlog');hideModal()">נקה יומן</button><button class="primary" onclick="hideModal()">סגור</button></div>`);
-}
 function confirmReopenProblem(id){
   const item=problems.find(x=>Number(x.id)===Number(id));
   showModal(`<h2>לפתוח את התקלה מחדש?</h2><p>${item?`"${esc(item.title)}" תחזור לרשימת התקלות הפתוחות.`:"התקלה תחזור לרשימת התקלות הפתוחות."}</p><div class="actions"><button class="secondary" onclick="openProblemDetails(${Number(id)})">ביטול</button><button class="primary" onclick="reopenProblem(${Number(id)},this)">פתח מחדש</button></div>`);
@@ -5662,26 +5573,10 @@ function updateThreadHTML(u){
     <div class="chat-reply-composer" hidden><textarea class="chat-reply-input" rows="2" placeholder="כתוב תגובה..."></textarea><div class="chat-reply-buttons"><button type="button" class="secondary" onclick="toggleReplyComposer(this)">ביטול</button><button type="button" class="primary" onclick="addFollowup(${Number(u.id)},this)">שליחה</button></div></div>
   </section>`;
 }
-function updateCardHTML(u){return updateThreadHTML(u);}
 function updatesScreen(){currentScreen="updates";editingUpdateId=null;const active=visibleUpdates(false),rows=active.length?active.map(updateThreadHTML).join(""):`<div class="u-sub chat-empty">אין עדכונים עדיין</div>`;const titleHTML=categoryHeaderTitle("עדכונים",active.length,null);page(titleHTML,"","updates",`<div class="page updates-page"><div class="updates-chat-stream">${rows}</div></div>`,"",updateComposerHTML());}
 function audiencePickerHTML(prefix,selectedAll=false,selected=[]){const allowed=availableBusinesses(),allAllowed=currentUser.role==="owner"||currentUser.all_businesses_access;return `<div class="audience-picker">${allAllowed?`<label><input type="checkbox" data-all-audience="${prefix}" ${selectedAll?"checked":""} onchange="toggleAllAudience('${prefix}',this)"> כל קבוצת IzaZoo</label>`:""}<div>${allowed.map(b=>`<label><input type="checkbox" class="${prefix}Business" value="${b.id}" ${selected.includes(Number(b.id))?"checked":""}> ${esc(b.name)}</label>`).join("")}</div></div>`;}
 function toggleAllAudience(prefix,source){const scope=source?.closest(".modal-card")||document,all=source||scope.querySelector(`[data-all-audience="${prefix}"]`);scope.querySelectorAll("."+prefix+"Business").forEach(x=>{x.disabled=!!all?.checked;if(all?.checked)x.checked=false;});}
 function selectedAudience(prefix,scope=document){const all=!!scope.querySelector(`[data-all-audience="${prefix}"]`)?.checked,ids=[...scope.querySelectorAll("."+prefix+"Business:checked")].map(x=>Number(x.value));return {all,ids};}
-function newUpdate(){showModal(`<h2>עדכון חדש</h2><label>תוכן</label><textarea class="new-update-body" style="min-height:150px" placeholder="מה חשוב לעדכן?"></textarea><label>למי מיועד?</label>${audiencePickerHTML("nu")}<label class="inline-check"><input class="new-update-pinned" type="checkbox" onchange="document.querySelector('.new-update-pin-days').hidden=!this.checked"> 📌 הצמד לראש הרשימה</label><label class="pin-days-row new-update-pin-days" hidden>לכמה זמן להצמיד?<select class="new-update-pin-days-select"><option value="3">3 ימים</option><option value="7" selected>7 ימים</option><option value="14">14 יום</option><option value="30">30 יום</option></select></label><div class="actions"><button class="secondary" onclick="hideModal()">ביטול</button><button class="primary" onclick="createUpdateV2(this)">פרסום</button></div>`);}
-async function createUpdateV2(btn){
-  const modal=btn?.closest(".modal-card"),body=(modal?.querySelector(".new-update-body")?.value||"").trim(),aud=selectedAudience("nu",modal||document),title=body.length>60?body.slice(0,60)+"…":body,pinned=!!modal?.querySelector(".new-update-pinned")?.checked;
-  const pinDays=Number(modal?.querySelector(".new-update-pin-days-select")?.value)||7;
-  const expiresAt=pinned?new Date(Date.now()+pinDays*86400000).toISOString():null;
-  if(!body)return toast("יש להזין תוכן","error");if(!aud.all&&!aud.ids.length)return toast("יש לבחור לפחות עסק אחד","error");if(!checkOnline())return;setBusy(btn,true,"מפרסם...");
-  const {data,error}=await supabaseClient.from("updates_v2").insert({title,body,created_by:currentUser.id,expires_at:expiresAt,is_pinned:pinned,all_businesses:aud.all,is_archived:false})
-    .select("id,title,body,created_by,created_at,updated_at,expires_at,is_archived,is_pinned,all_businesses").single();
-  if(error){console.error("updates_v2 insert",error);setBusy(btn,false);return toast("לא ניתן לפרסם את העדכון: "+error.message,"error");}
-  if(!aud.all&&aud.ids.length){const {error:e}=await supabaseClient.from("update_businesses").insert(aud.ids.map(business_id=>({update_id:data.id,business_id})));if(e){console.error("update_businesses insert",e);setBusy(btn,false);return toast("העדכון נוצר אך קהל היעד לא נשמר: "+e.message,"error");}}
-  if(data)upsertById(updates,data);
-  updateBusinesses=updateBusinesses.filter(x=>Number(x.update_id)!==Number(data.id));
-  if(!aud.all)updateBusinesses.push(...aud.ids.map(business_id=>({update_id:data.id,business_id})));
-  hideModal();updatesScreen();toast("העדכון פורסם");setTimeout(()=>focusUpdateThread(data.id),80);
-}
 function toggleReplyComposer(button){const thread=button?.closest(".update-thread"),composer=thread?.querySelector(".chat-reply-composer");if(!composer)return;const opening=composer.hidden;composer.hidden=!opening;if(opening)setTimeout(()=>composer.querySelector(".chat-reply-input")?.focus(),60);}
 let editingUpdateId=null;
 function updateComposerHTML(){
@@ -5756,27 +5651,6 @@ async function addFollowup(id,btn){
   updatesScreen();toast("התגובה נוספה");setTimeout(()=>focusUpdateThread(id),80);
 }
 function focusUpdateThread(id){const all=[...document.querySelectorAll(`.update-thread[data-update-id="${Number(id)}"]`)],el=all.find(e=>e.offsetParent!==null)||all[0];if(!el)return;el.scrollIntoView({behavior:"smooth",block:"center"});el.classList.remove("chat-highlight");requestAnimationFrame(()=>el.classList.add("chat-highlight"));setTimeout(()=>el.classList.remove("chat-highlight"),1400);}
-async function openUpdateDetails(id){if(currentScreen!=="updates")await goToScreen("updates",{push:true,direction:"forward"});setTimeout(()=>focusUpdateThread(id),60);}
-function editUpdate(id){
-  const u=updates.find(x=>Number(x.id)===Number(id));if(!canEditUpdate(u))return;
-  const daysLeft=u.expires_at?Math.max(1,Math.round((new Date(u.expires_at)-Date.now())/86400000)):7;
-  showModal(`<h2>עריכת עדכון</h2><textarea class="edit-update-body" style="min-height:140px">${esc(u.body)}</textarea><label>קהל יעד</label>${audiencePickerHTML("eu",u.all_businesses,updateTargetIds(u.id))}<label class="inline-check"><input class="edit-update-pinned" type="checkbox" ${isPinActive(u)?"checked":""} onchange="document.querySelector('.edit-update-pin-days').hidden=!this.checked"> 📌 מוצמד</label><label class="pin-days-row edit-update-pin-days" ${isPinActive(u)?"":"hidden"}>לכמה זמן להצמיד?<select class="edit-update-pin-days-select"><option value="3" ${daysLeft===3?"selected":""}>3 ימים</option><option value="7" ${daysLeft!==3&&daysLeft!==14&&daysLeft!==30?"selected":""}>7 ימים</option><option value="14" ${daysLeft===14?"selected":""}>14 יום</option><option value="30" ${daysLeft===30?"selected":""}>30 יום</option></select></label><div class="actions"><button class="secondary" onclick="hideModal()">ביטול</button><button class="primary" onclick="saveUpdate(${Number(id)},this)">שמירה</button></div>`);
-  const modal=document.querySelector("#modal .modal-card"),all=modal?.querySelector('[data-all-audience="eu"]');if(all)toggleAllAudience("eu",all);
-}
-async function saveUpdate(id,btn){
-  const modal=btn?.closest(".modal-card"),body=(modal?.querySelector(".edit-update-body")?.value||"").trim(),aud=selectedAudience("eu",modal||document),title=body.length>60?body.slice(0,60)+"…":body,pinned=!!modal?.querySelector(".edit-update-pinned")?.checked;
-  const pinDays=Number(modal?.querySelector(".edit-update-pin-days-select")?.value)||7;
-  const expiresAt=pinned?new Date(Date.now()+pinDays*86400000).toISOString():null;
-  if(!body)return toast("העדכון לא יכול להיות ריק","error");if(!aud.all&&!aud.ids.length)return toast("יש לבחור קהל יעד","error");if(!checkOnline())return;setBusy(btn,true,"שומר...");
-  const {data,error}=await supabaseClient.from("updates_v2").update({title,body,expires_at:expiresAt,is_archived:false,is_pinned:pinned,updated_at:new Date().toISOString()}).eq("id",id)
-    .select("id,title,body,created_by,created_at,updated_at,expires_at,is_archived,is_pinned,all_businesses").single();
-  if(error){console.error("updates_v2 update",error);setBusy(btn,false);return toast("לא ניתן לעדכן: "+error.message,"error");}
-  const {error:rerr}=await supabaseClient.rpc("replace_update_targets",{target_update_id:id,business_ids:aud.ids,new_all_businesses:aud.all});if(rerr){console.error("replace_update_targets",rerr);setBusy(btn,false);return toast("הטקסט נשמר אך קהל היעד לא עודכן: "+rerr.message,"error");}
-  if(data)upsertById(updates,data);
-  updateBusinesses=updateBusinesses.filter(x=>Number(x.update_id)!==Number(id));
-  if(!aud.all)updateBusinesses.push(...aud.ids.map(business_id=>({update_id:id,business_id})));
-  hideModal();updatesScreen();toast("העדכון נשמר");setTimeout(()=>focusUpdateThread(id),80);
-}
 
 function isTaskOverdue(t){
   if(t.status==="done"||!t.due_date)return false;
@@ -6313,7 +6187,6 @@ function setBusy(btn,busy,label=""){
     btn.disabled=false;if(btn.dataset.originalText){btn.textContent=btn.dataset.originalText;delete btn.dataset.originalText;}
   }
 }
-function nowISO(){return new Date().toISOString()}
 function newProblem(){
   if(currentBusinessId==="all")return alert("כדי לפתוח תקלה יש לבחור עסק מסוים.");
   const assignees=profilesForBusiness(currentBusinessId);
@@ -6338,7 +6211,6 @@ async function createProblem(btn){
   if(data)upsertById(problems,normalizeProblem(data));
   hideModal();problemsScreen();
 }
-function newDoc(){showModal(`<h2>מסמך חדש</h2><label>כותרת</label><input id="dt"><label>קטגוריה</label><input id="dc"><label>תוכן</label><textarea id="db"></textarea><div class="actions"><button class="secondary" onclick="hideModal()">ביטול</button><button class="primary" onclick="createDoc()">שמירה</button></div>`)}function createDoc(){if(!dt.value.trim())return alert("יש להזין כותרת");docs.push({id:String(Date.now()),title:dt.value.trim(),category:dc.value.trim()||"כללי",body:db.value.trim(),createdAt:nowISO()});save();hideModal();dashboard()}
 function calendarDay(ds){
   const its=calendarItems().filter(x=>x.date===ds);
   const date=new Date(ds+"T12:00:00");
@@ -6351,7 +6223,6 @@ function calendarDay(ds){
 }
 async function openCalendarItem(type,id,ds){const module=type==="problem"?"problems":type==="task"?"tasks":type==="update"?"updates":null;if(!module)return;hideModal();calendarReturnDate=ds;await goToScreen(module,{push:true,direction:"forward"});if(type==="problem")openProblemDetails(id);if(type==="task")openTaskDetails(id);if(type==="update")setTimeout(()=>focusUpdateThread(id),60);}
 
-function doSearch(q){liveSearch(currentSearchContext,q)}
 
 
 function applyViewportMode(){

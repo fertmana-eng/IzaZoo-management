@@ -92,13 +92,17 @@
   edge function. Verified with role-simulated tests. Public sign-up is turned
   off in Supabase (users are created only from the admin screen).
   Optional, not done: Supabase's leaked-password protection.
+- Removed 27 unused JavaScript functions (old login picker, old update/doc
+  modals, debug log viewer, unused animations, etc.). The knowledge module's
+  functions (`newKnowledge`, `openKnowledge`, `editKnowledge`, category
+  functions…) were kept on purpose: the module is closed but planned.
 
 ## Next steps (in order)
 
-1. **CSS cleanup and building each screen once (use Fable for the cleanup).** Each
+1. **CSS cleanup and building each screen once.** Fable if the owner has
+   allowance, otherwise Opus in small steps with before/after screenshots. Each
    screen is currently rendered twice (portrait and landscape) and the CSS has many
    overriding rules; removing the wrong one can quietly break a screen.
-2. Remove unused JavaScript (about 27 unused functions).
 
 ## Testing
 
