@@ -3597,8 +3597,9 @@ const docFileCache=new Map();      // file path -> downloaded file (this visit o
 
 function formatFileSize(n){
   if(!n&&n!==0)return "";
-  if(n<1024*1024)return Math.max(1,Math.round(n/1024))+" KB";
-  return (n/1024/1024).toFixed(1)+" MB";
+  // wrapped in left-to-right marks so "180 KB" isn't flipped inside Hebrew text
+  if(n<1024*1024)return "\u2066"+Math.max(1,Math.round(n/1024))+" KB\u2069";
+  return "\u2066"+(n/1024/1024).toFixed(1)+" MB\u2069";
 }
 const docCategoryKey=k=>k.category_id==null?"none":String(k.category_id);
 function knowledgeMeta(k){

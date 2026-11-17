@@ -5,6 +5,19 @@ const {chromium}=require('playwright');const fs=require('fs'),http=require('http
 const REPO=path.resolve(__dirname,'../..'),OUT=path.resolve(process.argv[2]||path.join(__dirname,'out/shots'));fs.mkdirSync(OUT,{recursive:true});
 const STUB=fs.readFileSync(path.join(__dirname,'../fake-supabase.js'),'utf8');
 const srv=http.createServer((req,res)=>{let f=req.url.split('?')[0];if(f==='/')f='/index.html';const p=path.join(REPO,f);if(!fs.existsSync(p)){res.writeHead(404);return res.end();}res.writeHead(200,{'content-type':f.endsWith('.html')?'text/html; charset=utf-8':f.endsWith('.svg')?'image/svg+xml':f.endsWith('.png')?'image/png':'text/javascript'});res.end(fs.readFileSync(p));});
+// a small two-page PDF and two sample documents (business 1, two categories)
+const SAMPLE_PDF=(()=>{const objs=['<</Type/Catalog/Pages 2 0 R>>','<</Type/Pages/Kids[3 0 R 5 0 R]/Count 2>>'];
+  for(let i=0;i<2;i++){const c=`0 0 ${i?1:0.5} rg 30 30 240 340 re f`;objs.push(`<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 400]/Contents ${4+i*2} 0 R/Resources<<>>>>`);objs.push(`<</Length ${c.length}>>stream\n${c}\nendstream`);}
+  let out='%PDF-1.4\n';const offs=[];objs.forEach((o,i)=>{offs.push(out.length);out+=`${i+1} 0 obj${o}endobj\n`;});const x=out.length;
+  out+=`xref\n0 ${objs.length+1}\n0000000000 65535 f \n`+offs.map(o=>String(o).padStart(10,'0')+' 00000 n \n').join('')+`trailer<</Root 1 0 R/Size ${objs.length+1}>>\nstartxref\n${x}\n%%EOF`;
+  return Buffer.from(out,'latin1').toString('base64');})();
+const seedDocs=p=>p.evaluate(async b64=>{const bytes=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+  switchBusiness('1');
+  [{id:1,title:'נוהל פתיחת בוקר',category_id:1,is_pinned:true},{id:2,title:'ניקיון מטבח בסוף משמרת',category_id:2,is_pinned:false}].forEach(k=>{
+    __db.knowledge_items.push({body:'',all_businesses:false,is_archived:false,updated_at:'2026-09-01T10:00:00Z',file_path:`f${k.id}.pdf`,file_name:`f${k.id}.pdf`,file_type:'application/pdf',file_size:184320,...k});
+    __db.knowledge_businesses.push({knowledge_id:k.id,business_id:1});
+    (window.__files||(window.__files={}))[`knowledge/f${k.id}.pdf`]=new Blob([bytes],{type:'application/pdf'});});
+  await loadKnowledge();navigateModule('docs');},SAMPLE_PDF);
 const STATES=[
  ['login',null,{noSession:true}],
  ['home',async p=>{}],
@@ -31,9 +44,9 @@ const STATES=[
  ['install',async p=>{await p.evaluate(()=>maybeShowInstallOffer());}],
  ['toast',async p=>{await p.evaluate(()=>toast('בדיקה','error'));await p.waitForTimeout(300);}],
  ['offline',async p=>{await p.evaluate(()=>{document.body.insertAdjacentHTML('afterbegin','<div id="offlineBar" class="offline-bar">אין חיבור לרשת</div>');});}],
- ['docs-items',async p=>{await p.evaluate(async()=>{__db.knowledge_items.push({id:1,title:'נוהל פתיחת בוקר',body:'להדליק אורות, לבדוק קופה ולפתוח את הדלת ב־8:00.',category_id:null,all_businesses:true,is_archived:false,is_pinned:true,updated_at:'2026-09-01T10:00:00Z'},{id:2,title:'ניקיון מטבח',body:'בסוף כל משמרת: משטחים, כיריים ורצפה.',category_id:null,all_businesses:true,is_archived:false,is_pinned:false,updated_at:'2026-08-20T10:00:00Z'});await loadKnowledge();navigateModule('docs');});}],
+ ['docs-items',async p=>{await seedDocs(p);}],
  ['knowledge-new',async p=>{await p.evaluate(()=>{switchBusiness('1');navigateModule('docs');newKnowledge();});}],
- ['knowledge',async p=>{await p.evaluate(()=>{docs.push({id:1,title:'נוהל',body:'תוכן',category_id:null,all_businesses:true,is_pinned:true,updated_at:'2026-09-01T10:00:00Z'});navigateModule('docs');openKnowledge(1);});}],
+ ['knowledge',async p=>{await seedDocs(p);await p.evaluate(()=>openKnowledge(1));await p.waitForFunction(()=>document.querySelectorAll('#docPages canvas').length===2,null,{timeout:15000});}],
  ['password',async p=>{await p.evaluate(()=>changePasswordModal(true));}],
 ];
 (async()=>{await new Promise(r=>srv.listen(0,r));const port=srv.address().port;const b=await chromium.launch();
@@ -47,7 +60,7 @@ const STATES=[
    await page.route('**/vendor/supabase.js',r=>r.fulfill({contentType:'text/javascript',body:STUB}));
    await page.goto(`http://localhost:${port}/`);await page.waitForTimeout(500);
    await page.evaluate(()=>{document.getElementById('installOffer')?.remove();document.querySelector('.app-toast')?.remove();});
-   if(act)await act(page);
+   if(act){try{await act(page);}catch(e){errs.push(name+' (setup): '+String(e).split('\n')[0]);}}
    await page.waitForTimeout(250);
    await page.addStyleTag({content:'*,*::before,*::after{transition:none!important;animation:none!important;caret-color:transparent!important}'});
    if(name!=='toast')await page.evaluate(()=>document.querySelector('.app-toast')?.remove());
