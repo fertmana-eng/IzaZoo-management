@@ -16,6 +16,12 @@ in CLAUDE.md (owner / full admin / limited admin / manager).
    warnings are "security definer function executable" for the app's own
    functions (they check the caller themselves) and "leaked password
    protection" (needs a paid plan). Anything else is new: investigate.
+0. **Run the saved database check first:** pass the contents of
+   `tests/db/checks.sql` to the Supabase connector's execute_sql. It tests both
+   permission layers for every app write, logged-out access, and owner/manager
+   behaviour on the real database, and rolls everything back. It must end with
+   "DB CHECKS: ALL n PASSED". When a change adds a new database action or
+   permission rule, add a check for it to that file in the same change.
 2. **Every table has row-level security on**, and no table or function is
    reachable without logging in (anon has no table grants and no EXECUTE).
 3. **Role-simulated tests** (read-only, inside a transaction that is rolled

@@ -17,7 +17,8 @@ reports; fix things afterwards as normal changes (one pull request each, with
 3. **Leftovers:** `node tests/tools/unused-functions.js index.html`,
    `node tests/tools/deadcss.js index.html` and
    `node tests/tools/overridden.js index.html` should all report 0.
-4. **Security:** run the security check (`.claude/skills/security-check/SKILL.md`).
+4. **Security:** run the security check (`.claude/skills/security-check/SKILL.md`),
+   including the saved database check `tests/db/checks.sql` (must report ALL PASSED).
 5. **Size and shape:** note the size of `index.html` (and of its style block)
    and compare with the last health check in CLAUDE.md. Big growth is a sign
    that code is being added without cleaning up.
