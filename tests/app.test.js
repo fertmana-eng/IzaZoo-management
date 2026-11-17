@@ -123,6 +123,67 @@ describe('updates',()=>{
   });
 });
 
+describe('knowledge (ידע ונהלים)',()=>{
+  const addItem=async(page,title,body)=>{
+    await page.click(visible('.cat-plus-btn'));
+    await page.fill('#nkTitle',title);await page.fill('#nkBody',body);
+    await page.check('#modal [data-all-audience="nk"]');
+    await page.click('#modal .primary');await page.waitForTimeout(500);
+  };
+  const cards=page=>page.evaluate(()=>[...document.querySelectorAll('.knowledge-card')].filter(e=>e.offsetParent).map(e=>e.innerText.replace(/\s+/g,' ')));
+  test('an admin adds an item; it appears in the list and in the home counter',async()=>{
+    const {page,ctx,errors}=await open();
+    await page.evaluate(()=>navigateModule('docs'));await page.waitForTimeout(300);
+    assert.match(await page.innerText(visible('.knowledge-page')),/אין עדיין פריטי ידע/);
+    await addItem(page,'נוהל פתיחה','לפתוח את הדלת בשמונה');
+    assert.match((await cards(page))[0],/נוהל פתיחה/);
+    assert.equal(await page.evaluate(()=>__db.knowledge_items.length),1);
+    await back(page);
+    assert.equal(await page.innerText(visible('.portrait-bottom-cat.doc .portrait-bottom-count')),'1');
+    assert.deepEqual(errors,[]);await ctx.close();
+  });
+  test('editing an item updates the list; archiving asks first and can be undone',async()=>{
+    const {page,ctx,errors}=await open();
+    await page.evaluate(()=>navigateModule('docs'));await page.waitForTimeout(300);
+    await addItem(page,'נוהל סגירה','לכבות אורות');
+    await page.click(visible('.knowledge-card'));await page.click('#modal button:has-text("עריכה")');
+    await page.fill('#ekTitle','נוהל סגירה מעודכן');await page.click('#modal .primary');await page.waitForTimeout(500);
+    assert.match((await cards(page))[0],/נוהל סגירה מעודכן/);
+    assert.equal(await page.evaluate(()=>__db.knowledge_versions.length),1,'the previous version is kept in the database');
+    await page.click('#modal button:has-text("ארכוב")');
+    assert.match((await state(page)).modal||'',/להעביר לארכיון/);
+    assert.equal(await page.evaluate(()=>__db.knowledge_items[0].is_archived||false),false,'nothing archived before confirming');
+    await page.click('#modal .primary');await page.waitForTimeout(500);
+    assert.match(await page.innerText(visible('.knowledge-page')),/ארכיון/);
+    await page.click(visible('.knowledge-card'));await page.click('#modal button:has-text("החזר לפעילים")');await page.waitForTimeout(500);
+    assert.doesNotMatch(await page.innerText(visible('.knowledge-page')),/ארכיון/);
+    assert.deepEqual(errors,[]);await ctx.close();
+  });
+  test('a manager can read items but has no add, edit or archive buttons',async()=>{
+    const {page,ctx,errors}=await open({cfg:{role:'manager'}});
+    await page.evaluate(()=>{__db.knowledge_items.push({id:7,title:'בטיחות',body:'מטף ליד הדלת',category_id:null,all_businesses:true,is_archived:false,is_pinned:false,updated_at:'2026-11-01T10:00:00Z'});});
+    await page.evaluate(async()=>{await loadKnowledge();navigateModule('docs');});await page.waitForTimeout(300);
+    assert.equal(await page.locator(visible('.cat-plus-btn')).count(),0);
+    await page.click(visible('.knowledge-card'));
+    const buttons=await page.evaluate(()=>[...document.querySelectorAll('#modal button')].map(b=>b.textContent.trim()));
+    assert.deepEqual(buttons,['חזרה']);
+    assert.match((await state(page)).modal||'',/מטף ליד הדלת/);
+    assert.deepEqual(errors,[]);await ctx.close();
+  });
+  test('search finds knowledge items, on home and in the knowledge screen',async()=>{
+    const {page,ctx}=await open();
+    await page.evaluate(async()=>{__db.knowledge_items.push({id:9,title:'הכנת קפה',body:'מכונה אדומה',category_id:null,all_businesses:true,is_archived:false,is_pinned:false,updated_at:'2026-11-01T10:00:00Z'});await loadKnowledge();dashboard();});
+    await page.fill(visible('.stable-search input'),'אדומה');await page.waitForTimeout(200);
+    assert.match(await page.innerText('.search-result-row'),/הכנת קפה/);
+    await page.click('.search-result-row');await page.waitForTimeout(400);
+    const s=await state(page);assert.equal(s.screen,'docs');assert.match(s.modal||'',/הכנת קפה/);
+    await page.evaluate(()=>hideModal());
+    await page.fill(visible('.stable-search input'),'קפה');await page.waitForTimeout(200);
+    assert.match(await page.innerText('.search-result-row'),/הכנת קפה/);
+    await ctx.close();
+  });
+});
+
 describe('back button and exit',()=>{
   test('back closes the window, then goes home, then asks to exit; "ביטול" stays; back on the question exits',async()=>{
     const {page,ctx,errors}=await open();

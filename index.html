@@ -1842,7 +1842,6 @@ body{overscroll-behavior:none}
 .knowledge-card{cursor:pointer}
 .knowledge-title{font-weight:800;font-size:14px}
 .knowledge-card .knowledge-category{color:var(--module-doc);background:var(--module-doc-soft)}
-.version-row{font-size:10px;padding:6px 0;border-top:1px solid var(--line)}
 .overdue-badge{font-size:9px;background:#f3e7e3;color:#934f47;padding:2px 5px;margin-inline-start:5px;font-weight:800}
 [data-search-text][style*="display: none"]{display:none!important}
 .module-user .module-top-tools,.module-feedback .module-top-tools,.module-admin .module-top-tools{display:none}
@@ -2124,7 +2123,8 @@ body.is-portrait .module-updates .mobile-sticky-head,
 body.is-portrait .module-docs .mobile-sticky-head{position:sticky;top:-14px;z-index:6;background:var(--bg);margin:-14px -12px 0;padding:14px 12px 10px}
 body.is-portrait .module-problems .mobile-header .module-top-tools,
 body.is-portrait .module-tasks .mobile-header .module-top-tools,
-body.is-portrait .module-updates .mobile-header .module-top-tools{display:none!important}
+body.is-portrait .module-updates .mobile-header .module-top-tools,
+body.is-portrait .module-docs .mobile-header .module-top-tools{display:none!important}
 .active-business-tag b{color:var(--ink);font-weight:600}
 body.is-portrait .module-problems .mobile-header,
 body.is-portrait .module-tasks .mobile-header,
@@ -2137,28 +2137,36 @@ body.is-portrait .module-docs .mobile-header{background:transparent!important;bo
 .module-docs .cat-badge,.module-docs .cat-plus-btn{background:var(--module-doc)!important}
 body.is-landscape .module-problems .desktop-layout,
 body.is-landscape .module-tasks .desktop-layout,
-body.is-landscape .module-updates .desktop-layout{grid-template-columns:minmax(0,1fr)!important}
+body.is-landscape .module-updates .desktop-layout,
+body.is-landscape .module-docs .desktop-layout{grid-template-columns:minmax(0,1fr)!important}
 body.is-landscape .module-problems .sidebar,
 body.is-landscape .module-tasks .sidebar,
-body.is-landscape .module-updates .sidebar{display:none!important}
+body.is-landscape .module-updates .sidebar,
+body.is-landscape .module-docs .sidebar{display:none!important}
 body.is-landscape .module-problems .full-module-main,
 body.is-landscape .module-tasks .full-module-main,
-body.is-landscape .module-updates .full-module-main{grid-column:1/-1!important;max-width:none!important}
+body.is-landscape .module-updates .full-module-main,
+body.is-landscape .module-docs .full-module-main{grid-column:1/-1!important;max-width:none!important}
 body.is-landscape .module-problems .topbar .module-top-tools,
 body.is-landscape .module-tasks .topbar .module-top-tools,
-body.is-landscape .module-updates .topbar .module-top-tools{display:none!important}
+body.is-landscape .module-updates .topbar .module-top-tools,
+body.is-landscape .module-docs .topbar .module-top-tools{display:none!important}
 body.is-landscape .module-problems .desktop-sticky-head,
 body.is-landscape .module-tasks .desktop-sticky-head,
-body.is-landscape .module-updates .desktop-sticky-head{position:sticky;top:0;z-index:6;background:var(--bg);padding-bottom:2px}
+body.is-landscape .module-updates .desktop-sticky-head,
+body.is-landscape .module-docs .desktop-sticky-head{position:sticky;top:0;z-index:6;background:var(--bg);padding-bottom:2px}
 body.is-landscape .module-problems .topbar,
 body.is-landscape .module-tasks .topbar,
-body.is-landscape .module-updates .topbar{background:transparent!important;border-bottom:0!important;margin-bottom:2px!important}
+body.is-landscape .module-updates .topbar,
+body.is-landscape .module-docs .topbar{background:transparent!important;border-bottom:0!important;margin-bottom:2px!important}
 body.is-landscape .module-problems .stable-search,
 body.is-landscape .module-tasks .stable-search,
-body.is-landscape .module-updates .stable-search{border-radius:12px!important;overflow:hidden;border-inline-start:0!important}
+body.is-landscape .module-updates .stable-search,
+body.is-landscape .module-docs .stable-search{border-radius:12px!important;overflow:hidden;border-inline-start:0!important}
 body.is-landscape .module-problems .stable-search input{box-shadow:inset -4px 0 0 0 var(--module-problem)!important;border-radius:12px!important}
 body.is-landscape .module-tasks .stable-search input{box-shadow:inset -4px 0 0 0 var(--module-task)!important;border-radius:12px!important}
 body.is-landscape .module-updates .stable-search input{box-shadow:inset -4px 0 0 0 var(--module-update)!important;border-radius:12px!important}
+body.is-landscape .module-docs .stable-search input{box-shadow:inset -4px 0 0 0 var(--module-doc)!important;border-radius:12px!important}
 .cat-plus-icon{font-size:16px;line-height:1}
 .cat-plus-label{font-size:12px;font-weight:700;white-space:nowrap}
 body.is-portrait .module-problems .mobile-header .module-back,
@@ -2210,7 +2218,6 @@ let updateFollowups=[];
 let tasks=[];
 let docs=[];
 let knowledgeBusinesses=[];
-let knowledgeVersions=[];
 let knowledgeCategories=[];
 let betaFeedback=[];
 let calCursor=new Date();
@@ -2500,7 +2507,6 @@ async function loadUpdatesV2(){
 }
 
 async function loadKnowledge(){
-  const v={data:knowledgeVersions,error:null}; // version history isn't shown while the module is closed
   const [i,b,c]=await Promise.all([
     supabaseClient.from("knowledge_items")
       .select("id,title,body,category_id,created_by,updated_by,created_at,updated_at,is_archived,is_pinned,all_businesses")
@@ -2512,13 +2518,11 @@ async function loadKnowledge(){
   ]);
   docs=i.error?docs:(i.data||[]);
   knowledgeBusinesses=b.error?knowledgeBusinesses:(b.data||[]);
-  knowledgeVersions=v.error?knowledgeVersions:(v.data||[]);
   knowledgeCategories=c.error?knowledgeCategories:(c.data||[]);
   if(i.error)console.error("knowledge_items",i.error);
   if(b.error)console.error("knowledge_businesses",b.error);
-  if(v.error)console.error("knowledge_versions",v.error);
   if(c.error)console.error("knowledge_categories",c.error);
-  return !(i.error||b.error||v.error||c.error);
+  return !(i.error||b.error||c.error);
 }
 
 async function loadBetaFeedback(){
@@ -2839,6 +2843,7 @@ function searchMatches(context,q){
   if(context==="home"||context==="problems")visibleProblems().forEach(x=>push("problem",x.id,"תקלה",x.title,x.description||""));
   if(context==="home"||context==="tasks")visibleTasks().forEach(x=>push("task",x.id,"משימה",x.description));
   if(context==="home"||context==="updates")visibleUpdates(false).forEach(x=>push("update",x.id,"עדכון",x.body));
+  if(context==="home"||context==="docs")visibleKnowledge(false).forEach(x=>push("doc",x.id,"ידע",x.title,x.body+" "+categoryName(x.category_id)));
   return matches;
 }
 function renderSearchResults(context,q,sourceInput){
@@ -2854,6 +2859,7 @@ async function openSearchResult(type,id){
   if(type==="problem"){if(currentScreen!=="problems")await goToScreen("problems",{push:true,direction:"forward"});return openProblemDetails(id);}
   if(type==="task"){if(currentScreen!=="tasks")await goToScreen("tasks",{push:true,direction:"forward"});return openTaskDetails(id);}
   if(type==="update"){if(currentScreen!=="updates")await goToScreen("updates",{push:true,direction:"forward"});return focusUpdateThread(id);}
+  if(type==="doc"){if(currentScreen!=="docs")await goToScreen("docs",{push:true,direction:"forward"});return openKnowledge(id);}
 }
 
 async function refreshOnResume(){
@@ -3045,7 +3051,7 @@ async function saveFeedback(id,btn){
 }
 
 function page(title,sub,active,content,fab="",stickyExtra=""){
-  currentSearchContext=active;const moduleClass=`module-${active}`;const showSearch=["problems","tasks","updates"].includes(active);
+  currentSearchContext=active;const moduleClass=`module-${active}`;const showSearch=["problems","tasks","updates","docs"].includes(active);
   const bizTag=showSearch?`<div class="active-business-tag">עסק פעיל: <b>${esc(activeBusinessLabel())}</b></div>`:"";
   // build only the layout for the current orientation (the other one would be hidden anyway)
   const layout=viewportMode()==="portrait"
@@ -3567,7 +3573,16 @@ function knowledgeCardHTML(k){
     <div class="item-meta">עודכן ${esc(formatProblemDateTime(k.updated_at))} · ${esc(audienceLabel(k.all_businesses,knowledgeTargetIds(k.id)))}</div>
   </div>`;
 }
-function docsScreen(){currentScreen="docs";page("ידע ונהלים","בקרוב","docs",`<div class="page knowledge-page"><section class="under-construction-card"><div class="construction-icon" aria-hidden="true">🛠️</div><h2>המודול בבנייה</h2><p>ידע ונהלים יהיו חלק מ־IzaZoo בהמשך. כרגע אנחנו משאירים את המודול סגור עד שהמבנה שלו יוגדר במלואו.</p></section></div>`);}
+function docsScreen(){
+  currentScreen="docs";
+  const active=visibleKnowledge(false);
+  const rows=active.length?active.map(knowledgeCardHTML).join(""):`<div class="u-sub">${canAdmin()?"אין עדיין פריטי ידע. אפשר להוסיף בכפתור ״פריט חדש״.":"אין עדיין פריטי ידע."}</div>`;
+  // archived items: only administrators see them (to bring them back)
+  const archived=canAdmin()?visibleKnowledge(true):[];
+  const archive=archived.length?`<h3 style="margin:20px 0 10px">ארכיון</h3>${archived.map(knowledgeCardHTML).join("")}`:"";
+  const titleHTML=categoryHeaderTitle("ידע ונהלים",active.length,canAdmin()?"newKnowledge()":null,"פריט חדש");
+  page(titleHTML,"","docs",`<div class="page knowledge-page">${rows}${archive}</div>`);
+}
 function newKnowledge(){
   showModal(`<h2>פריט ידע חדש</h2>
     <label>כותרת</label><input id="nkTitle">
@@ -3579,14 +3594,14 @@ function newKnowledge(){
 }
 async function createKnowledge(btn){
   const title=nkTitle.value.trim(),body=nkBody.value.trim(),aud=selectedAudience("nk");
-  if(!title||!body)return alert("יש להזין כותרת ותוכן");
-  if(!aud.all&&!aud.ids.length)return alert("יש לבחור עסקים");
+  if(!title||!body)return toast("יש להזין כותרת ותוכן","error");
+  if(!aud.all&&!aud.ids.length)return toast("יש לבחור לפחות עסק אחד","error");
   if(!checkOnline())return;setBusy(btn,true,"שומר...");
   const {data,error}=await supabaseClient.from("knowledge_items").insert({
     title,body,category_id:Number(nkCategory.value)||null,created_by:currentUser.id,updated_by:currentUser.id,
     is_pinned:nkPinned.checked,all_businesses:aud.all
   }).select("id").single();
-  if(error){setBusy(btn,false);return toast("לא ניתן ליצור את הפריט","error");}
+  if(error){setBusy(btn,false);console.error("knowledge_items insert",error);return toast("לא ניתן ליצור את הפריט: "+error.message,"error");}
   if(!aud.all&&aud.ids.length){
     const {error:e}=await supabaseClient.from("knowledge_businesses").insert(aud.ids.map(business_id=>({knowledge_id:data.id,business_id})));
     if(e){setBusy(btn,false);return toast("הפריט נוצר אך שיוך העסקים נכשל","error");}
@@ -3595,13 +3610,11 @@ async function createKnowledge(btn){
 }
 function openKnowledge(id){
   const k=docs.find(x=>Number(x.id)===Number(id));if(!k)return;
-  const versions=knowledgeVersions.filter(v=>Number(v.knowledge_id)===Number(id));
   showModal(`<h2>${k.is_pinned?"📌 ":""}${esc(k.title)}</h2>
     <div class="knowledge-category">${esc(categoryName(k.category_id))}</div>
     <div class="knowledge-full-body">${esc(k.body)}</div>
     <div class="detail-meta">${esc(audienceLabel(k.all_businesses,knowledgeTargetIds(k.id)))}<br>עודכן ${esc(formatProblemDateTime(k.updated_at))}</div>
-    ${versions.length?`<details><summary>היסטוריית גרסאות (${versions.length})</summary>${versions.slice(0,10).map(v=>`<div class="version-row"><strong>${esc(profileName(v.edited_by))}</strong> · ${esc(formatProblemDateTime(v.created_at))}</div>`).join("")}</details>`:""}
-    <div class="actions"><button class="secondary" onclick="hideModal()">חזרה</button>${canAdmin()?`<button class="secondary" onclick="editKnowledge(${id})">עריכה</button><button class="primary" onclick="archiveKnowledge(${id},${!!k.is_archived},this)">${k.is_archived?"החזר לפעילים":"ארכוב"}</button>`:""}</div>`);
+    <div class="actions"><button class="secondary" onclick="hideModal()">חזרה</button>${canAdmin()?`<button class="secondary" onclick="editKnowledge(${id})">עריכה</button><button class="primary" onclick="${k.is_archived?`archiveKnowledge(${id},true,this)`:`confirmArchiveKnowledge(${id})`}">${k.is_archived?"החזר לפעילים":"ארכוב"}</button>`:""}</div>`);
 }
 function editKnowledge(id){
   const k=docs.find(x=>Number(x.id)===Number(id));if(!k)return;
@@ -3616,17 +3629,22 @@ function editKnowledge(id){
 }
 async function saveKnowledge(id,btn){
   const k=docs.find(x=>Number(x.id)===Number(id)),title=ekTitle.value.trim(),body=ekBody.value.trim(),aud=selectedAudience("ek");
-  if(!title||!body)return;
-  if(!aud.all&&!aud.ids.length)return alert("יש לבחור עסקים");
+  if(!title||!body)return toast("יש להזין כותרת ותוכן","error");
+  if(!aud.all&&!aud.ids.length)return toast("יש לבחור לפחות עסק אחד","error");
   if(!checkOnline())return;setBusy(btn,true,"שומר...");
+  // the previous version is kept in the database (not shown in the app)
   await supabaseClient.from("knowledge_versions").insert({knowledge_id:id,title:k.title,body:k.body,edited_by:currentUser.id});
   const {error}=await supabaseClient.from("knowledge_items").update({
     title,body,category_id:Number(ekCategory.value)||null,updated_by:currentUser.id,updated_at:new Date().toISOString(),is_pinned:ekPinned.checked
   }).eq("id",id);
-  if(error){setBusy(btn,false);return toast("לא ניתן לשמור","error");}
+  if(error){setBusy(btn,false);console.error("knowledge_items update",error);return toast("לא ניתן לשמור: "+error.message,"error");}
   const {error:rerr}=await supabaseClient.rpc("replace_knowledge_targets",{target_knowledge_id:id,business_ids:aud.ids,new_all_businesses:aud.all});
   if(rerr){setBusy(btn,false);return toast("התוכן נשמר אך שיוך העסקים לא עודכן","error");}
-  await loadKnowledge();toast("פריט הידע עודכן");openKnowledge(id);
+  await loadKnowledge();refreshScreenBehindModal("docs",docsScreen);toast("פריט הידע עודכן");openKnowledge(id);
+}
+function confirmArchiveKnowledge(id){
+  const k=docs.find(x=>Number(x.id)===Number(id));if(!k)return;
+  showModal(`<h2>להעביר לארכיון?</h2><p>"${esc(k.title)}" לא יוצג יותר למשתמשים. אפשר להחזיר אותו מהארכיון בכל עת.</p><div class="actions"><button class="secondary" onclick="openKnowledge(${Number(id)})">ביטול</button><button class="primary" onclick="archiveKnowledge(${Number(id)},false,this)">ארכוב</button></div>`);
 }
 async function archiveKnowledge(id,isArchived,btn){
   if(!checkOnline())return;setBusy(btn,true,"שומר...");
@@ -3793,27 +3811,6 @@ async function toggleBusiness(id,newActive,btn){
   await loadAdminData();adminScreen();
 }
 
-
-function newKnowledgeCategory(){
-  showModal(`<h2>קטגוריה חדשה</h2><label>שם</label><input id="newCatName"><label>סדר</label><input id="newCatSort" type="number" value="100"><div class="actions"><button class="secondary" onclick="hideModal()">ביטול</button><button class="primary" onclick="createKnowledgeCategory(this)">יצירה</button></div>`);
-}
-async function createKnowledgeCategory(btn){
-  const name=newCatName.value.trim();if(!name)return;
-  setBusy(btn,true,"יוצר...");
-  const {error}=await supabaseClient.rpc("admin_create_knowledge_category",{category_name:name,category_sort_order:Number(newCatSort.value)||0});
-  if(error){setBusy(btn,false);return toast("לא ניתן ליצור קטגוריה","error");}
-  await loadKnowledge();hideModal();toast("הקטגוריה נוצרה");adminScreen();
-}
-function editKnowledgeCategory(id){
-  const c=knowledgeCategories.find(x=>Number(x.id)===Number(id));if(!c)return;
-  showModal(`<h2>עריכת קטגוריה</h2><label>שם</label><input id="editCatName" value="${esc(c.name)}"><label>סדר</label><input id="editCatSort" type="number" value="${c.sort_order}"><label>סטטוס</label><select id="editCatActive"><option value="true" ${c.is_active?"selected":""}>פעילה</option><option value="false" ${!c.is_active?"selected":""}>לא פעילה</option></select><div class="actions"><button class="secondary" onclick="hideModal()">ביטול</button><button class="primary" onclick="saveKnowledgeCategory(${id},this)">שמירה</button></div>`);
-}
-async function saveKnowledgeCategory(id,btn){
-  setBusy(btn,true,"שומר...");
-  const {error}=await supabaseClient.rpc("admin_update_knowledge_category",{target_category:id,new_name:editCatName.value.trim(),new_sort_order:Number(editCatSort.value)||0,new_active:editCatActive.value==="true"});
-  if(error){setBusy(btn,false);return toast("לא ניתן לעדכן קטגוריה","error");}
-  await loadKnowledge();hideModal();toast("הקטגוריה עודכנה");adminScreen();
-}
 
 function syncVisualViewport(){const vv=window.visualViewport,h=vv?.height||window.innerHeight,top=vv?.offsetTop||0,keyboard=Math.max(0,window.innerHeight-h-top);document.documentElement.style.setProperty("--app-vvh",h+"px");document.documentElement.style.setProperty("--app-vvtop",top+"px");document.documentElement.style.setProperty("--keyboard-inset",keyboard+"px");}
 function focusFieldIntoView(target){if(!target||!target.matches("input,textarea,select"))return;setTimeout(()=>target.scrollIntoView({behavior:"smooth",block:"center",inline:"nearest"}),180);}

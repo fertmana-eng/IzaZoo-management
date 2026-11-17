@@ -29,6 +29,13 @@
 - A single-page Hebrew (RTL) management app for the IzaZoo businesses: problems
   (תקלות), tasks (משימות), updates (עדכונים), knowledge (ידע ונהלים, still closed),
   an admin screen and user feedback.
+- Knowledge (opened Nov 2026; owner's decisions): only the owner and full admins
+  add, edit and archive items (archiving asks first; archived items are shown
+  to admins only, in an "ארכיון" section); everyone reads the items meant for
+  their business. The 7 categories in the database are fixed (no category
+  admin in the app). Previous versions are saved to `knowledge_versions` on
+  every edit but not shown. Knowledge is included in search (own screen and
+  home) and styled like the other three modules.
 - Everything is in `index.html` (one style block of roughly 70 KB, then the JS). `sw.js` is the
   service worker; `vendor/supabase.js` is a bundled copy of supabase-js v2.119.0.
   Bump the cache name in `sw.js` when you change files it caches.
@@ -108,10 +115,8 @@
 
 ## Next steps (in order)
 
-Nothing pending from the code review. Possible future work, only if the owner
-asks: open the knowledge module (ידע ונהלים; its functions are already in the
-code). (Supabase's leaked-password protection needs a paid Supabase plan; the
-project is on the free plan, so don't suggest it unless that changes.)
+Nothing pending. (Supabase's leaked-password protection needs a paid Supabase
+plan; the project is on the free plan, so don't suggest it unless that changes.)
 
 ## How we make changes (always)
 
@@ -156,7 +161,7 @@ job is ever renamed, the ruleset's required check must be renamed to match
 Tests live in `tests/` (see `tests/README.md`). They run in headless Chromium
 against a fake database (`tests/fake-supabase.js`), never the real project.
 
-- **Behaviour tests:** `node --test tests/app.test.js` (26 tests, each checks its
+- **Behaviour tests:** `node --test tests/app.test.js` (30 tests, each checks its
   own result). Run them after every change, and add a test for every bug fixed.
 - **Styling changes:** take screenshots before and after with
   `tests/visual/screenshots.js` and compare with `tests/visual/compare.js`

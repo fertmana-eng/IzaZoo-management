@@ -5,7 +5,7 @@ const fs=require('fs'),acorn=require('acorn');
 const file=process.argv[2],write=process.argv[3]==='--write';
 let html=fs.readFileSync(file,'utf8');
 // knowledge module (ידע ונהלים): closed for now but planned, keep its functions
-const KEEP=new Set(['newKnowledge','createKnowledge','knowledgeCardHTML','openKnowledge','editKnowledge','saveKnowledge','archiveKnowledge','newKnowledgeCategory','createKnowledgeCategory','editKnowledgeCategory','saveKnowledgeCategory']);
+const KEEP=new Set(['newKnowledge','createKnowledge','knowledgeCardHTML','openKnowledge','editKnowledge','saveKnowledge','archiveKnowledge']);
 const removed=[];
 for(let round=1;round<10;round++){
   const open='<script src="vendor/supabase.js"></script>\n<script>';

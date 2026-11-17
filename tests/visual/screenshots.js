@@ -31,6 +31,8 @@ const STATES=[
  ['install',async p=>{await p.evaluate(()=>maybeShowInstallOffer());}],
  ['toast',async p=>{await p.evaluate(()=>toast('בדיקה','error'));await p.waitForTimeout(300);}],
  ['offline',async p=>{await p.evaluate(()=>{document.body.insertAdjacentHTML('afterbegin','<div id="offlineBar" class="offline-bar">אין חיבור לרשת</div>');});}],
+ ['docs-items',async p=>{await p.evaluate(async()=>{__db.knowledge_items.push({id:1,title:'נוהל פתיחת בוקר',body:'להדליק אורות, לבדוק קופה ולפתוח את הדלת ב־8:00.',category_id:null,all_businesses:true,is_archived:false,is_pinned:true,updated_at:'2026-09-01T10:00:00Z'},{id:2,title:'ניקיון מטבח',body:'בסוף כל משמרת: משטחים, כיריים ורצפה.',category_id:null,all_businesses:true,is_archived:false,is_pinned:false,updated_at:'2026-08-20T10:00:00Z'});await loadKnowledge();navigateModule('docs');});}],
+ ['knowledge-new',async p=>{await p.evaluate(()=>{switchBusiness('1');navigateModule('docs');newKnowledge();});}],
  ['knowledge',async p=>{await p.evaluate(()=>{docs.push({id:1,title:'נוהל',body:'תוכן',category_id:null,all_businesses:true,is_pinned:true,updated_at:'2026-09-01T10:00:00Z'});navigateModule('docs');openKnowledge(1);});}],
  ['password',async p=>{await p.evaluate(()=>changePasswordModal(true));}],
 ];

@@ -1,11 +1,12 @@
 // Fake Supabase client used by the tests instead of the real database.
 // It keeps a small in-memory database (window.__db) and records every call (window.__ops).
-// Options are read from window.__cfg: noSession, mustChange, failTables[], profileError.
+// Options are read from window.__cfg: noSession, mustChange, failTables[], profileError,
+// role ("owner" by default; "manager" or "admin" are limited to business 1).
 (function(){
   const cfg=window.__cfg||{};
   const now=()=>new Date().toISOString();
   const db={
-    profiles:[{id:"u1",username:"alex",first_name:"Alex",last_name:"A",display_name:"Alex A",role:"owner",is_active:true,must_change_password:!!cfg.mustChange,all_businesses_access:true,business_ids:[1,2]}],
+    profiles:[{id:"u1",username:"alex",first_name:"Alex",last_name:"A",display_name:"Alex A",role:cfg.role||"owner",is_active:true,must_change_password:!!cfg.mustChange,all_businesses_access:!cfg.role||cfg.role==="owner",business_ids:[1,2]}],
     businesses:[{id:1,name:"Biz1",is_active:true},{id:2,name:"Biz2",is_active:true}],
     user_businesses:[{user_id:"u1",business_id:1}],
     problems:[{id:1,title:"Leak",description:"d",status:"open",priority:"normal",created_by:"u1",assigned_to:null,created_at:"2026-09-03T22:30:00Z",updated_at:now(),closed_at:null,closed_by:null,business_id:1}],
