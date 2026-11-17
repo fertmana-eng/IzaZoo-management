@@ -21,8 +21,10 @@
   merged, a decision made, a new rule from the owner, a lesson learned, the next
   steps changing), update this file and merge it, so a new session can continue
   without losing progress.
-- **Always show the app link when asking the owner to test something:**
-  https://fertmana-eng.github.io/IzaZoo-management/
+- **The owner tests in the installed app,** so don't repeat the app link at each
+  step. Give it (https://fertmana-eng.github.io/IzaZoo-management/) only when
+  something should be checked in the browser too, e.g. to compare the website
+  with the installed app.
 
 ## The app
 
