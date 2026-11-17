@@ -46,6 +46,18 @@
   every item). "הסרה" asks: archive (restorable) or delete for good (document
   and file; also available on archived documents).
   Supabase free plan: 1 GB storage in total.
+- Photos on problems and tasks (Nov 2026; owner's decisions): up to 5 per
+  problem or task, added when opening or editing it (camera or gallery; removed
+  in editing). Shrunk on the phone to about 1600 px JPEG plus a 320 px copy for
+  the lists, stored in the private bucket `photos` as `problem/<id>/...` or
+  `task/<id>/...`; rows in `item_photos`. Access follows the problem/task
+  itself (anyone who can see it sees its photos; anyone who can edit it adds or
+  removes them), enforced in the database
+  (`supabase/migrations/20261117_item_photos.sql`; at most 5 is enforced
+  there too). Cards show the first photo with one or two grey cards peeking out
+  behind it when there are more (owner's design). Tapping a photo opens it full
+  screen; back closes the photo, then the window. The aim is to replace the
+  WhatsApp groups: a photo of the problem plus what needs doing.
 - Everything is in `index.html` (one style block of roughly 70 KB, then the JS). `sw.js` is the
   service worker; `vendor/supabase.js` is a bundled copy of supabase-js v2.119.0.
   Bump the cache name in `sw.js` when you change files it caches.
@@ -162,6 +174,8 @@
 - Removed 27 unused JavaScript functions (old login picker, old update/doc
   modals, debug log viewer, unused animations, etc.).
 - Opened the knowledge module as a document library (see "The app" above).
+- App icon and startup screen from the IzaZoo logo; photos on problems and
+  tasks (see "The app" above).
 
 ## Next steps (in order)
 
@@ -226,19 +240,19 @@ job is ever renamed, the ruleset's required check must be renamed to match
 Tests live in `tests/` (see `tests/README.md`). They run in headless Chromium
 against a fake database (`tests/fake-supabase.js`), never the real project.
 
-- **Behaviour tests:** `node --test tests/app.test.js` (37 tests, each checks its
+- **Behaviour tests:** `node --test tests/app.test.js` (42 tests, each checks its
   own result). Run them after every change, and add a test for every bug fixed.
 - **Styling changes:** take screenshots before and after with
   `tests/visual/screenshots.js` and compare with `tests/visual/compare.js`
   (`cd tests && npm install` first). Accept only zero differences, or
   differences the owner asked for.
-- **Real-database check:** `tests/db/checks.sql` (40 checks, rolled back),
+- **Real-database check:** `tests/db/checks.sql` (50 checks, rolled back),
   run by the security check. Not run on GitHub on purpose (it would need the
   live database password there).
 - **Clean-up tools:** `tests/tools/deadcss.js`, `tests/tools/overridden.js`,
   `tests/tools/unused-functions.js` (report only unless `--write`).
 - Class names built at runtime (`module-${active}`, `calendar-${x.type}`,
-  `nav-${id}`) don't appear literally in the code; the CSS tools account for them.
+  `nav-${id}`, `stack-${behind}`) don't appear literally in the code; the CSS tools account for them.
 - Always finish by asking the owner to check the change on their phone.
 
 ## Health checks

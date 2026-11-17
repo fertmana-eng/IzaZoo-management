@@ -1,7 +1,8 @@
 // Fake Supabase client used by the tests instead of the real database.
 // It keeps a small in-memory database (window.__db) and records every call (window.__ops).
 // Options are read from window.__cfg: noSession, mustChange, failTables[], profileError,
-// role ("owner" by default; "manager" or "admin" are limited to business 1), failUpload.
+// role ("owner" by default; "manager" or "admin" are limited to business 1), failUpload,
+// photos (rows for item_photos; their files are made up on download).
 (function(){
   const cfg=window.__cfg||{};
   const now=()=>new Date().toISOString();
@@ -13,7 +14,7 @@
     problem_activity:[],
     tasks:[{id:1,description:"Task due 4th",business_id:1,created_by:"u1",created_at:"2026-09-01T10:00:00Z",assigned_to:null,due_date:"2026-09-04",status:"open"}],
     updates_v2:Array.from({length:30},(_,i)=>({id:i+1,title:"u"+(i+1),body:"Update number "+(i+1),created_by:"u1",created_at:new Date(Date.UTC(2026,7,1+i,10)).toISOString(),updated_at:now(),expires_at:null,is_archived:false,is_pinned:false,all_businesses:true})),
-    update_businesses:[],update_followups:[],knowledge_items:[],knowledge_businesses:[],knowledge_versions:[],knowledge_categories:[{id:1,name:"פתיחה",sort_order:1,is_active:true},{id:2,name:"מטבח",sort_order:2,is_active:true}],beta_feedback:[],admin_activity:[]
+    update_businesses:[],update_followups:[],knowledge_items:[],knowledge_businesses:[],knowledge_versions:[],knowledge_categories:[{id:1,name:"פתיחה",sort_order:1,is_active:true},{id:2,name:"מטבח",sort_order:2,is_active:true}],beta_feedback:[],admin_activity:[],item_photos:cfg.photos||[]
   };
   window.__db=db;window.__ops=[];
   function q(table){
@@ -67,7 +68,7 @@
     storage:{from(bucket){const files=window.__files||(window.__files={});return {
       upload:async(path,file)=>{window.__ops.push({storage:"upload",bucket,path});
         if(cfg.failUpload)return {data:null,error:{message:"upload failed"}};files[bucket+"/"+path]=file;return {data:{path},error:null};},
-      download:async path=>{const f=files[bucket+"/"+path];return f?{data:f,error:null}:{data:null,error:{message:"Object not found"}};},
+      download:async path=>{window.__ops.push({storage:"download",bucket,path});const f=files[bucket+"/"+path]||(bucket==="photos"&&(cfg.photos||[]).some(p=>p.file_path===path||p.thumb_path===path)?new Blob(["x"],{type:"image/jpeg"}):null);return f?{data:f,error:null}:{data:null,error:{message:"Object not found"}};},
       remove:async paths=>{window.__ops.push({storage:"remove",bucket,paths});paths.forEach(p=>delete files[bucket+"/"+p]);return {data:[],error:null};}
     };}},
     functions:{invoke:async(n,o)=>{window.__ops.push({fn:n,body:o.body});return {data:{},error:null}}}

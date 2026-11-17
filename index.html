@@ -2210,6 +2210,29 @@ body.is-portrait .portrait-single-header .stable-search{margin-top:14px!importan
 .doc-pages{direction:ltr;flex:1;min-height:0;overflow:auto;background:#e9e7e1;border-radius:8px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:8px}
 .doc-page{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15);max-width:100%;flex:0 0 auto}
 .doc-loading{padding:24px;text-align:center}
+/* photos on problems and tasks */
+.list-card.has-photo{display:flow-root}
+.card-photo{float:left;position:relative;width:58px;height:58px;margin-inline-start:10px;margin-bottom:4px}
+.card-photo.stack-1{margin-left:10px}
+.card-photo.stack-2{margin-left:19px}
+.card-photo img{position:relative;width:100%;height:100%;object-fit:cover;border-radius:13px;background:#e4e2db;display:block;box-shadow:-3px 0 0 #fdfcf8}
+.card-photo-back{position:absolute;top:50%;left:0;width:100%;border-radius:13px;box-shadow:-3px 0 0 #fdfcf8}
+.card-photo-back.back-1{height:84%;transform:translate(-10px,-50%);background:#8f979c}
+.card-photo-back.back-2{height:68%;transform:translate(-19px,-50%);background:#bcc2c5}
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;margin:4px 0 6px}
+.photo-tile,.photo-add{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;padding:0;border:0;background:#e4e2db}
+.photo-tile img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-add{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:22px;border:1.5px dashed #b9b5aa;background:transparent;color:#555}
+.photo-add span{font-size:12px;font-weight:600}
+.photo-remove{position:absolute;top:4px;left:4px;width:24px;height:24px;border-radius:50%;border:0;padding:0;background:rgba(0,0,0,.6);color:#fff;font-size:13px;line-height:24px}
+.photo-missing{visibility:hidden}
+.photo-viewer{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center}
+.photo-viewer img{max-width:100%;max-height:100%;object-fit:contain}
+.photo-viewer button{position:absolute;border:0;background:rgba(255,255,255,.15);color:#fff;border-radius:50%;width:44px;height:44px;font-size:22px;padding:0}
+.photo-viewer-close{top:calc(14px + env(safe-area-inset-top));left:14px}
+.photo-viewer-prev{right:10px;top:50%;transform:translateY(-50%)}
+.photo-viewer-next{left:10px;top:50%;transform:translateY(-50%)}
+.photo-viewer-count{position:absolute;bottom:calc(18px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);color:#fff;font-size:14px}
 /* startup screen: three loading dots; in the browser also the logo. The installed app
    leaves the logo out: the phone's own launch screen has just shown it, and a second
    logo of a different size would jump. */
@@ -2611,7 +2634,7 @@ async function loadAppData(){
   appDataLoadPromise=(async()=>{
     const results=await Promise.all([
       loadProfiles(),loadBusinesses(),loadProblems(),loadProblemActivity(),
-      loadTasks(),loadUpdatesV2(),loadKnowledge(),loadBetaFeedback()
+      loadTasks(),loadUpdatesV2(),loadKnowledge(),loadBetaFeedback(),loadItemPhotos()
     ]);
     if(results.some(ok=>ok===false))toast("חלק מהנתונים לא נטענו. בדוק את החיבור לרשת ונסה שוב.","error");
   })();
@@ -2826,7 +2849,9 @@ function closeModalSmart(){
   }
   hideModal();
 }
+let skipPopAfterPhoto=false; // the history.forward() after closing a photo must not also close the window under it
 window.addEventListener("popstate",async e=>{
+  if(skipPopAfterPhoto){skipPopAfterPhoto=false;return;}
   const st=e.state;
   const modal=document.getElementById("modal");
   if(exitConfirmOpen){
@@ -2839,6 +2864,8 @@ window.addEventListener("popstate",async e=>{
     }
     if(!st)return;
     exitConfirmOpen=false;exitReady=false;modal?.remove(); // moved forward into the app
+  }else if(document.getElementById("photoViewer")){
+    closePhotoViewer();skipPopAfterPhoto=true;history.forward();return; // back closes the full-screen photo, the window under it stays
   }else if(modal){
     // back closes the open window (a forced password change stays open),
     // then we return to the entry we came from without adding a new one
@@ -3102,6 +3129,134 @@ function __forceRepaint(){
   void nudge.offsetHeight;
   nudge.remove();
 }
+// ---- photos on problems and tasks (up to 5 each) ----
+// Photos are shrunk on the phone before upload (about 300 KB, plus a small copy for the
+// lists) and kept in the private "photos" store as problem/<id>/... or task/<id>/...
+const PHOTO_BUCKET="photos",PHOTO_MAX=5,PHOTO_SIZE=1600,THUMB_SIZE=320;
+let itemPhotos=[];               // rows of item_photos
+let photoDraft=null;             // the photos being chosen in an open new/edit window
+const photoUrls={};              // storage path -> promise of a local picture address
+async function loadItemPhotos(){
+  const {data,error}=await supabaseClient.from("item_photos")
+    .select("id,problem_id,task_id,file_path,thumb_path,created_at").order("created_at",{ascending:true});
+  if(error){console.error("loadItemPhotos",error);return false;}
+  itemPhotos=data||[];return true;
+}
+function photosFor(type,id){return itemPhotos.filter(p=>Number(type==="problem"?p.problem_id:p.task_id)===Number(id));}
+function photoUrl(path){
+  if(!photoUrls[path])photoUrls[path]=supabaseClient.storage.from(PHOTO_BUCKET).download(path).then(({data,error})=>{
+    if(error||!data){delete photoUrls[path];throw error||new Error("missing");}
+    return URL.createObjectURL(data);
+  });
+  return photoUrls[path];
+}
+// pictures are drawn as <img data-photo="path">; this fills them in whenever they appear
+function fillPhotos(){
+  document.querySelectorAll("img[data-photo]:not([data-filled])").forEach(img=>{
+    img.dataset.filled="1";
+    photoUrl(img.dataset.photo).then(u=>{img.src=u;}).catch(()=>img.classList.add("photo-missing"));
+  });
+}
+new MutationObserver(()=>fillPhotos()).observe(document.documentElement,{childList:true,subtree:true});
+function cardPhotoHTML(type,id){
+  const ph=photosFor(type,id);if(!ph.length)return "";
+  // the first photo in front; with more photos, one or two cards peek out behind it
+  const behind=Math.min(ph.length-1,2);
+  return `<div class="card-photo stack-${behind}" title="${ph.length} תמונות">${behind>1?`<span class="card-photo-back back-2"></span>`:""}${behind?`<span class="card-photo-back back-1"></span>`:""}<img data-photo="${esc(ph[0].thumb_path)}" alt=""></div>`;
+}
+function photoGalleryHTML(type,id){
+  const ph=photosFor(type,id);if(!ph.length)return "";
+  return `<label>תמונות</label><div class="photo-grid">${ph.map((x,i)=>`<button type="button" class="photo-tile" onclick="openPhotoViewer('${type}',${Number(id)},${i})"><img data-photo="${esc(x.thumb_path)}" alt="תמונה ${i+1}"></button>`).join("")}</div>`;
+}
+// the photo part of a new/edit window
+function photoPickerHTML(){
+  return `<label>תמונות <span class="u-sub">(עד ${PHOTO_MAX})</span></label>
+    <div class="photo-grid" id="photoDraftGrid">${photoDraftTilesHTML()}</div>
+    <input id="photoCamera" type="file" accept="image/*" capture="environment" hidden onchange="photosChosen(this)">
+    <input id="photoGallery" type="file" accept="image/*" multiple hidden onchange="photosChosen(this)">`;
+}
+function photoDraftTilesHTML(){
+  const d=photoDraft;if(!d)return "";
+  const tiles=d.keep.map(x=>`<div class="photo-tile"><img data-photo="${esc(x.thumb_path)}" alt=""><button type="button" class="photo-remove" aria-label="הסרת תמונה" onclick="removeDraftPhoto('keep',${Number(x.id)})">✕</button></div>`)
+    .concat(d.added.map((x,i)=>`<div class="photo-tile"><img src="${x.url}" alt=""><button type="button" class="photo-remove" aria-label="הסרת תמונה" onclick="removeDraftPhoto('added',${i})">✕</button></div>`));
+  const room=PHOTO_MAX-d.keep.length-d.added.length;
+  if(room>0)tiles.push(`<button type="button" class="photo-add" onclick="document.getElementById('photoCamera').click()">📷<span>צילום</span></button>`,
+    `<button type="button" class="photo-add" onclick="document.getElementById('photoGallery').click()">🖼️<span>מהגלריה</span></button>`);
+  return tiles.join("");
+}
+function startPhotoDraft(type,id){photoDraft={type,id:id??null,keep:id?photosFor(type,id):[],added:[],removed:[]};}
+function redrawPhotoDraft(){const g=document.getElementById("photoDraftGrid");if(g)g.innerHTML=photoDraftTilesHTML();}
+function removeDraftPhoto(kind,key){
+  if(!photoDraft)return;
+  if(kind==="keep"){const x=photoDraft.keep.find(p=>Number(p.id)===Number(key));if(x){photoDraft.removed.push(x);photoDraft.keep=photoDraft.keep.filter(p=>p!==x);}}
+  else{const x=photoDraft.added.splice(key,1)[0];if(x)URL.revokeObjectURL(x.url);}
+  redrawPhotoDraft();
+}
+async function shrinkPhoto(file,max){
+  let src;
+  try{src=await createImageBitmap(file,{imageOrientation:"from-image"});}
+  catch(e){src=await new Promise((ok,bad)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=bad;i.src=URL.createObjectURL(file);});}
+  const w=src.width,h=src.height,k=Math.min(1,max/Math.max(w,h));
+  const c=document.createElement("canvas");c.width=Math.max(1,Math.round(w*k));c.height=Math.max(1,Math.round(h*k));
+  c.getContext("2d").drawImage(src,0,0,c.width,c.height);
+  return await new Promise((ok,bad)=>c.toBlob(b=>b?ok(b):bad(new Error("toBlob")),"image/jpeg",0.8));
+}
+async function photosChosen(input){
+  const files=[...(input.files||[])];input.value="";
+  if(!photoDraft||!files.length)return;
+  const room=PHOTO_MAX-photoDraft.keep.length-photoDraft.added.length;
+  if(files.length>room)toast(`אפשר לצרף עד ${PHOTO_MAX} תמונות`,"error");
+  for(const f of files.slice(0,Math.max(0,room))){
+    try{
+      const blob=await shrinkPhoto(f,PHOTO_SIZE),thumb=await shrinkPhoto(blob,THUMB_SIZE);
+      if(!photoDraft)return; // the window was closed meanwhile
+      photoDraft.added.push({blob,thumb,url:URL.createObjectURL(thumb)});
+    }catch(e){console.error("photo",e);toast("לא ניתן לקרוא את התמונה","error");}
+  }
+  redrawPhotoDraft();
+}
+// after the problem/task itself is saved: remove the photos taken out, upload the new ones
+async function savePhotoDraft(type,id){
+  const d=photoDraft;photoDraft=null;if(!d)return true;
+  let failed=0;
+  for(const x of d.removed){
+    const {data,error}=await supabaseClient.from("item_photos").delete().eq("id",x.id).select("id");
+    if(error||!data?.length){failed++;console.error("photo delete",error);continue;}
+    itemPhotos=itemPhotos.filter(p=>Number(p.id)!==Number(x.id));
+    await supabaseClient.storage.from(PHOTO_BUCKET).remove([x.file_path,x.thumb_path]);
+  }
+  for(const x of d.added){
+    const name=crypto.randomUUID?crypto.randomUUID():Date.now()+"-"+Math.random().toString(36).slice(2);
+    const file_path=`${type}/${Number(id)}/${name}.jpg`,thumb_path=`${type}/${Number(id)}/${name}-t.jpg`;
+    const store=supabaseClient.storage.from(PHOTO_BUCKET);
+    const a=await store.upload(file_path,x.blob,{contentType:"image/jpeg",upsert:false});
+    const b=a.error?a:await store.upload(thumb_path,x.thumb,{contentType:"image/jpeg",upsert:false});
+    if(a.error||b.error){failed++;console.error("photo upload",a.error||b.error);await store.remove([file_path,thumb_path]);continue;}
+    const row={[type==="problem"?"problem_id":"task_id"]:Number(id),file_path,thumb_path,created_by:currentUser?.id};
+    const {data,error}=await supabaseClient.from("item_photos").insert(row).select("id,problem_id,task_id,file_path,thumb_path,created_at").single();
+    if(error||!data){failed++;console.error("photo row",error);await store.remove([file_path,thumb_path]);continue;}
+    itemPhotos.push(data);photoUrls[thumb_path]=Promise.resolve(x.url);
+  }
+  if(failed)toast(`${failed===1?"תמונה אחת לא נשמרה":failed+" תמונות לא נשמרו"}. אפשר לנסות שוב בעריכה.`,"error");
+  return !failed;
+}
+// full-screen photo, above the open window; back or a tap closes it
+let photoViewerList=[],photoViewerIndex=0;
+function openPhotoViewer(type,id,i){
+  photoViewerList=photosFor(type,id);photoViewerIndex=i;
+  document.getElementById("photoViewer")?.remove();
+  document.body.insertAdjacentHTML("beforeend",`<div class="photo-viewer" id="photoViewer" onclick="if(event.target===this)closePhotoViewer()"></div>`);
+  drawPhotoViewer();
+}
+function drawPhotoViewer(){
+  const v=document.getElementById("photoViewer"),x=photoViewerList[photoViewerIndex];if(!v||!x)return;
+  const n=photoViewerList.length;
+  v.innerHTML=`<img data-photo="${esc(x.file_path)}" alt="תמונה ${photoViewerIndex+1}">
+    <button type="button" class="photo-viewer-close" aria-label="סגירה" onclick="closePhotoViewer()">✕</button>
+    ${n>1?`<button type="button" class="photo-viewer-prev" aria-label="הקודמת" onclick="stepPhotoViewer(-1)">›</button><button type="button" class="photo-viewer-next" aria-label="הבאה" onclick="stepPhotoViewer(1)">‹</button><div class="photo-viewer-count" dir="ltr">${photoViewerIndex+1} / ${n}</div>`:""}`;
+}
+function stepPhotoViewer(d){const n=photoViewerList.length;photoViewerIndex=(photoViewerIndex+d+n)%n;drawPhotoViewer();}
+function closePhotoViewer(){document.getElementById("photoViewer")?.remove();}
 function problemCardHTML(x){
   const title=esc(x.title||"");
   const description=(x.description||"").trim();
@@ -3112,9 +3267,10 @@ function problemCardHTML(x){
   const closedLine=x.status==="closed"
     ? `<div class="problem-meta-line"><span>נסגרה ע"י:</span> <strong>${esc(profileName(x.closed_by))}</strong><span class="problem-dot">·</span><span>${esc(formatProblemDateTime(x.closed_at))}</span></div>`
     : "";
-  return `<div class="list-card problem-card compact-card"
+  const photo=cardPhotoHTML("problem",x.id);
+  return `<div class="list-card problem-card compact-card${photo?" has-photo":""}"
     data-search-text="${esc((x.title+" "+(x.description||"")+" "+profileName(x.created_by)+" "+profileName(x.assigned_to)).toLowerCase())}"
-    onclick="openProblemDetails(${Number(x.id)})">
+    onclick="openProblemDetails(${Number(x.id)})">${photo}
     <div class="problem-title-row"><div class="problem-title">${title}${bus}</div>${x.priority==="urgent"?`<span class="priority-badge urgent">דחופה</span>`:""}</div>
     <div class="problem-title-divider"></div>
     ${desc}
@@ -3148,6 +3304,8 @@ function problemFormTemplate(x,editing=false){
 
     <label>תיאור</label>
     ${editing?`<textarea id="editDescription">${esc(x.description||"")}</textarea>`:`<div class="form-readonly" style="white-space:pre-wrap;min-height:70px">${esc(x.description||"ללא תיאור")}</div>`}
+
+    ${editing?photoPickerHTML():photoGalleryHTML("problem",x.id)}
 
     <label>אחראי לטיפול</label>
     ${editing?`<select id="editAssignee"><option value="">ללא אחראי</option>${assignees.map(p=>`<option value="${p.id}" ${p.id===x.assigned_to?"selected":""}>${esc(p.display_name)}</option>`).join("")}</select>`:`<div class="form-readonly">${esc(x.assigned_to?profileName(x.assigned_to):"ללא אחראי")}</div>`}
@@ -3184,6 +3342,7 @@ function openProblemDetails(id){
 }
 function editProblem(id){
   const x=problems.find(p=>Number(p.id)===Number(id));if(!x)return;
+  startPhotoDraft("problem",x.id);
   showModal(problemFormTemplate(x,true));
 }
 async function saveProblemEdit(id,btn){
@@ -3195,6 +3354,7 @@ async function saveProblemEdit(id,btn){
     .select("id,title,description,status,priority,created_by,assigned_to,created_at,updated_at,closed_at,closed_by,business_id").single();
   if(error){setBusy(btn,false);console.error(error);return alert("לא ניתן לעדכן את התקלה: "+error.message);}
   if(data)upsertById(problems,normalizeProblem(data));
+  await savePhotoDraft("problem",id);
   refreshScreenBehindModal("problems",problemsScreen);
   showModal(problemFormTemplate(problems.find(p=>Number(p.id)===Number(id)),false));
 }
@@ -3349,7 +3509,8 @@ function taskCardHTML(t){
       </div>`
     : "";
   const overdue=isTaskOverdue(t)?`<span class="overdue-badge">באיחור</span>`:"";
-  return `<div class="list-card task-card" data-search-text="${esc((t.description+" "+assignee+" "+due).toLowerCase())}" onclick="openTaskDetails(${Number(t.id)})">
+  const photo=cardPhotoHTML("task",t.id);
+  return `<div class="list-card task-card${photo?" has-photo":""}" data-search-text="${esc((t.description+" "+assignee+" "+due).toLowerCase())}" onclick="openTaskDetails(${Number(t.id)})">${photo}
     <div class="task-description card-description-preview">${esc(t.description)} ${overdue}${business}</div>
     <div class="task-meta-row">
       <span>אחראי: <strong>${esc(assignee)}</strong></span>
@@ -3399,10 +3560,13 @@ function newTask(){
     return alert("כדי לפתוח משימה יש לבחור עסק מסוים.");
 
   const assignees=profilesForBusiness(currentBusinessId);
+  startPhotoDraft("task");
 
   showModal(`<h2>משימה חדשה</h2>
     <label>מה צריך לעשות?</label>
     <textarea id="taskDescription" style="min-height:95px"></textarea>
+
+    ${photoPickerHTML()}
 
     <label>אחראי <span class="u-sub">(אופציונלי)</span></label>
     <select id="taskAssignee">
@@ -3449,7 +3613,7 @@ async function createTask(btn){
     return alert("לא ניתן ליצור את המשימה: "+error.message);
   }
 
-  if(data)upsertById(tasks,data);
+  if(data){upsertById(tasks,data);setBusy(btn,true,"מעלה תמונות...");await savePhotoDraft("task",data.id);}
   hideModal();tasksScreen();
 }
 
@@ -3463,6 +3627,8 @@ function taskFormTemplate(t,editing=false){
     ${editing
       ? `<textarea id="editTaskDescription" style="min-height:95px">${esc(t.description)}</textarea>`
       : `<div class="form-readonly" style="white-space:pre-wrap;min-height:70px">${esc(t.description)}</div>`}
+
+    ${editing?photoPickerHTML():photoGalleryHTML("task",t.id)}
 
     <label>אחראי</label>
     ${editing
@@ -3531,6 +3697,7 @@ async function saveTaskEdit(id,btn){
   }
 
   if(data)upsertById(tasks,data);
+  await savePhotoDraft("task",id);
   refreshScreenBehindModal("tasks",tasksScreen);
   showModal(taskFormTemplate(tasks.find(x=>Number(x.id)===Number(id)),false));
 }
@@ -4044,9 +4211,11 @@ function setBusy(btn,busy,label=""){
 function newProblem(){
   if(currentBusinessId==="all")return alert("כדי לפתוח תקלה יש לבחור עסק מסוים.");
   const assignees=profilesForBusiness(currentBusinessId);
+  startPhotoDraft("problem");
   showModal(`<h2>תקלה חדשה</h2>
     <label>כותרת</label><input id="pt">
     <label>תיאור</label><textarea id="pd"></textarea>
+    ${photoPickerHTML()}
     <label>אחראי לטיפול</label><select id="passignee"><option value="">ללא אחראי</option>${assignees.map(p=>`<option value="${p.id}">${esc(p.display_name)}</option>`).join("")}</select>
     <label>דחיפות</label><select id="ppriority"><option value="normal">רגילה</option><option value="urgent">דחופה</option></select>
     <div class="actions"><button class="secondary" onclick="hideModal()">ביטול</button><button class="primary" onclick="createProblem(this)">שמירה</button></div>`);
@@ -4062,7 +4231,7 @@ async function createProblem(btn){
   const {data,error}=await supabaseClient.from("problems").insert(payload)
     .select("id,title,description,status,priority,created_by,assigned_to,created_at,updated_at,closed_at,closed_by,business_id").single();
   if(error){setBusy(btn,false);console.error(error);return alert("לא ניתן לשמור את התקלה בענן: "+error.message);}
-  if(data)upsertById(problems,normalizeProblem(data));
+  if(data){upsertById(problems,normalizeProblem(data));setBusy(btn,true,"מעלה תמונות...");await savePhotoDraft("problem",data.id);}
   hideModal();problemsScreen();
 }
 function calendarDay(ds){
