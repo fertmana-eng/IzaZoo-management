@@ -102,11 +102,24 @@
 ## Next steps (in order)
 
 1. **CSS cleanup and building each screen once.** Opus, in small steps with
-   before/after screenshots. Each
+   before/after screenshots. Done so far: step 1, removed 292 CSS selectors that
+   target class names the app never uses (about 21 KB). Next: rules overridden
+   by later rules, merging the two `<style>` blocks, then rendering each screen
+   once instead of twice (portrait + landscape). Each
    screen is currently rendered twice (portrait and landscape) and the CSS has many
    overriding rules; removing the wrong one can quietly break a screen.
 
 ## Testing
+
+For CSS changes, take full-page screenshots of every screen and window in
+portrait (390x844) and landscape (1280x800) before and after the change and
+compare them pixel by pixel; the change is accepted only with zero differences
+(or differences the owner asked for). Wait for focus/scroll animations to settle
+before taking a screenshot, or the comparison will show false differences.
+Class names built at runtime (`module-${active}`, `calendar-${x.type}`,
+`nav-${id}`) don't appear literally in the code; account for them when deciding
+whether a CSS rule is unused.
+
 
 There is no automated test suite in the repository. Test changes in headless
 Chromium (Playwright is pre-installed) by serving the folder locally and replacing
