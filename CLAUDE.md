@@ -29,13 +29,19 @@
 - A single-page Hebrew (RTL) management app for the IzaZoo businesses: problems
   (תקלות), tasks (משימות), updates (עדכונים), knowledge (ידע ונהלים, still closed),
   an admin screen and user feedback.
-- Knowledge (opened Nov 2026; owner's decisions): only the owner and full admins
-  add, edit and archive items (archiving asks first; archived items are shown
-  to admins only, in an "ארכיון" section); everyone reads the items meant for
-  their business. The 7 categories in the database are fixed (no category
-  admin in the app). Previous versions are saved to `knowledge_versions` on
-  every edit but not shown. Knowledge is included in search (own screen and
-  home) and styled like the other three modules.
+- Knowledge = a document library (Nov 2026; owner's decisions): PDF files
+  (other types possibly later), up to 20 MB each, in the private Supabase
+  storage bucket `knowledge`. Filtered by business (chips; the app's active
+  business) and by category within the business (only categories that have
+  documents there; the 7 categories are fixed, no category admin). PDFs open
+  inside the app with PDF.js (`vendor/pdfjs`, legacy build, loaded only when a
+  document is opened), because Android Chrome can't show PDFs inside a page.
+  Only the owner and full admins upload, edit details, replace files (old file
+  deleted) and archive (asks first; archive visible to admins only). Everyone
+  else views and downloads the documents for their business. Previous versions
+  are recorded in `knowledge_versions` but not shown. The database enforces
+  this (`supabase/migrations/20261117_knowledge_documents.sql`, applied).
+  Supabase free plan: 1 GB storage in total.
 - Everything is in `index.html` (one style block of roughly 70 KB, then the JS). `sw.js` is the
   service worker; `vendor/supabase.js` is a bundled copy of supabase-js v2.119.0.
   Bump the cache name in `sw.js` when you change files it caches.
@@ -49,7 +55,10 @@
   available to Claude. Its confirmation prompts for database changes do not reach
   the owner's phone and time out; instead give the owner the SQL to paste into the
   dashboard's SQL Editor and press Run. Read-only queries and edge-function
-  deploys work through the connector.
+  deploys work through the connector. Role-simulated tests in a DO block that
+  ends with `raise exception` (so everything is rolled back) work too, as long as
+  they contain no UPDATE/DELETE (those trigger the prompt). Dry-run a migration
+  the same way (EXECUTE each statement, then raise) before giving it to the owner.
 - Copies of server-side code are kept in `supabase/`: the `admin-users` edge
   function (`supabase/functions/admin-users/Index.ts`) and applied database
   changes (`supabase/migrations/`). Keep them in step with what is deployed.
@@ -110,7 +119,7 @@
   (`onViewportChange`); before, each screen was built twice and one copy hidden.
 - Removed 27 unused JavaScript functions (old login picker, old update/doc
   modals, debug log viewer, unused animations, etc.).
-- Opened the knowledge module (see "The app" above).
+- Opened the knowledge module as a document library (see "The app" above).
 
 ## Next steps (in order)
 
@@ -160,7 +169,7 @@ job is ever renamed, the ruleset's required check must be renamed to match
 Tests live in `tests/` (see `tests/README.md`). They run in headless Chromium
 against a fake database (`tests/fake-supabase.js`), never the real project.
 
-- **Behaviour tests:** `node --test tests/app.test.js` (30 tests, each checks its
+- **Behaviour tests:** `node --test tests/app.test.js` (34 tests, each checks its
   own result). Run them after every change, and add a test for every bug fixed.
 - **Styling changes:** take screenshots before and after with
   `tests/visual/screenshots.js` and compare with `tests/visual/compare.js`
