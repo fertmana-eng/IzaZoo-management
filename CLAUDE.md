@@ -93,7 +93,7 @@
   posting; limited admins able to reset passwords / create users in the
   edge function. Verified with role-simulated tests. Public sign-up is turned
   off in Supabase (users are created only from the admin screen).
-  Optional, not done: Supabase's leaked-password protection.
+  Leaked-password protection is not available on the free Supabase plan.
 - Styling cleanup (Nov 2026), all verified with zero-difference before/after
   screenshots: removed 292 CSS selectors for class names the app never uses and
   1,155 settings always overridden by a later identical rule; merged the two
@@ -110,7 +110,8 @@
 
 Nothing pending from the code review. Possible future work, only if the owner
 asks: open the knowledge module (ידע ונהלים; its functions are already in the
-code), turn on Supabase's leaked-password protection.
+code). (Supabase's leaked-password protection needs a paid Supabase plan; the
+project is on the free plan, so don't suggest it unless that changes.)
 
 ## Testing
 
