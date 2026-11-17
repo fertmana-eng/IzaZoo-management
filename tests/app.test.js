@@ -160,6 +160,8 @@ describe('knowledge (ידע ונהלים): documents',()=>{
     await page.selectOption('#nkCategory','1');
     await page.click('#modal .primary');await page.waitForTimeout(500);
     assert.match((await cards(page))[0],/נוהל פתיחה.*פתיחה.*KB/);
+    // file sizes are wrapped in left-to-right marks so "180 KB" isn't shown as "KB 180" in Hebrew text
+    assert.deepEqual(await page.evaluate(()=>[formatFileSize(184320),formatFileSize(3*1024*1024)]),['\u2066180 KB\u2069','\u20663.0 MB\u2069']);
     const r=await page.evaluate(()=>({row:__db.knowledge_items[0],files:Object.keys(window.__files||{})}));
     assert.match(r.row.file_path,/\.pdf$/);assert.equal(r.row.file_name,'נוהל פתיחה.pdf');assert.equal(r.row.category_id,1);
     assert.deepEqual(r.files,['knowledge/'+r.row.file_path]);
