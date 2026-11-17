@@ -1,6 +1,6 @@
 ---
 name: health-check
-description: Periodic mini-review of the whole IzaZoo app, so problems are caught while small. Use after a batch of changes, about once a month, before a big new feature, or when the owner types /health-check.
+description: Mini-review of the whole IzaZoo app, so problems are caught while small. Run only when the owner types /health-check or agrees to it. Never schedule it; suggest it to the owner after a batch of changes, about a month after the last one, or before a big new feature.
 ---
 
 # Health check
