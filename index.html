@@ -2876,8 +2876,41 @@ function dashboard(){
   currentSearchContext="home";
   const c=counts();
   const first=esc(currentUser.firstName||currentUser.name);
-  root().innerHTML=`<div class="app-shell">
-    <div class="desktop-layout mirrored-landscape">
+  // build only the layout for the current orientation (the other one would be hidden anyway)
+  const layout=viewportMode()==="portrait"
+    ?`    <div class="mobile-layout portrait-dashboard portrait-single-column">
+      <main class="portrait-single-workspace">
+        <header class="portrait-single-header">
+          <div class="portrait-header-row">
+            <div class="portrait-header-greeting">
+              <h1>שלום, ${first}</h1>
+              <div class="portrait-single-date">${fmtFull()}</div>
+            </div>
+            <div class="clean-header-tools portrait-header-tools-compact">
+              ${businessSelectorHTML()}
+              <button class="header-action header-icon-btn" onclick="userScreen()" aria-label="משתמש">👤</button>
+              <button class="header-action header-icon-btn" onclick="confirmLogout()" aria-label="התנתקות">⏻</button>
+            </div>
+          </div>
+          ${searchBoxHTML("home")}
+        </header>
+
+        <section class="portrait-bottom-nav portrait-category-bar">
+          ${portraitBottomCat("!","תקלות",c.p,"navigateModule('problems')","problem")}
+          ${portraitBottomCat("✓","משימות",c.t,"navigateModule('tasks')","task")}
+          ${portraitBottomCat("↗","עדכונים",c.u,"navigateModule('updates')","update")}
+          ${portraitBottomCat("▥","ידע ונהלים",c.d,"navigateModule('docs')","doc")}
+        </section>
+
+        <div class="portrait-scroll-content" data-search-context="home">
+          <section class="portrait-single-calendar">${calendarHTML(true)}</section>
+          <section class="portrait-single-card"><h3>פריטים פתוחים</h3>${mobileOpenItemsHTML(10)}</section>
+          <section class="portrait-single-card"><h3>פעילות אחרונה</h3>${activityFeedHTML(14)}</section>
+        </div>
+      </main>
+    </div>
+`
+    :`    <div class="desktop-layout mirrored-landscape">
       <aside class="landscape-sidebar">
         <div class="landscape-brand">IzaZoo</div>
         <div class="landscape-nav">
@@ -2913,38 +2946,9 @@ function dashboard(){
         </div>
       </main>
     </div>
-
-    <div class="mobile-layout portrait-dashboard portrait-single-column">
-      <main class="portrait-single-workspace">
-        <header class="portrait-single-header">
-          <div class="portrait-header-row">
-            <div class="portrait-header-greeting">
-              <h1>שלום, ${first}</h1>
-              <div class="portrait-single-date">${fmtFull()}</div>
-            </div>
-            <div class="clean-header-tools portrait-header-tools-compact">
-              ${businessSelectorHTML()}
-              <button class="header-action header-icon-btn" onclick="userScreen()" aria-label="משתמש">👤</button>
-              <button class="header-action header-icon-btn" onclick="confirmLogout()" aria-label="התנתקות">⏻</button>
-            </div>
-          </div>
-          ${searchBoxHTML("home")}
-        </header>
-
-        <section class="portrait-bottom-nav portrait-category-bar">
-          ${portraitBottomCat("!","תקלות",c.p,"navigateModule('problems')","problem")}
-          ${portraitBottomCat("✓","משימות",c.t,"navigateModule('tasks')","task")}
-          ${portraitBottomCat("↗","עדכונים",c.u,"navigateModule('updates')","update")}
-          ${portraitBottomCat("▥","ידע ונהלים",c.d,"navigateModule('docs')","doc")}
-        </section>
-
-        <div class="portrait-scroll-content" data-search-context="home">
-          <section class="portrait-single-calendar">${calendarHTML(true)}</section>
-          <section class="portrait-single-card"><h3>פריטים פתוחים</h3>${mobileOpenItemsHTML(10)}</section>
-          <section class="portrait-single-card"><h3>פעילות אחרונה</h3>${activityFeedHTML(14)}</section>
-        </div>
-      </main>
-    </div>
+`;
+  root().innerHTML=`<div class="app-shell">
+${layout}
   </div>`;
   renderOfflineBar();
   __forceRepaint();

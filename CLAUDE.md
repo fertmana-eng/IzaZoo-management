@@ -94,6 +94,13 @@
   edge function. Verified with role-simulated tests. Public sign-up is turned
   off in Supabase (users are created only from the admin screen).
   Optional, not done: Supabase's leaked-password protection.
+- Styling cleanup (Nov 2026), all verified with zero-difference before/after
+  screenshots: removed 292 CSS selectors for class names the app never uses and
+  1,155 settings always overridden by a later identical rule; merged the two
+  style blocks (CSS went from about 130 KB to about 71 KB). Every screen,
+  including home, now builds only the layout for the current orientation
+  (`viewportMode()`) and is redrawn when the orientation changes
+  (`onViewportChange`); before, each screen was built twice and one copy hidden.
 - Removed 27 unused JavaScript functions (old login picker, old update/doc
   modals, debug log viewer, unused animations, etc.). The knowledge module's
   functions (`newKnowledge`, `openKnowledge`, `editKnowledge`, category
@@ -101,17 +108,9 @@
 
 ## Next steps (in order)
 
-1. **CSS cleanup and building each screen once.** Opus, in small steps with
-   before/after screenshots. Done so far: (1) removed 292 CSS selectors that
-   target class names the app never uses (about 21 KB); (2) removed 1,155 CSS
-   settings always overridden by a later rule with the identical selector in the
-   same context (about 38 KB); (3) merged the two style blocks into one;
-   (4) every screen built by `page()` (all except home) now builds only the
-   layout for the current orientation (`viewportMode()`), and any screen is
-   redrawn when the orientation changes (`onViewportChange`). Next: the same for
-   the home screen (`dashboard()`), then have the owner check on the phone. Each
-   screen is currently rendered twice (portrait and landscape) and the CSS has many
-   overriding rules; removing the wrong one can quietly break a screen.
+Nothing pending from the code review. Possible future work, only if the owner
+asks: open the knowledge module (ידע ונהלים; its functions are already in the
+code), turn on Supabase's leaked-password protection.
 
 ## Testing
 
