@@ -105,10 +105,11 @@
    before/after screenshots. Done so far: (1) removed 292 CSS selectors that
    target class names the app never uses (about 21 KB); (2) removed 1,155 CSS
    settings always overridden by a later rule with the identical selector in the
-   same context (about 38 KB); (3) merged the two style blocks into one. Next:
-   rendering each screen once instead of twice (portrait + landscape). This is
-   the riskiest step: plan it, do it one screen at a time, and have the owner
-   check each screen on the phone. Each
+   same context (about 38 KB); (3) merged the two style blocks into one;
+   (4) every screen built by `page()` (all except home) now builds only the
+   layout for the current orientation (`viewportMode()`), and any screen is
+   redrawn when the orientation changes (`onViewportChange`). Next: the same for
+   the home screen (`dashboard()`), then have the owner check on the phone. Each
    screen is currently rendered twice (portrait and landscape) and the CSS has many
    overriding rules; removing the wrong one can quietly break a screen.
 
