@@ -63,6 +63,12 @@
   therefore only added on a tap (see `ensureExitGuard`), and never in response to
   a back press.
 
+## Lessons learned
+
+- **Screens that load data before drawing** (admin, feedback) must check after
+  loading that the user is still on that screen (`currentScreen`) before drawing.
+  Otherwise a back press during a slow load is undone by the late drawing.
+
 ## Done so far
 
 - Removed hard-coded user list and passwords, the debug-log button, and the way to

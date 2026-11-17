@@ -5445,6 +5445,7 @@ async function feedbackScreen(push=true){
   if(push&&currentScreen!=="feedback")return goToScreen("feedback",{push:true,direction:"forward"});
   currentScreen="feedback";
   if(push)await loadBetaFeedback();
+  if(currentScreen!=="feedback")return; // the user moved on while loading: don't draw over the new screen
   const mine=betaFeedback.filter(f=>f.author_id===currentUser.id).sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at));
   page("משוב על המערכת","הערות לבטא","feedback",`<div class="page feedback-page"><div class="feedback-compose"><textarea class="new-feedback-body" placeholder="כתוב כאן הערה, רעיון או תקלה במערכת..."></textarea><button type="button" class="primary" onclick="sendFeedback(this)">שליחה</button></div><h3>המשובים שלי</h3><div class="feedback-own-list">${mine.length?mine.map(f=>`<button type="button" class="list-card feedback-card" onclick="editFeedback(${Number(f.id)})"><div class="feedback-preview">${esc(f.body)}</div><div class="item-meta">עודכן ${esc(formatProblemDateTime(f.updated_at))}</div></button>`).join(""):`<div class="u-sub">עדיין לא שלחת משוב</div>`}</div></div>`);
 }
@@ -6149,6 +6150,7 @@ async function adminScreen(push=true){
   currentScreen="admin";
   if(!canAdmin())return userScreen(false);
   await loadAdminData();
+  if(currentScreen!=="admin")return; // the user moved on while loading: don't draw over the new screen
   const profiles=Object.values(profilesById);
   const userRows=profiles.map(p=>{
     const global=p.role==="owner"||p.all_businesses_access;
