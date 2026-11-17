@@ -2189,6 +2189,7 @@ body.is-portrait .portrait-header-tools-compact .header-icon-btn{flex:0 0 auto;w
 body.is-portrait .portrait-single-header .stable-search{margin-top:14px!important}
 
 /* knowledge: document library */
+.danger-btn{background:#a33a3a;color:#fff;border:1px solid #a33a3a}
 .doc-chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}
 .doc-chips::-webkit-scrollbar{display:none}
 .doc-chip{flex:0 0 auto;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:600;min-height:0;line-height:1.2}
@@ -3718,7 +3719,9 @@ async function fetchDocFile(k){
 }
 function openKnowledge(id){
   const k=docs.find(x=>Number(x.id)===Number(id));if(!k)return;
-  const admin=canAdmin()?`<button type="button" class="secondary" onclick="editKnowledge(${Number(id)})">פרטים</button><button type="button" class="secondary" onclick="${k.is_archived?`archiveKnowledge(${Number(id)},true,this)`:`confirmArchiveKnowledge(${Number(id)})`}">${k.is_archived?"החזר לפעילים":"ארכוב"}</button>`:"";
+  const admin=!canAdmin()?"":`<button type="button" class="secondary" onclick="editKnowledge(${Number(id)})">פרטים</button>`+(k.is_archived
+    ?`<button type="button" class="secondary" onclick="archiveKnowledge(${Number(id)},true,this)">החזר לפעילים</button><button type="button" class="danger-btn" onclick="confirmDeleteKnowledge(${Number(id)})">מחיקה לצמיתות</button>`
+    :`<button type="button" class="secondary" onclick="confirmRemoveKnowledge(${Number(id)})">הסרה</button>`);
   const download=k.file_path?`<button type="button" class="secondary" onclick="downloadKnowledge(${Number(id)},this)">הורדה</button>`:"";
   showModal(`<div class="doc-viewer-head">
       <div class="doc-viewer-title"><h2>${k.is_pinned?"📌 ":""}${esc(k.title)}</h2><div class="item-meta">${esc(categoryName(k.category_id))} · ${esc(knowledgeMeta(k))}</div></div>
@@ -3808,9 +3811,30 @@ async function saveKnowledge(id,btn){
   if(!rerr)toast("המסמך עודכן");
   openKnowledge(id);
 }
-function confirmArchiveKnowledge(id){
+// "הסרה": the admin chooses between archiving (can be undone) and deleting for good
+function confirmRemoveKnowledge(id){
   const k=docs.find(x=>Number(x.id)===Number(id));if(!k)return;
-  showModal(`<h2>להעביר לארכיון?</h2><p>"${esc(k.title)}" לא יוצג יותר למשתמשים. אפשר להחזיר אותו מהארכיון בכל עת.</p><div class="actions"><button class="secondary" onclick="openKnowledge(${Number(id)})">ביטול</button><button class="primary" onclick="archiveKnowledge(${Number(id)},false,this)">ארכוב</button></div>`);
+  showModal(`<h2>להסיר את המסמך?</h2><p>"${esc(k.title)}"</p>
+    <p class="u-sub"><b>העברה לארכיון:</b> המסמך לא יוצג למשתמשים, ואפשר להחזיר אותו בכל עת.<br><b>מחיקה לצמיתות:</b> המסמך והקובץ יימחקו ולא ניתן יהיה לשחזר אותם.</p>
+    <div class="actions"><button class="secondary" onclick="openKnowledge(${Number(id)})">ביטול</button><button class="primary" onclick="archiveKnowledge(${Number(id)},false,this)">העברה לארכיון</button><button class="danger-btn" onclick="deleteKnowledge(${Number(id)},this)">מחיקה לצמיתות</button></div>`);
+}
+function confirmDeleteKnowledge(id){
+  const k=docs.find(x=>Number(x.id)===Number(id));if(!k)return;
+  showModal(`<h2>למחוק לצמיתות?</h2><p>"${esc(k.title)}" והקובץ שלו יימחקו ולא ניתן יהיה לשחזר אותם.</p>
+    <div class="actions"><button class="secondary" onclick="openKnowledge(${Number(id)})">ביטול</button><button class="danger-btn" onclick="deleteKnowledge(${Number(id)},this)">מחיקה לצמיתות</button></div>`);
+}
+async function deleteKnowledge(id,btn){
+  const k=docs.find(x=>Number(x.id)===Number(id));if(!k)return;
+  if(!checkOnline())return;setBusy(btn,true,"מוחק...");
+  // ask for the deleted row back: if the database refuses, nothing comes back (and no error)
+  const {data,error}=await supabaseClient.from("knowledge_items").delete().eq("id",id).select("id");
+  if(error||!data?.length){setBusy(btn,false);console.error("knowledge delete",error);return toast("לא ניתן למחוק את המסמך","error");}
+  if(k.file_path){
+    const {error:fe}=await supabaseClient.storage.from(DOC_BUCKET).remove([k.file_path]);
+    if(fe)console.error("knowledge file delete",fe);
+    docFileCache.delete(k.file_path);
+  }
+  await loadKnowledge();hideModal();toast("המסמך נמחק");docsScreen();
 }
 async function archiveKnowledge(id,isArchived,btn){
   if(!checkOnline())return;setBusy(btn,true,"שומר...");
