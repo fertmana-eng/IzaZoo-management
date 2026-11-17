@@ -56,6 +56,9 @@
   (full square; Android's launcher decides the final shape, which code can't
   control), `apple-touch-icon.png`. The site's logo file is tiny (300x40), so
   the icons were rebuilt by smoothing it up; the script is not kept. The owner
+  The startup screen shows this logo (gently pulsing) instead of "טוען..." (owner's
+  request); the manifest's background colour matches the app's (`#f2f1ec`) so
+  the phone's launch screen flows into it. The owner
   wants the logo used in the app's design too (sign-in screen, header): do that
   as part of the design work, not before.
 - Backend: Supabase (auth with `<username>@izazoo.local`, tables, RPCs and an
@@ -219,7 +222,7 @@ job is ever renamed, the ruleset's required check must be renamed to match
 Tests live in `tests/` (see `tests/README.md`). They run in headless Chromium
 against a fake database (`tests/fake-supabase.js`), never the real project.
 
-- **Behaviour tests:** `node --test tests/app.test.js` (36 tests, each checks its
+- **Behaviour tests:** `node --test tests/app.test.js` (37 tests, each checks its
   own result). Run them after every change, and add a test for every bug fixed.
 - **Styling changes:** take screenshots before and after with
   `tests/visual/screenshots.js` and compare with `tests/visual/compare.js`
