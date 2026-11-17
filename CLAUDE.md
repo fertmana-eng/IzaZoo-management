@@ -37,6 +37,18 @@
   https://fertmana-eng.github.io/IzaZoo-management/
   A merge goes live about 2 minutes later; the app must be fully closed and
   reopened on the phone to pick up a new version.
+- Supabase project id: `ocfbgppfpvjfhclpdtao`. A Supabase connector may be
+  available to Claude. Its confirmation prompts for database changes do not reach
+  the owner's phone and time out; instead give the owner the SQL to paste into the
+  dashboard's SQL Editor and press Run. Read-only queries and edge-function
+  deploys work through the connector.
+- Copies of server-side code are kept in `supabase/`: the `admin-users` edge
+  function (`supabase/functions/admin-users/Index.ts`) and applied database
+  changes (`supabase/migrations/`). Keep them in step with what is deployed.
+- Permission model: owner = everything. Admin with "all businesses" = full admin.
+  Admin limited to some businesses = treated like a manager (no admin screen, no
+  admin actions, in the database and in the edge function). Manager = only their
+  businesses. Only full admins may post updates to all businesses.
 - The Supabase project is on a plan that pauses after inactivity. If the app shows
   "אין תשובה משרת הנתונים", check whether the project is paused and restore it in
   the Supabase dashboard.
@@ -63,16 +75,18 @@
   6 months, updates from the last 30 days plus active pins, latest 300 activity
   rows (full history when a problem is opened).
 - Rewrote back-button and exit handling (see above).
+- Permissions review (Nov 2026): every table has row-level security; admin
+  database functions check the caller. Fixed: logged-out access to server
+  functions and a public staff list; managers able to read other businesses'
+  updates via update links; anyone posting to all businesses; inactive users
+  posting; limited admins able to reset passwords / create users in the
+  edge function. Verified with role-simulated tests.
 
 ## Next steps (in order)
 
-1. **Database permissions review (use Fable).** The app only hides buttons; the
-   real protection must be in Supabase row-level security policies, the RPC
-   functions (especially `admin_*`, `close_problem`, `complete_task`,
-   `replace_*_targets`) and the `admin-users` edge function. Check that every
-   table has RLS on, and that a logged-in non-admin cannot read or change other
-   businesses' data or perform admin actions. Report findings in plain language
-   and ask before changing anything in the database.
+1. **Owner to confirm in the Supabase dashboard:** Authentication → Sign In /
+   Providers → "Allow new users to sign up" is OFF (users are created only from
+   the admin screen). Optional: turn on leaked-password protection.
 2. **CSS cleanup and building each screen once (use Fable for the cleanup).** Each
    screen is currently rendered twice (portrait and landscape) and the CSS has many
    overriding rules; removing the wrong one can quietly break a screen.
