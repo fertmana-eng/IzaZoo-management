@@ -113,6 +113,16 @@ asks: open the knowledge module (ידע ונהלים; its functions are already 
 code). (Supabase's leaked-password protection needs a paid Supabase plan; the
 project is on the free plan, so don't suggest it unless that changes.)
 
+## Checks ("departments")
+
+Three project skills hold the checklists; use them as described:
+- `/qa` (`.claude/skills/qa/SKILL.md`): after every change, before merging.
+- `/design-check`: when anything visual could change.
+- `/security-check`: when data, logins, permissions or Supabase code change.
+
+The "Tests" GitHub workflow (`.github/workflows/tests.yml`) runs the behaviour
+tests on every pull request and on `main`. Merge only when it is green.
+
 ## Testing
 
 Tests live in `tests/` (see `tests/README.md`). They run in headless Chromium
