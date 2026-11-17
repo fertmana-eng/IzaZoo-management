@@ -80,17 +80,16 @@
   functions and a public staff list; managers able to read other businesses'
   updates via update links; anyone posting to all businesses; inactive users
   posting; limited admins able to reset passwords / create users in the
-  edge function. Verified with role-simulated tests.
+  edge function. Verified with role-simulated tests. Public sign-up is turned
+  off in Supabase (users are created only from the admin screen).
+  Optional, not done: Supabase's leaked-password protection.
 
 ## Next steps (in order)
 
-1. **Owner to confirm in the Supabase dashboard:** Authentication → Sign In /
-   Providers → "Allow new users to sign up" is OFF (users are created only from
-   the admin screen). Optional: turn on leaked-password protection.
-2. **CSS cleanup and building each screen once (use Fable for the cleanup).** Each
+1. **CSS cleanup and building each screen once (use Fable for the cleanup).** Each
    screen is currently rendered twice (portrait and landscape) and the CSS has many
    overriding rules; removing the wrong one can quietly break a screen.
-3. Remove unused JavaScript (about 27 unused functions).
+2. Remove unused JavaScript (about 27 unused functions).
 
 ## Testing
 
