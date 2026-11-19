@@ -221,6 +221,23 @@
    - The app opens on the בית tab (owner's choice). No calendar.
    - Shifts/shift stages are not part of the app; only as a possible new feature later.
 
+3. **Recruiting module ("גיוס")** (owner wants it, not yet scheduled). Today it is
+   a separate Claude artifact the owner uses, "גיוס עיזה בר (Copy)"
+   (claude.ai artifact slug `63fc6f69-9076-4e03-a14f-aac8cbf1524c`), with its
+   data in the artifact's own database (collections `candidates`, `employees`,
+   positions, `config/main` with targets and headcount per role). Features:
+   candidate pipeline (פנייה חדשה → סינון טלפוני → ראיון → משמרת ניסיון → הצעה →
+   התקבל/ה / נדחה/תה / ויתר/ה), recruiting channels, open positions, current
+   staff vs. target per role, long leaves, waitresses training for the bar,
+   feedback talks, "needs attention", targets, Excel import, data copy, sharing
+   with the recruiter. Plan: its own section with the side rail (דורש טיפול ·
+   מועמדים · משרות · עובדים · יעדים), per business, **owner and managers only**
+   (names and phone numbers are personal data; enforce in the database), one-time
+   copy of the existing data with the owner's OK (never to GitHub). Open
+   questions: recruiter gets a limited login vs. a shared link; where it sits
+   (bottom bar is full, maybe a managers-only entry); build with or before the
+   redesign. About the size of the document library: several steps.
+
 Otherwise nothing pending. (Supabase's leaked-password protection needs a paid Supabase
 plan; the project is on the free plan, so don't suggest it unless that changes.)
 
