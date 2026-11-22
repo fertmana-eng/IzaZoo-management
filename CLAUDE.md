@@ -238,6 +238,12 @@
    (bottom bar is full, maybe a managers-only entry); build with or before the
    redesign. About the size of the document library: several steps.
 
+4. **Table reservations for עיזה בר: a separate project** (Nov 2026), in the
+   private repository `fertmana-eng/iza-bar-reservation` with its own
+   Supabase project (`brpovhypzsgwsnuenpfj`). Started in a chat, moved to
+   Claude Code with the same rules, tests and checks as IzaZoo; its own
+   `CLAUDE.md` has the details and next steps. Work on it there, not here.
+
 Otherwise nothing pending. (Supabase's leaked-password protection needs a paid Supabase
 plan; the project is on the free plan, so don't suggest it unless that changes.)
 
